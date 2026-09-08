@@ -1,0 +1,577 @@
+{
+  "nombre": "Melson Nolima",
+  "codigo": 1,
+  "linea": "Ninguna",
+  "asignaturas": [
+    {
+      "nombre": "Deporte formativo",
+      "codigo": "404010C",
+      "semestre": 1,
+      "creditos": 2,
+      "lineaProfesional": "No",
+      "componente": "Obligatoria de ley",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Antropología Social Y Cultural",
+      "codigo": "201002M",
+      "semestre": 1,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Introducción A La Lógica Formal",
+      "codigo": "402264M",
+      "semestre": 1,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Cultura Escrita Y Pensamiento Disciplinar",
+      "codigo": "402180M",
+      "semestre": 1,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Fundamentos Biológicos Para La Psicología",
+      "codigo": "402052M",
+      "semestre": 1,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Fundamentos Filosóficos e Históricos De La Psicología",
+      "codigo": "402179M",
+      "semestre": 1,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Fundamentos Filosóficos e Históricos De La Psicología II",
+      "codigo": "402181M",
+      "semestre": 2,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Procesos Psicológicos I: Percepción, Atención Y Memoria",
+      "codigo": "402183M",
+      "semestre": 2,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Neuroanatomía",
+      "codigo": "402256M",
+      "semestre": 2,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Fundamentos De Psicología Social I",
+      "codigo": "402184M",
+      "semestre": 2,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Fundamentos De Psicología Clínica",
+      "codigo": "402182M",
+      "semestre": 2,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "I. Electiva complementaria: Segundo Semestre",
+      "codigo": "1",
+      "semestre": 0,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Electiva complementaria",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Del Desarrollo I: Infancia Y Niñez",
+      "codigo": "402187M",
+      "semestre": 3,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Metodología De La Investigación: Cualitativa",
+      "codigo": "402186M",
+      "semestre": 3,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Estrategias De Análisis De Datos",
+      "codigo": "402185M",
+      "semestre": 3,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Procesos Psicológicos II: Lenguaje Y Pensamiento",
+      "codigo": "402188M",
+      "semestre": 3,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Constitución Política",
+      "codigo": "403063M",
+      "semestre": 3,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Obligatoria de ley",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Del Aprendizaje",
+      "codigo": "402195M",
+      "semestre": 4,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Del Desarrollo II: Adolescencia A La Senectud",
+      "codigo": "402193M",
+      "semestre": 4,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Metodología De La Investigación II: Cuantitativas",
+      "codigo": "402194M",
+      "semestre": 4,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Estadística",
+      "codigo": "402205M",
+      "semestre": 4,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "II. Electiva complementaria: Cuarto Semestre",
+      "codigo": "2",
+      "semestre": 0,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Electiva complementaria",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Seminario De Epistemología De Psicología",
+      "codigo": "402199M",
+      "semestre": 5,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Diseño De Instrumentos De Medición En Psicología",
+      "codigo": "402198M",
+      "semestre": 5,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Electiva Profesional I: Psi. Y Prob. Act Del Ind. En La Soc",
+      "codigo": "402197M",
+      "semestre": 5,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "II. Electiva profesional:Quinto Semestre",
+      "codigo": "3",
+      "semestre": 0,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Electiva profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "III. Electiva profesional:Sexto Semestre",
+      "codigo": "4",
+      "semestre": 0,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Electiva profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "IV. Electiva profesional: Sexto Semestre",
+      "codigo": "5",
+      "semestre": 0,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Electiva profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Clínica I",
+      "codigo": "402206M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "Clínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Social I",
+      "codigo": "402201M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "Social",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Educativa I",
+      "codigo": "402200M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "Educativa",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Organizacional I",
+      "codigo": "402202M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "Organizacional",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Neuropsicología I",
+      "codigo": "402218M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "NeuroClínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Ética Del Ejercicio Profesional",
+      "codigo": "402203M",
+      "semestre": 6,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicopatología",
+      "codigo": "402023M",
+      "semestre": 7,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Clínica II",
+      "codigo": "402208M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "Clínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Social II",
+      "codigo": "402210M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "Social",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "NeuroPsicología II",
+      "codigo": "402073M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "NeuroClínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Educativa II ",
+      "codigo": "402209M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "Educativa",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Organizacional II",
+      "codigo": "402207M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "Organizacional",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Práctica De Fundamentación Profesional I",
+      "codigo": "402212M",
+      "semestre": 7,
+      "creditos": 2,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Seminario De Trabajo De Grado I",
+      "codigo": "402211M",
+      "semestre": 7,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Clínica III",
+      "codigo": "402215M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "Clínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Social III",
+      "codigo": "402214M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "Social",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Educativa III",
+      "codigo": "402216M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "Educativa",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Psicología Organizacional III",
+      "codigo": "402213M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "Organizacional",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Neuropsicología III",
+      "codigo": "402219M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "NeuroClínica",
+      "componente": "Asignatura profesional",
+      "area": "Formación Profesional en Campos de Aplicación",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Evaluación Y Diagnostico Psicológico ",
+      "codigo": "402204M",
+      "semestre": 8,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura básica",
+      "area": "Fundamentación Disciplinar e Interdisciplinar",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Seminario De Trabajo De Grado II",
+      "codigo": "402217M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Práctica De Fundamentación Profesional II",
+      "codigo": "402221M",
+      "semestre": 8,
+      "creditos": 3,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Practica Profesional Supervisada I",
+      "codigo": "402222M",
+      "semestre": 9,
+      "creditos": 7,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Trabajo De Grado I",
+      "codigo": "402223M",
+      "semestre": 9,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Trabajo De Grado II",
+      "codigo": "402225M",
+      "semestre": 10,
+      "creditos": 4,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Practica Profesional Supervisada II",
+      "codigo": "402224M",
+      "semestre": 10,
+      "creditos": 7,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "Actividades Académicas Complementarias",
+      "codigo": "402226M",
+      "semestre": 0,
+      "creditos": 5,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "1ra Continuación De Trabajo De Grado",
+      "codigo": "990001M-19",
+      "semestre": 0,
+      "creditos": 0,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    },
+    {
+      "nombre": "2da Continuación De Trabajo De Grado",
+      "codigo": "<<990001M",
+      "semestre": 0,
+      "creditos": 0,
+      "lineaProfesional": "No",
+      "componente": "Asignatura profesional",
+      "area": "Formación en investigación e Intervención",
+      "nota": 1.0
+    }
+  ]
+}

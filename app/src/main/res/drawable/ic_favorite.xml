@@ -1,0 +1,10 @@
+<!-- ic_chart_up.xml -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M120,840L120,300L280,300L280,840L120,840ZM400,840L400,120L560,120L560,840L400,840ZM680,840L680,480L840,480L840,840L680,840ZM80,900L880,900L880,840L80,840L80,900Z" />
+</vector>
