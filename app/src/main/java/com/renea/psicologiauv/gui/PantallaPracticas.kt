@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -277,7 +276,7 @@ fun PantallaPracticas(
                             modifier = Modifier.weight(1f)
                         )
                         TarjetaRequisito(
-                            nombre = "Evaluación y Diagnóstico Psicológico",
+                            nombre = "Eval. y Diagnóstico Psicológico",
                             cumple = programa.requisitosPracticasDiagnostico(),
                             icono = Icons.Filled.Description,
                             modifier = Modifier.weight(1f)
@@ -289,13 +288,13 @@ fun PantallaPracticas(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         TarjetaRequisito(
-                            nombre = "Práctica de fundamentación profesional I",
+                            nombre = "Práctica de fund. profesional I",
                             cumple = programa.requisitosPracticasFundamentacionI(),
                             icono = Icons.Filled.Filter1,
                             modifier = Modifier.weight(1f)
                         )
                         TarjetaRequisito(
-                            nombre = "Práctica de fundamentación profesional II",
+                            nombre = "Práctica de fund. profesional II",
                             cumple = programa.requisitosPracticasFundamentacionII(),
                             icono = Icons.Filled.Filter2,
                             modifier = Modifier.weight(1f)

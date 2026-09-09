@@ -208,12 +208,14 @@ private fun TarjetaHeroeProgreso(
         label = "progresoCarrera"
     )
 
-    // Paleta inspirada en la referencia visual:
-    // fondo casi blanco + rojo intenso + vino oscuro + círculos suaves.
-    val rojo = Color(0xFFD7093F)
-    val vino = Color(0xFF4A0B1D)
-    val fondo = Color(0xFFFCFAFB)
-    val grisBarra = Color(0xFFEDECEF)
+    // Color de acento rojo institucional (idéntico al hero de PantallaPensum).
+    // El fondo, textos y barra de pista usan MaterialTheme para adaptarse
+    // automáticamente a modo oscuro / claro.
+    val rojo = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surface
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
 
     Card(
         modifier = Modifier
@@ -221,7 +223,7 @@ private fun TarjetaHeroeProgreso(
             .height(233.dp),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = fondo
+            containerColor = surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 3.dp
@@ -232,7 +234,7 @@ private fun TarjetaHeroeProgreso(
         ) {
 
             // =========================================================
-            // CÍRCULOS DECORATIVOS
+            // CÍRCULOS DECORATIVOS (igual que PantallaPensum hero)
             // =========================================================
 
             Box(
@@ -292,7 +294,7 @@ private fun TarjetaHeroeProgreso(
                         progreso = progresoAnimado,
                         diametro = 128.dp,
                         grosor = 11.dp,
-                        colorFondo = Color(0xFFE9E9EB),
+                        colorFondo = surfaceVariant,
                         colorProgreso = rojo
                     ) {
                         Text(
@@ -319,7 +321,7 @@ private fun TarjetaHeroeProgreso(
                         text = "Créditos de carrera",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = vino
+                        color = onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(3.dp))
@@ -331,7 +333,7 @@ private fun TarjetaHeroeProgreso(
                             text = "$creditosCursados",
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF17151A)
+                            color = onSurface
                         )
 
                         Spacer(modifier = Modifier.width(6.dp))
@@ -340,7 +342,7 @@ private fun TarjetaHeroeProgreso(
                             text = "/ $creditosCarrera cr.",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
-                            color = vino,
+                            color = onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 7.dp)
                         )
                     }
@@ -353,7 +355,7 @@ private fun TarjetaHeroeProgreso(
                             .fillMaxWidth()
                             .height(9.dp)
                             .background(
-                                color = grisBarra,
+                                color = surfaceVariant,
                                 shape = RoundedCornerShape(50)
                             )
                     ) {

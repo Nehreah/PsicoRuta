@@ -2675,29 +2675,29 @@ private fun TarjetaPerfilHero(
     onSettingsClick: () -> Unit
 ) {
 
-    val heroBackground = Color(0xFFFFFAFB)
-    val heroBurgundy = Color(0xFF5A071E)
-    val heroRed = Color(0xFFD40A3D)
-    val heroSoftPink = Color(0xFFF8E5EA)
-    val heroSoftRed = Color(0xFFF3D1D9)
-    val heroGray = Color(0xFFF1EFF1)
+    // Tokens de tema: se adaptan automáticamente a modo oscuro / claro,
+    // igual que el hero de PantallaPensum.
+    val primary       = MaterialTheme.colorScheme.primary
+    val surface       = MaterialTheme.colorScheme.surface
+    val onSurface     = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVar  = MaterialTheme.colorScheme.onSurfaceVariant
+    val primaryCont   = MaterialTheme.colorScheme.primaryContainer
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(27.dp),
-        colors = CardDefaults.cardColors(containerColor = heroBackground),
+        colors = CardDefaults.cardColors(containerColor = surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(224.dp)
-                .background(heroBackground)
+                .background(surface)
         ) {
 
             // ================================================================
-            // CÍRCULOS DECORATIVOS — estilo suave y académico.
-            // Mantienen el fondo claro y evitan el bloque rojo sólido.
+            // CÍRCULOS DECORATIVOS — mismo estilo que PantallaPensum hero.
             // ================================================================
 
             Box(
@@ -2706,7 +2706,7 @@ private fun TarjetaPerfilHero(
                     .align(Alignment.TopEnd)
                     .offset(x = 92.dp, y = (-120).dp)
                     .clip(CircleShape)
-                    .background(heroSoftPink.copy(alpha = 0.92f))
+                    .background(primary.copy(alpha = 0.08f))
             )
 
             Box(
@@ -2715,7 +2715,7 @@ private fun TarjetaPerfilHero(
                     .align(Alignment.BottomStart)
                     .offset(x = (-82).dp, y = 92.dp)
                     .clip(CircleShape)
-                    .background(heroSoftRed.copy(alpha = 0.72f))
+                    .background(primary.copy(alpha = 0.055f))
             )
 
             Box(
@@ -2724,7 +2724,7 @@ private fun TarjetaPerfilHero(
                     .align(Alignment.TopStart)
                     .offset(x = (-78).dp, y = (-58).dp)
                     .clip(CircleShape)
-                    .background(heroGray.copy(alpha = 0.82f))
+                    .background(primary.copy(alpha = 0.035f))
             )
 
             Box(
@@ -2733,7 +2733,7 @@ private fun TarjetaPerfilHero(
                     .align(Alignment.BottomEnd)
                     .offset(x = 34.dp, y = 38.dp)
                     .clip(CircleShape)
-                    .background(heroSoftPink.copy(alpha = 0.66f))
+                    .background(primary.copy(alpha = 0.045f))
             )
 
             // Círculo de acento muy sutil.
@@ -2743,7 +2743,7 @@ private fun TarjetaPerfilHero(
                     .align(Alignment.TopEnd)
                     .offset(x = (-22).dp, y = 20.dp)
                     .clip(CircleShape)
-                    .background(heroRed.copy(alpha = 0.045f))
+                    .background(primary.copy(alpha = 0.045f))
             )
 
             Column(
@@ -2758,14 +2758,14 @@ private fun TarjetaPerfilHero(
                         modifier = Modifier
                             .size(66.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.96f))
+                            .background(primaryCont.copy(alpha = 0.96f))
                             .clickable(onClick = onSettingsClick),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_avatar_default),
                             contentDescription = "Editar datos",
-                            tint = heroBurgundy,
+                            tint = primary,
                             modifier = Modifier.size(38.dp)
                         )
                     }
@@ -2776,14 +2776,14 @@ private fun TarjetaPerfilHero(
                             .size(30.dp)
                             .clickable(onClick = onSettingsClick),
                         shape = CircleShape,
-                        color = Color.White,
+                        color = surface,
                         shadowElevation = 3.dp
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Editar datos",
-                                tint = heroRed,
+                                tint = primary,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -2796,7 +2796,7 @@ private fun TarjetaPerfilHero(
                     text = nombre,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color = onSurface,
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -2806,7 +2806,7 @@ private fun TarjetaPerfilHero(
                 Text(
                     text = if (codigo.isNotBlank()) "Código $codigo" else "Código no definido",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Color.Black
+                    color = onSurfaceVar
                 )
 
                 Spacer(Modifier.height(5.dp))
@@ -2816,10 +2816,10 @@ private fun TarjetaPerfilHero(
                         .height(36.dp)
                         .clickable(onClick = onLineaClick),
                     shape = RoundedCornerShape(24.dp),
-                    color = (linea?.color ?: heroRed).copy(alpha = 0.14f),
+                    color = (linea?.color ?: primary).copy(alpha = 0.14f),
                     border = BorderStroke(
                         1.dp,
-                        (linea?.color ?: heroRed).copy(alpha = 0.32f)
+                        (linea?.color ?: primary).copy(alpha = 0.32f)
                     )
                 ) {
                     Row(
@@ -2829,7 +2829,7 @@ private fun TarjetaPerfilHero(
                         Icon(
                             imageVector = if (linea != null) Icons.Default.Check else Icons.Default.Person,
                             contentDescription = null,
-                            tint = linea?.color ?: heroBurgundy,
+                            tint = linea?.color ?: primary,
                             modifier = Modifier.size(14.dp)
                         )
 
@@ -2838,7 +2838,7 @@ private fun TarjetaPerfilHero(
                         Text(
                             text = linea?.nombre ?: "Selecciona tu línea profesional",
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.Black,
+                            color = onSurface,
                             fontWeight = FontWeight.SemiBold
                         )
 
@@ -2847,7 +2847,7 @@ private fun TarjetaPerfilHero(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = linea?.color ?: heroRed,
+                            tint = linea?.color ?: primary,
                             modifier = Modifier.size(15.dp)
                         )
                     }
@@ -2858,12 +2858,13 @@ private fun TarjetaPerfilHero(
                 Text(
                     text = if (mostrandoSelector) "Selecciona una nueva línea" else "Toca tu foto o la tuerca para editar tus datos",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Black
+                    color = onSurfaceVar
                 )
             }
         }
     }
 }
+
 
 // ========================================================================
 // SELECTOR DE LÍNEA

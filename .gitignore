@@ -1,15 +1,81 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# ============================================================
+# Android / Kotlin / Gradle
+# ============================================================
+
+# Archivos de build
+/build/
+**/build/
+
+# Archivos locales de configuración (contienen rutas absolutas del SDK, etc.)
 local.properties
+
+# Archivos de módulo de IntelliJ / Android Studio
+*.iml
+
+# Gradle cache y wrappers locales
+.gradle/
+gradle-app.setting
+
+# Caches y configuraciones de IntelliJ / Android Studio
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Capturas de perfilado / profiling
+/captures
+
+# Artefactos de build nativos
+.externalNativeBuild/
+.cxx/
+
+# Keystore (¡NUNCA versionar claves de firma!)
+*.jks
+*.keystore
+release.properties
+
+# ============================================================
+# Sistema operativo
+# ============================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ============================================================
+# IDEs y editores
+# ============================================================
+
+# VS Code
+.vscode/
+
+# Vim
+*.swp
+*.swo
+
+# ============================================================
+# Kotlin / JVM
+# ============================================================
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# ============================================================
+# Archivos temporales y de log
+# ============================================================
+*.log
+*.tmp
+*.temp
