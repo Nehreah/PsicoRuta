@@ -1,8 +1,8 @@
-# PsicologiaUV 🧠
+# PsicologiaUV 
 
 Aplicación Android para estudiantes de la carrera de **Psicología** de la Universidad del Valle (UV), desarrollada con **Kotlin y Jetpack Compose**.
 
-## ✨ Características
+## Características
 
 - 📚 Consulta de materias y malla curricular
 - 👤 Perfil de estudiante con información académica
@@ -11,7 +11,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la Univ
 - 📖 Historias clínicas y casos de práctica
 - 📧 Integración de contacto y correo institucional
 
-## 🛠️ Stack tecnológico
+## Stack tecnológico
 
 | Tecnología | Versión |
 |---|---|
@@ -24,7 +24,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la Univ
 | Android min SDK | 24 (Android 7.0) |
 | Target SDK | 37 |
 
-## 🚀 Cómo ejecutar el proyecto
+## Cómo ejecutar el proyecto
 
 ### Requisitos previos
 
@@ -45,7 +45,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la Univ
 
 4. Ejecuta la app en un emulador o dispositivo físico (Android 7.0+).
 
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 app/
@@ -63,7 +63,7 @@ app/
 └── build.gradle.kts
 ```
 
-## 🤝 Contribuciones
+## Contribuciones
 
 Las contribuciones son bienvenidas. Por favor, abre un *issue* para discutir cambios importantes antes de hacer un *pull request*.
 

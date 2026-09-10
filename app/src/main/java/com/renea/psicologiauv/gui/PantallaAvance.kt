@@ -1,5 +1,6 @@
 package com.renea.psicologiauv.gui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -26,13 +27,18 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AmberAccent
 import com.renea.psicologiauv.ui.theme.AprobadoColor
+import kotlinx.coroutines.delay
 
 // ========================================================================
 // 3. AVANCE - reporte de progreso
@@ -193,14 +199,38 @@ private fun materiaIdiomaActiva(candidatas: List<Asignatura>): Asignatura? =
         ?: candidatas.firstOrNull()
 
 // ========================================================================
-// TARJETA HÉROE: PROGRESO DE CARRERA
+// TARJETA HÉROE: PROGRESO DE CARRERA (incluye el consejo rotativo)
 // ========================================================================
+
+private val ConsejosCampus = listOf(
+    "Habito el campus y limpio los espacios que uso.",
+    "No soy cochinx, no dejo colillas, ni latas tiradas en ningun espacio de mi univerisdad.",
+    "Respeto a mis compañerxs y ellos me respetan también.",
+    "Cuido las zonas verdes, porque son zonas de vida.",
+    "El piso NO es basurero. Uso los botes de basura porque amo mi universidad.",
+    "Bajo el volumen en espacios de estudio compartidos.",
+    "Respeto a mis compañerxs en su diversidad.",
+    "No soy conchudx, si exijo, aplico.",
+    "No soy pusilanime, participo activamente en mi facultad.",
+    "Si lo ensucio, lo limpio.",
+    "Si ofendo a un compañero, me disculpo.",
+    "No dejo basura 'para después'. Después siempre se convierte en nunca.",
+    "Mi libertad termina donde empieza la libertad de lxs demás.",
+    "Cuido a los animales que habitan el campus y no los molesto ni alimento irresponsablemente.",
+    "No normalizo el acoso, la discriminación, ni las burlas. Si veo algo, no me hago de la vista gorda. BRINDO AYUDA.",
+    "No soy espectadxr: si el campus es de todxs, su cuidado también.",
+    "Todo lo hago desde el amor y los buenos deseos",
+    "La digna rabia y la protesta: son consignas justas",
+    "Después de sexto semestre parece que la universdiad y la vida pesan más, apoyate en tus amigos"
+)
 
 @Composable
 private fun TarjetaHeroeProgreso(
     progreso: Float,
     creditosCursados: Int,
-    creditosCarrera: Int
+    creditosCarrera: Int,
+    consejos: List<String> = ConsejosCampus,
+    intervaloMs: Long = 10_000L
 ) {
     val progresoAnimado by animateFloatAsState(
         targetValue = (progreso / 100f).coerceIn(0f, 1f),
@@ -216,6 +246,40 @@ private fun TarjetaHeroeProgreso(
     val onSurface = MaterialTheme.colorScheme.onSurface
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+
+    // Orden aleatorio de consejos:
+    // cada vez que se crea esta pantalla se baraja la lista, por lo que
+    // el primer consejo ya no es siempre el mismo. Además, se recorren
+    // todos los consejos antes de volver a repetirlos.
+    var ordenConsejos by remember(consejos) {
+        mutableStateOf(consejos.shuffled())
+    }
+    var indiceConsejo by remember(consejos) { mutableStateOf(0) }
+
+    LaunchedEffect(consejos) {
+        while (true) {
+            delay(intervaloMs)
+
+            if (ordenConsejos.isEmpty()) continue
+
+            if (indiceConsejo < ordenConsejos.lastIndex) {
+                indiceConsejo++
+            } else {
+                // Ya se mostraron todos. Se vuelve a barajar para comenzar
+                // otro ciclo aleatorio, evitando repetir inmediatamente
+                // el último consejo mostrado.
+                val ultimoConsejo = ordenConsejos[indiceConsejo]
+                var nuevoOrden = consejos.shuffled()
+
+                if (nuevoOrden.size > 1 && nuevoOrden.first() == ultimoConsejo) {
+                    nuevoOrden = nuevoOrden.drop(1) + nuevoOrden.first()
+                }
+
+                ordenConsejos = nuevoOrden
+                indiceConsejo = 0
+            }
+        }
+    }
 
     Card(
         modifier = Modifier
@@ -268,105 +332,156 @@ private fun TarjetaHeroeProgreso(
             )
 
             // =========================================================
-            // CONTENIDO PRINCIPAL
+            // CONTENIDO PRINCIPAL (progreso arriba + consejo abajo)
             // =========================================================
 
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(
                         horizontal = 22.dp,
                         vertical = 18.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically
+                    )
             ) {
 
-                // -----------------------------------------------------
-                // ANILLO DE PROGRESO
-                // -----------------------------------------------------
-
-                Box(
-                    modifier = Modifier
-                        .size(128.dp),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
                 ) {
-                    AnilloProgreso(
-                        progreso = progresoAnimado,
-                        diametro = 128.dp,
-                        grosor = 11.dp,
-                        colorFondo = surfaceVariant,
-                        colorProgreso = rojo
+
+                    // -----------------------------------------------------
+                    // ANILLO DE PROGRESO
+                    // -----------------------------------------------------
+
+                    Box(
+                        modifier = Modifier
+                            .size(128.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AnilloProgreso(
+                            progreso = progresoAnimado,
+                            diametro = 128.dp,
+                            grosor = 11.dp,
+                            colorFondo = surfaceVariant,
+                            colorProgreso = rojo
+                        ) {
+                            Text(
+                                text = "${"%.0f".format(progreso)}%",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = rojo,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(22.dp))
+
+                    // -----------------------------------------------------
+                    // INFORMACIÓN
+                    // -----------------------------------------------------
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.Top
                     ) {
                         Text(
-                            text = "${"%.0f".format(progreso)}%",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = rojo,
-                            textAlign = TextAlign.Center
+                            text = "Créditos de carrera",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = onSurfaceVariant
                         )
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            Text(
+                                text = "$creditosCursados",
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = onSurface
+                            )
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Text(
+                                text = "/ $creditosCarrera cr.",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 7.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Barra horizontal de progreso
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(9.dp)
+                                .background(
+                                    color = surfaceVariant,
+                                    shape = RoundedCornerShape(50)
+                                )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(progresoAnimado)
+                                    .fillMaxHeight()
+                                    .background(
+                                        color = rojo,
+                                        shape = RoundedCornerShape(50)
+                                    )
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.width(22.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
                 // -----------------------------------------------------
-                // INFORMACIÓN
+                // CONSEJO ROTATIVO (integrado al hero)
                 // -----------------------------------------------------
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
+                Divider(
+                    color = onSurfaceVariant.copy(alpha = 0.15f),
+                    thickness = 1.dp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Créditos de carrera",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = onSurfaceVariant
+                    Icon(
+                        imageVector = Icons.Filled.Psychology,
+                        contentDescription = null,
+                        tint = rojo,
+                        modifier = Modifier.size(20.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+                    Crossfade(
+                        targetState = ordenConsejos.getOrElse(indiceConsejo) {
+                            consejos.firstOrNull().orEmpty()
+                        },
+                        label = "consejoRotativoHero"
+                    ) { consejo ->
                         Text(
-                            text = "$creditosCursados",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = onSurface
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        Text(
-                            text = "/ $creditosCarrera cr.",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 7.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Barra horizontal de progreso
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(9.dp)
-                            .background(
-                                color = surfaceVariant,
-                                shape = RoundedCornerShape(50)
-                            )
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(progresoAnimado)
-                                .fillMaxHeight()
-                                .background(
-                                    color = rojo,
-                                    shape = RoundedCornerShape(50)
-                                )
+                            text = buildAnnotatedString {
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                                    append("Consejo: ")
+                                }
+                                append(consejo)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

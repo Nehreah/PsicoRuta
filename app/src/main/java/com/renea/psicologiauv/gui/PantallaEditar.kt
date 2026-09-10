@@ -41,8 +41,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
@@ -79,7 +79,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -886,7 +885,6 @@ fun PantallaEditar(
                     "Documentos y contactos importantes."
             )
 
-
             Card(
 
                 modifier =
@@ -1527,7 +1525,7 @@ fun PantallaEditar(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Antes que nada, te disculpas a ti querido usuario si por alguna razón encuentras algún error, fallo o incoveniente. Este es un proyecto desarrollado por una sola persona(Egresado), con mucho esfuerzo, cariño y todo el amor para los estudiantes de la Facultad de Psicología.",
+                        text = "Antes que nada, te pido disculpas a ti queridx usuarix si por alguna razón encuentras algún error, fallo o incoveniente. Este proyecto de software libre ha sido desarrollado por una sola persona(egresada), que con mucho amor, esfuerzo y cariño la ha desarrollado para mejorar la experiencia académica de lxs estudiantes de la Facultad de Psicología sin costo alguno.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center

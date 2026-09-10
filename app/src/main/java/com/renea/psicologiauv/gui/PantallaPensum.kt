@@ -550,8 +550,8 @@ private fun PensumHeaderModerno(
                     MiniStatPensum("Hechos", "$creditosHechos cr.", Modifier.weight(1f))
                     MiniStatPensum("Faltan", "$creditosFaltantes cr.", Modifier.weight(1f))
                     MiniStatPensum(
-                        "Progreso",
-                        "${(progreso * 100).toInt()}%",
+                        "Lo haces bien",
+                        "No te rindas",
                         Modifier.weight(1f)
                     )
                 }
