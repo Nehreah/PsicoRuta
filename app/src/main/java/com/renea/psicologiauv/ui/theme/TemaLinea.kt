@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.R
 import kotlin.math.cos
 import kotlin.math.sin
@@ -19,13 +20,13 @@ import kotlin.math.sin
 // ENUM DE LÍNEAS PROFESIONALES
 // ========================================================================
 
-enum class TipoLinea(val id: String, val nombreVisible: String) {
-    CLINICA("Clínica", "Clínica"),
-    ORGANIZACIONAL("Organizacional", "Organizacional"),
-    SOCIAL("Social", "Social"),
-    NEUROCLINICA("NeuroClínica", "Neuroclínica"),
-    EDUCATIVA("Educativa", "Educativa"),
-    NINGUNA("Ninguna", "Sin línea")
+enum class TipoLinea {
+    CLINICA,
+    ORGANIZACIONAL,
+    SOCIAL,
+    NEUROCLINICA,
+    EDUCATIVA,
+    NINGUNA
 }
 
 // ========================================================================
