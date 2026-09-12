@@ -22,11 +22,14 @@ import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -98,69 +101,86 @@ fun PantallaPracticas(
     ) {
 
         // ================================================================
-        // CABECERA — compacta, como la referencia
+        // CABECERA — temática según línea profesional
         // ================================================================
+        val isDark = isSystemInDarkTheme()
+        val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(otraLineaSeleccionada)
+        val colorAcento = temaLinea.colorPrimario
+        val fondoCabecera = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = surface),
+            colors = CardDefaults.cardColors(containerColor = fondoCabecera),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, outline.copy(alpha = 0.45f))
+            border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f))
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    modifier = Modifier.size(42.dp),
-                    shape = RoundedCornerShape(14.dp),
-                    color = primary.copy(alpha = 0.09f)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
+                    tipo = temaLinea.tipo,
+                    colorAcento = colorAcento,
+                    isDark = isDark,
+                    modifier = Modifier.matchParentSize()
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Filled.School,
-                            contentDescription = null,
-                            tint = primary,
-                            modifier = Modifier.size(19.dp)
+                    Surface(
+                        modifier = Modifier.size(42.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = colorAcento.copy(alpha = if (isDark) 0.18f else 0.12f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(temaLinea.iconoRes),
+                                contentDescription = null,
+                                tint = colorAcento,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = if (temaLinea.tipo != com.renea.psicologiauv.ui.theme.TipoLinea.NINGUNA)
+                                "LÍNEA ${temaLinea.nombreVisible.uppercase()}"
+                            else
+                                "REQUISITOS",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = colorAcento
+                        )
+
+                        Text(
+                            text = "Prácticas profesionales",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else text,
+                            maxLines = 1
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "REQUISITOS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = secondaryText
-                    )
-
-                    Text(
-                        text = "Prácticas profesionales",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = text,
-                        maxLines = 1
-                    )
-                }
-
-                Surface(
-                    modifier = Modifier.size(30.dp),
-                    shape = RoundedCornerShape(13.dp),
-                    color = softSurface.copy(alpha = 0.70f)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "⋮",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = secondaryText
-                        )
+                    Surface(
+                        modifier = Modifier.size(30.dp),
+                        shape = RoundedCornerShape(13.dp),
+                        color = colorAcento.copy(alpha = if (isDark) 0.15f else 0.08f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "⋮",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = colorAcento
+                            )
+                        }
                     }
                 }
             }

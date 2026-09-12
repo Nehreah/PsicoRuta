@@ -3,9 +3,11 @@ package com.renea.psicologiauv.gui
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,7 +72,8 @@ fun PantallaAvance(
             TarjetaHeroeProgreso(
                 progreso = datos.avanceCarrera,
                 creditosCursados = datos.creditosCursados,
-                creditosCarrera = datos.creditosCarreraTotal
+                creditosCarrera = datos.creditosCarreraTotal,
+                linea = programa.estudiante?.linea
             )
 
             TarjetaAvancePorArea(avances = datos.avances)
@@ -229,6 +232,7 @@ private fun TarjetaHeroeProgreso(
     progreso: Float,
     creditosCursados: Int,
     creditosCarrera: Int,
+    linea: String? = null,
     consejos: List<String> = ConsejosCampus,
     intervaloMs: Long = 10_000L
 ) {
@@ -238,14 +242,13 @@ private fun TarjetaHeroeProgreso(
         label = "progresoCarrera"
     )
 
-    // Color de acento rojo institucional (idéntico al hero de PantallaPensum).
-    // El fondo, textos y barra de pista usan MaterialTheme para adaptarse
-    // automáticamente a modo oscuro / claro.
-    val rojo = MaterialTheme.colorScheme.primary
-    val surface = MaterialTheme.colorScheme.surface
-    val onSurface = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
-    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val isDark = isSystemInDarkTheme()
+    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea)
+    val colorAcento = temaLinea.colorPrimario
+    val fondo = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
+    val colorTexto = if (isDark) Color.White else Color(0xFF17151A)
+    val colorSubtexto = if (isDark) Color.White.copy(alpha = 0.70f) else temaLinea.colorSecundario
+    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.16f) else Color(0xFFE5E5EB)
 
     // Orden aleatorio de consejos:
     // cada vez que se crea esta pantalla se baraja la lista, por lo que
@@ -287,48 +290,26 @@ private fun TarjetaHeroeProgreso(
             .height(233.dp),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = surface
+            containerColor = fondo
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 3.dp
-        )
+        ),
+        border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f))
     ) {
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
 
             // =========================================================
-            // CÍRCULOS DECORATIVOS (igual que PantallaPensum hero)
+            // ILUSTRACIÓN VECTORIAL DE FONDO (MARCA DE AGUA POR LÍNEA)
             // =========================================================
 
-            Box(
-                modifier = Modifier
-                    .size(190.dp)
-                    .offset(x = (-82).dp, y = 110.dp)
-                    .background(
-                        color = rojo.copy(alpha = 0.055f),
-                        shape = RoundedCornerShape(50)
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(235.dp)
-                    .offset(x = 245.dp, y = (-100).dp)
-                    .background(
-                        color = rojo.copy(alpha = 0.075f),
-                        shape = RoundedCornerShape(50)
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(175.dp)
-                    .offset(x = 255.dp, y = 125.dp)
-                    .background(
-                        color = rojo.copy(alpha = 0.045f),
-                        shape = RoundedCornerShape(50)
-                    )
+            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
+                tipo = temaLinea.tipo,
+                colorAcento = colorAcento,
+                isDark = isDark,
+                modifier = Modifier.matchParentSize()
             )
 
             // =========================================================
@@ -362,14 +343,14 @@ private fun TarjetaHeroeProgreso(
                             progreso = progresoAnimado,
                             diametro = 128.dp,
                             grosor = 11.dp,
-                            colorFondo = surfaceVariant,
-                            colorProgreso = rojo
+                            colorFondo = pistaProgreso,
+                            colorProgreso = colorAcento
                         ) {
                             Text(
                                 text = "${"%.0f".format(progreso)}%",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = rojo,
+                                color = colorAcento,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -389,7 +370,7 @@ private fun TarjetaHeroeProgreso(
                             text = "Créditos de carrera",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            color = onSurfaceVariant
+                            color = colorSubtexto
                         )
 
                         Spacer(modifier = Modifier.height(3.dp))
@@ -401,7 +382,7 @@ private fun TarjetaHeroeProgreso(
                                 text = "$creditosCursados",
                                 style = MaterialTheme.typography.displaySmall,
                                 fontWeight = FontWeight.Bold,
-                                color = onSurface
+                                color = colorTexto
                             )
 
                             Spacer(modifier = Modifier.width(6.dp))
@@ -410,7 +391,7 @@ private fun TarjetaHeroeProgreso(
                                 text = "/ $creditosCarrera cr.",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Medium,
-                                color = onSurfaceVariant,
+                                color = colorSubtexto,
                                 modifier = Modifier.padding(bottom = 7.dp)
                             )
                         }
@@ -423,7 +404,7 @@ private fun TarjetaHeroeProgreso(
                                 .fillMaxWidth()
                                 .height(9.dp)
                                 .background(
-                                    color = surfaceVariant,
+                                    color = pistaProgreso,
                                     shape = RoundedCornerShape(50)
                                 )
                         ) {
@@ -432,7 +413,7 @@ private fun TarjetaHeroeProgreso(
                                     .fillMaxWidth(progresoAnimado)
                                     .fillMaxHeight()
                                     .background(
-                                        color = rojo,
+                                        color = colorAcento,
                                         shape = RoundedCornerShape(50)
                                     )
                             )

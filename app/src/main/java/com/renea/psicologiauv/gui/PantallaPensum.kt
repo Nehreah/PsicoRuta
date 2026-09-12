@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.*
@@ -165,7 +166,8 @@ fun PantallaPensum(
                 progreso = datosProgreso.progreso,
                 creditosHechos = datosProgreso.creditosHechos,
                 creditosFaltantes = datosProgreso.creditosFaltantes,
-                creditosTotales = datosProgreso.creditosCarrera
+                creditosTotales = datosProgreso.creditosCarrera,
+                linea = estudiante.linea
             )
 
             /* ========================================================== */
@@ -442,7 +444,8 @@ private fun PensumHeaderModerno(
     progreso: Float,
     creditosHechos: Int,
     creditosFaltantes: Int,
-    creditosTotales: Int
+    creditosTotales: Int,
+    linea: String? = null
 ) {
     val progresoAnimado by animateFloatAsState(
         targetValue = progreso,
@@ -450,46 +453,34 @@ private fun PensumHeaderModerno(
         label = "pensumProgress"
     )
 
-    val primary = MaterialTheme.colorScheme.primary
+    val isDark = isSystemInDarkTheme()
+    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea)
+    val colorAcento = temaLinea.colorPrimario
+    val fondo = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
+    val colorTexto = if (isDark) Color.White else Color(0xFF17151A)
+    val colorSubtexto = if (isDark) Color.White.copy(alpha = 0.70f) else temaLinea.colorSecundario
+    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.16f) else Color(0xFFE5E5EB)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = fondo
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f))
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            Canvas(Modifier.matchParentSize()) {
-                drawCircle(
-                    color = primary.copy(alpha = 0.08f),
-                    radius = size.minDimension * 0.48f,
-                    center = Offset(size.width * 0.96f, size.height * 0.04f)
-                )
-                drawCircle(
-                    color = primary.copy(alpha = 0.055f),
-                    radius = size.minDimension * 0.28f,
-                    center = Offset(size.width * 0.80f, size.height * 0.90f)
-                )
-                drawCircle(
-                    color = primary.copy(alpha = 0.035f),
-                    radius = size.minDimension * 0.22f,
-                    center = Offset(size.width * 0.08f, size.height * 0.92f)
-                )
-            }
+            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
+                tipo = temaLinea.tipo,
+                colorAcento = colorAcento,
+                isDark = isDark,
+                modifier = Modifier.matchParentSize()
+            )
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                primary.copy(alpha = 0.075f),
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.02f),
-                                primary.copy(alpha = 0.025f)
-                            )
-                        )
-                    )
                     .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -500,10 +491,14 @@ private fun PensumHeaderModerno(
                         modifier = Modifier
                             .size(82.dp)
                             .clip(RoundedCornerShape(41.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .background(colorAcento.copy(alpha = if (isDark) 0.18f else 0.10f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        AnilloPensum(progresoAnimado)
+                        AnilloPensum(
+                            progreso = progresoAnimado,
+                            colorProgreso = colorAcento,
+                            colorFondo = pistaProgreso
+                        )
                     }
 
                     Spacer(Modifier.width(13.dp))
@@ -514,18 +509,19 @@ private fun PensumHeaderModerno(
                         Text(
                             text = "Créditos de carrera",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = colorSubtexto
                         )
                         Row(verticalAlignment = Alignment.Bottom) {
                             Text(
                                 text = "$creditosHechos",
                                 style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colorTexto
                             )
                             Text(
                                 text = " / $creditosTotales cr.",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = colorSubtexto
                             )
                         }
                         Spacer(Modifier.height(5.dp))
@@ -535,8 +531,8 @@ private fun PensumHeaderModerno(
                                 .fillMaxWidth()
                                 .height(5.dp)
                                 .clip(RoundedCornerShape(50.dp)),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            color = colorAcento,
+                            trackColor = pistaProgreso
                         )
                     }
                 }
@@ -547,11 +543,12 @@ private fun PensumHeaderModerno(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    MiniStatPensum("Hechos", "$creditosHechos cr.", Modifier.weight(1f))
-                    MiniStatPensum("Faltan", "$creditosFaltantes cr.", Modifier.weight(1f))
+                    MiniStatPensum("Hechos", "$creditosHechos cr.", colorAcento, Modifier.weight(1f))
+                    MiniStatPensum("Faltan", "$creditosFaltantes cr.", colorAcento, Modifier.weight(1f))
                     MiniStatPensum(
                         "Lo haces bien",
                         "No te rindas",
+                        colorAcento,
                         Modifier.weight(1f)
                     )
                 }
@@ -568,12 +565,14 @@ private fun PensumHeaderModerno(
 private fun MiniStatPensum(
     titulo: String,
     valor: String,
+    colorAcento: Color = MaterialTheme.colorScheme.primary,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f)
+        color = colorAcento.copy(alpha = if (isDark) 0.14f else 0.08f)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
@@ -581,22 +580,24 @@ private fun MiniStatPensum(
             Text(
                 text = titulo,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isDark) Color.White.copy(alpha = 0.70f) else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = valor,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
             )
         }
     }
 }
 
 @Composable
-private fun AnilloPensum(progreso: Float) {
-    val colorFondo = MaterialTheme.colorScheme.surfaceVariant
-    val colorProgreso = MaterialTheme.colorScheme.primary
-
+private fun AnilloPensum(
+    progreso: Float,
+    colorProgreso: Color = MaterialTheme.colorScheme.primary,
+    colorFondo: Color = MaterialTheme.colorScheme.surfaceVariant
+) {
     Box(
         modifier = Modifier.size(72.dp),
         contentAlignment = Alignment.Center
@@ -629,7 +630,7 @@ private fun AnilloPensum(progreso: Float) {
             text = "${(progreso * 100).toInt()}%",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.ExtraBold,
-            color = MaterialTheme.colorScheme.primary
+            color = colorProgreso
         )
     }
 }

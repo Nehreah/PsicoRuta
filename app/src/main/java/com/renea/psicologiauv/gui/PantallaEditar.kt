@@ -21,6 +21,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -242,31 +243,31 @@ private val LINEAS_DISPONIBLES = listOf(
     LineaInfo(
         nombre = "Educativa",
         icono = R.drawable.ic_linea_educativa,
-        color = Color(0xFF4E7AC7)
+        color = Color(0xFFD88523) // Ámbar / Dorado
     ),
 
     LineaInfo(
         nombre = "Social",
         icono = R.drawable.ic_linea_social,
-        color = Color(0xFFE0793D)
+        color = Color(0xFF41835A) // Verde salvia
     ),
 
     LineaInfo(
         nombre = "Organizacional",
         icono = R.drawable.ic_linea_organizacional,
-        color = Color(0xFF5C8A5C)
+        color = Color(0xFF7A4FA3) // Lavanda / Violeta
     ),
 
     LineaInfo(
         nombre = "Clínica",
         icono = R.drawable.ic_linea_clinica,
-        color = Color(0xFFC74E4E)
+        color = Color(0xFFD4465B) // Coral / Rosa clínico
     ),
 
     LineaInfo(
         nombre = "NeuroClínica",
         icono = R.drawable.ic_linea_neuroclinica,
-        color = Color(0xFF8B5CC7)
+        color = Color(0xFF2F76B9) // Azul acero
     )
 )
 
@@ -771,12 +772,6 @@ fun PantallaEditar(
                 mostrandoSelector =
                     mostrandoSelectorLinea,
 
-                onAvatarClick = {
-
-                    mostrandoSelectorLinea =
-                        !mostrandoSelectorLinea
-                },
-
                 onLineaClick = {
 
                     mostrandoSelectorLinea =
@@ -787,6 +782,12 @@ fun PantallaEditar(
 
                     mostrandoDatosPersonales =
                         true
+                },
+
+                onMemoriaClick = {
+
+                    mostrandoMemoriaEstudiantil =
+                        !mostrandoMemoriaEstudiantil
                 }
             )
 
@@ -2668,176 +2669,160 @@ private fun TarjetaPerfilHero(
     nombre: String,
     codigo: String,
     mostrandoSelector: Boolean,
-    onAvatarClick: () -> Unit,
     onLineaClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onMemoriaClick: () -> Unit
 ) {
-
-    // Tokens de tema: se adaptan automáticamente a modo oscuro / claro,
-    // igual que el hero de PantallaPensum.
-    val primary       = MaterialTheme.colorScheme.primary
-    val surface       = MaterialTheme.colorScheme.surface
-    val onSurface     = MaterialTheme.colorScheme.onSurface
-    val onSurfaceVar  = MaterialTheme.colorScheme.onSurfaceVariant
-    val primaryCont   = MaterialTheme.colorScheme.primaryContainer
+    val isDark = isSystemInDarkTheme()
+    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea?.nombre)
+    val colorAcento = temaLinea.colorPrimario
+    val fondo = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
+    val colorTexto = if (isDark) Color.White else Color(0xFF17151A)
+    val colorTextoSecundario = if (isDark) Color.White.copy(alpha = 0.70f) else Color(0xFF4C454F)
+    val chipFondo = if (isDark) temaLinea.chipFondoOscuro else temaLinea.chipFondoClaro
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(27.dp),
-        colors = CardDefaults.cardColors(containerColor = surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = fondo),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.28f else 0.16f))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(224.dp)
-                .background(surface)
+                .height(212.dp)
         ) {
-
             // ================================================================
-            // CÍRCULOS DECORATIVOS — mismo estilo que PantallaPensum hero.
+            // ILUSTRACIÓN VECTORIAL DE FONDO (MARCA DE AGUA POR LÍNEA)
             // ================================================================
-
-            Box(
-                modifier = Modifier
-                    .size(300.dp)
-                    .align(Alignment.TopEnd)
-                    .offset(x = 92.dp, y = (-120).dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.08f))
+            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
+                tipo = temaLinea.tipo,
+                colorAcento = colorAcento,
+                isDark = isDark,
+                modifier = Modifier.matchParentSize()
             )
 
-            Box(
+            // ================================================================
+            // TUERCA (CONFIGURACIÓN) — Arriba a la izquierda
+            // ================================================================
+            Surface(
                 modifier = Modifier
-                    .size(205.dp)
-                    .align(Alignment.BottomStart)
-                    .offset(x = (-82).dp, y = 92.dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.055f))
-            )
-
-            Box(
-                modifier = Modifier
-                    .size(150.dp)
                     .align(Alignment.TopStart)
-                    .offset(x = (-78).dp, y = (-58).dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.035f))
-            )
+                    .padding(12.dp)
+                    .size(36.dp)
+                    .clickable(onClick = onSettingsClick),
+                shape = CircleShape,
+                color = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White,
+                shadowElevation = 3.dp,
+                border = BorderStroke(
+                    1.dp,
+                    colorAcento.copy(alpha = 0.22f)
+                )
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Editar datos",
+                        tint = colorAcento,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
 
-            Box(
+            // ================================================================
+            // MEMORIA ES — Arriba a la derecha (píldora vino según rediseño Gg)
+            // ================================================================
+            Surface(
                 modifier = Modifier
-                    .size(115.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = 34.dp, y = 38.dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.045f))
-            )
-
-            // Círculo de acento muy sutil.
-            Box(
-                modifier = Modifier
-                    .size(74.dp)
                     .align(Alignment.TopEnd)
-                    .offset(x = (-22).dp, y = 20.dp)
-                    .clip(CircleShape)
-                    .background(primary.copy(alpha = 0.045f))
-            )
+                    .padding(12.dp)
+                    .height(34.dp)
+                    .clickable(onClick = onMemoriaClick),
+                shape = RoundedCornerShape(18.dp),
+                color = Burgundy,
+                shadowElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = "Memoria es",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
+            // ================================================================
+            // CONTENIDO CENTRAL (Nombre, código, chip de línea y subtítulo)
+            // ================================================================
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(contentAlignment = Alignment.Center) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(66.dp)
-                            .clip(CircleShape)
-                            .background(primaryCont.copy(alpha = 0.96f))
-                            .clickable(onClick = onSettingsClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_avatar_default),
-                            contentDescription = "Editar datos",
-                            tint = primary,
-                            modifier = Modifier.size(38.dp)
-                        )
-                    }
-
-                    Surface(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(30.dp)
-                            .clickable(onClick = onSettingsClick),
-                        shape = CircleShape,
-                        color = surface,
-                        shadowElevation = 3.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Editar datos",
-                                tint = primary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(5.dp))
+                Spacer(Modifier.height(18.dp))
 
                 Text(
                     text = nombre,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = onSurface,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = colorTexto,
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
 
-                Spacer(Modifier.height(1.dp))
+                Spacer(Modifier.height(2.dp))
 
                 Text(
                     text = if (codigo.isNotBlank()) "Código $codigo" else "Código no definido",
                     style = MaterialTheme.typography.labelMedium,
-                    color = onSurfaceVar
+                    color = colorTextoSecundario
                 )
 
-                Spacer(Modifier.height(5.dp))
+                Spacer(Modifier.height(10.dp))
 
+                // CHIP DE LÍNEA SELECCIONADA
                 Surface(
                     modifier = Modifier
-                        .height(36.dp)
+                        .height(38.dp)
                         .clickable(onClick = onLineaClick),
-                    shape = RoundedCornerShape(24.dp),
-                    color = (linea?.color ?: primary).copy(alpha = 0.14f),
+                    shape = RoundedCornerShape(20.dp),
+                    color = chipFondo,
                     border = BorderStroke(
                         1.dp,
-                        (linea?.color ?: primary).copy(alpha = 0.32f)
+                        colorAcento.copy(alpha = 0.40f)
                     )
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = if (linea != null) Icons.Default.Check else Icons.Default.Person,
+                            imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = linea?.color ?: primary,
-                            modifier = Modifier.size(14.dp)
+                            tint = if (isDark) colorAcento else temaLinea.colorTextoChip,
+                            modifier = Modifier.size(15.dp)
                         )
 
-                        Spacer(Modifier.width(5.dp))
+                        Spacer(Modifier.width(6.dp))
 
                         Text(
-                            text = linea?.nombre ?: "Selecciona tu línea profesional",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = onSurface,
-                            fontWeight = FontWeight.SemiBold
+                            text = temaLinea.nombreVisible,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isDark) Color.White else temaLinea.colorTextoChip,
+                            fontWeight = FontWeight.Bold
                         )
 
                         Spacer(Modifier.width(8.dp))
@@ -2845,24 +2830,24 @@ private fun TarjetaPerfilHero(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            tint = linea?.color ?: primary,
+                            tint = if (isDark) colorAcento else temaLinea.colorTextoChip,
                             modifier = Modifier.size(15.dp)
                         )
                     }
                 }
 
-                Spacer(Modifier.height(5.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = if (mostrandoSelector) "Selecciona una nueva línea" else "Toca tu foto o la tuerca para editar tus datos",
+                    text = if (mostrandoSelector) "Selecciona una nueva línea" else "Toca la tuerca para editar tus datos",
                     style = MaterialTheme.typography.labelSmall,
-                    color = onSurfaceVar
+                    color = colorTextoSecundario,
+                    textAlign = TextAlign.Center
                 )
             }
         }
     }
 }
-
 
 // ========================================================================
 // SELECTOR DE LÍNEA
