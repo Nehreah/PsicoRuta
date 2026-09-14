@@ -33,6 +33,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.AvanceLineaProfesional
 import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AprobadoColor
@@ -68,7 +72,8 @@ import com.renea.psicologiauv.ui.theme.AprobadoColor
 @Composable
 fun PantallaPracticas(
     modifier: Modifier = Modifier,
-    programa: ProgramaM
+    programa: ProgramaM,
+    viewModel: ControlV? = null
 ) {
     // ================================================================
     // ESTADO ORIGINAL: se conserva
@@ -80,6 +85,9 @@ fun PantallaPracticas(
     // ================================================================
     // DATOS ORIGINALES: se conserva
     // ================================================================
+    var expandidoRequisitos by remember { mutableStateOf(false) }
+    var materiaSeleccionada by remember { mutableStateOf<Asignatura?>(null) }
+
     val datos = remember(programa, otraLineaSeleccionada) {
         calcularDatosPracticas(programa, otraLineaSeleccionada)
     }
@@ -237,7 +245,7 @@ fun PantallaPracticas(
         )
 
         // ================================================================
-        // ESTADO DE REQUISITOS
+        // ASIGNATURAS NECESARIAS (DESPLEGABLE)
         // ================================================================
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -252,12 +260,12 @@ fun PantallaPracticas(
                     .padding(horizontal = 10.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Requisitos: 4 asignaturas + 4 líneas + electivas.
-                // El modelo centraliza el conteo de los 9 requisitos.
                 val requisitosAprobados = programa.contarRequisitosAprobadosPracticas()
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expandidoRequisitos = !expandidoRequisitos },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -270,7 +278,7 @@ fun PantallaPracticas(
                     Spacer(modifier = Modifier.width(7.dp))
 
                     Text(
-                        text = "Estado de requisitos",
+                        text = "Asignaturas necesarias",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = text,
@@ -282,92 +290,107 @@ fun PantallaPracticas(
                         color = primary.copy(alpha = 0.09f)
                     ) {
                         Text(
-                            text = "$requisitosAprobados / 9",
+                            text = "$requisitosAprobados / 8",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Icon(
+                        imageVector = if (expandidoRequisitos) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (expandidoRequisitos) "Colapsar" else "Expandir",
+                        tint = secondaryText,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
 
-                // ------------------------------------------------------------
-                // Requisitos compactos: 4 asignaturas + 4 líneas + electivas.
-                // ------------------------------------------------------------
-                val lineas = listOf(
-                    "Social" to Icons.Filled.Groups,
-                    "Organizacional" to Icons.Filled.Business,
-                    "Educativa" to Icons.Filled.School,
-                    "Clínica/NeuroClínica" to Icons.Filled.LocalHospital
-                )
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        TarjetaRequisito(
-                            nombre = "Ética del ejercicio profesional",
-                            cumple = programa.requisitosPracticasEtica(),
-                            icono = Icons.Filled.Gavel,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TarjetaRequisito(
-                            nombre = "Eval. y Diagnóstico Psicológico",
-                            cumple = programa.requisitosPracticasDiagnostico(),
-                            icono = Icons.Filled.Description,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        TarjetaRequisito(
-                            nombre = "Práctica de fund. profesional I",
-                            cumple = programa.requisitosPracticasFundamentacionI(),
-                            icono = Icons.Filled.Filter1,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TarjetaRequisito(
-                            nombre = "Práctica de fund. profesional II",
-                            cumple = programa.requisitosPracticasFundamentacionII(),
-                            icono = Icons.Filled.Filter2,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // El mensaje original se conserva y queda directamente
-                    // antes de los cuatro cajones de línea.
-                    BannerEstado(
-                        texto = if (datos.todasLasLineasCursadas) {
-                            "Cursó al menos un nivel de cada línea"
-                        } else {
-                            "No cursó al menos un nivel de cada línea"
-                        },
-                        cumple = datos.todasLasLineasCursadas
+                if (expandidoRequisitos) {
+                    val lineas = listOf(
+                        "Social" to Icons.Filled.Groups,
+                        "Organizacional" to Icons.Filled.Business,
+                        "Educativa" to Icons.Filled.School,
+                        "Clínica/NeuroClínica" to Icons.Filled.LocalHospital
                     )
 
-                    Row(
+                    val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
+                    val matEtica = asignaturasEstudiante.find { it.codigo == "402203M" }
+                    val matDiagnostico = asignaturasEstudiante.find { it.codigo == "402204M" }
+                    val matFundI = asignaturasEstudiante.find { it.codigo == "402212M" }
+                    val matFundII = asignaturasEstudiante.find { it.codigo == "402221M" }
+
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        lineas.forEach { (nombreLinea, icono) ->
-                            CajonNivelLinea(
-                                linea = nombreLinea,
-                                icono = icono,
-                                avance = datos.avanceLineas[nombreLinea],
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            TarjetaRequisito(
+                                nombre = "Ética del ejercicio profesional",
+                                cumple = programa.requisitosPracticasEtica(),
+                                icono = Icons.Filled.Gavel,
+                                modifier = Modifier.weight(1f),
+                                onClick = { matEtica?.let { materiaSeleccionada = it } }
+                            )
+                            TarjetaRequisito(
+                                nombre = "Eval. y Diagnóstico Psicológico",
+                                cumple = programa.requisitosPracticasDiagnostico(),
+                                icono = Icons.Filled.Description,
+                                modifier = Modifier.weight(1f),
+                                onClick = { matDiagnostico?.let { materiaSeleccionada = it } }
                             )
                         }
-                    }
 
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            TarjetaRequisito(
+                                nombre = "Práctica de fund. profesional I",
+                                cumple = programa.requisitosPracticasFundamentacionI(),
+                                icono = Icons.Filled.Filter1,
+                                modifier = Modifier.weight(1f),
+                                onClick = { matFundI?.let { materiaSeleccionada = it } }
+                            )
+                            TarjetaRequisito(
+                                nombre = "Práctica de fund. profesional II",
+                                cumple = programa.requisitosPracticasFundamentacionII(),
+                                icono = Icons.Filled.Filter2,
+                                modifier = Modifier.weight(1f),
+                                onClick = { matFundII?.let { materiaSeleccionada = it } }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            lineas.forEach { (nombreLinea, icono) ->
+                                CajonNivelLinea(
+                                    linea = nombreLinea,
+                                    icono = icono,
+                                    avance = datos.avanceLineas[nombreLinea],
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                )
+                            }
+                        }
+
+                        BannerEstado(
+                            texto = if (datos.todasLasLineasCursadas) {
+                                "Cursó al menos un nivel de cada línea"
+                            } else {
+                                "No cursó al menos un nivel de cada línea"
+                            },
+                            cumple = datos.todasLasLineasCursadas
+                        )
+                    }
                 }
             }
         }
@@ -502,7 +525,8 @@ fun PantallaPracticas(
                                 TarjetaNivelMateria(
                                     nivel = nivel,
                                     aprobada = materia.aprobo(),
-                                    modifier = Modifier.width(108.dp)
+                                    modifier = Modifier.width(108.dp),
+                                    onClick = { materiaSeleccionada = materia }
                                 )
                             }
                         }
@@ -512,6 +536,14 @@ fun PantallaPracticas(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    if (materiaSeleccionada != null) {
+        DialogoInformacionMateria(
+            materia = materiaSeleccionada!!,
+            viewModel = viewModel,
+            onDismiss = { materiaSeleccionada = null }
+        )
     }
 }
 
@@ -700,7 +732,8 @@ private fun TarjetaRequisito(
     nombre: String,
     cumple: Boolean,
     icono: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     val scheme = MaterialTheme.colorScheme
     val stateColor = if (cumple) AprobadoColor else scheme.primary
@@ -711,7 +744,7 @@ private fun TarjetaRequisito(
     }
 
     Surface(
-        modifier = modifier.height(66.dp),
+        modifier = if (onClick != null) modifier.height(66.dp).clickable { onClick() } else modifier.height(66.dp),
         shape = RoundedCornerShape(16.dp),
         color = stateBackground
     ) {
@@ -847,7 +880,8 @@ private fun CajonNivelLinea(
 private fun TarjetaNivelMateria(
     nivel: String,
     aprobada: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     val colorTarjeta = MaterialTheme.colorScheme.surfaceContainerLow
     val colorEncabezado =
@@ -856,7 +890,7 @@ private fun TarjetaNivelMateria(
         if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSecondaryContainer
 
     Card(
-        modifier = modifier.height(54.dp),
+        modifier = if (onClick != null) modifier.height(54.dp).clickable { onClick() } else modifier.height(54.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(
@@ -891,4 +925,372 @@ private fun TarjetaNivelMateria(
             )
         }
     }
+}
+
+
+// ========================================================================
+// MÓDULO DE INFORMACIÓN Y EDICIÓN DE ASIGNATURAS
+// ========================================================================
+
+@Composable
+private fun DialogoInformacionMateria(
+    materia: Asignatura,
+    viewModel: ControlV?,
+    onDismiss: () -> Unit
+) {
+    var modoEdicion by remember { mutableStateOf(false) }
+
+    if (!modoEdicion) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
+            iconContentColor = MaterialTheme.colorScheme.primary,
+            shape = RoundedCornerShape(24.dp),
+
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Description,
+                    contentDescription = null
+                )
+            },
+
+            title = {
+                Text(
+                    text = materia.nombre,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    InformacionMateriaFila(
+                        etiqueta = "Nombre",
+                        valor = materia.nombre
+                    )
+                    InformacionMateriaFila(
+                        etiqueta = "Código",
+                        valor = materia.codigo
+                    )
+                    InformacionMateriaFila(
+                        etiqueta = "Nota",
+                        valor = if (materia.nota > 0) {
+                            materia.nota.toString()
+                        } else {
+                            materia.notaEspecial ?: "-"
+                        }
+                    )
+                    InformacionMateriaFila(
+                        etiqueta = "Semestre",
+                        valor = materia.semestre.toString()
+                    )
+                    InformacionMateriaFila(
+                        etiqueta = "Créditos",
+                        valor = materia.creditos.toString()
+                    )
+                }
+            },
+
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cerrar")
+                }
+            },
+
+            confirmButton = {
+                Button(
+                    onClick = { modoEdicion = true },
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text("Editar")
+                }
+            }
+        )
+    } else {
+        DialogoEditarMateria(
+            materia = materia,
+            viewModel = viewModel,
+            onDismiss = onDismiss
+        )
+    }
+}
+
+@Composable
+private fun InformacionMateriaFila(
+    etiqueta: String,
+    valor: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp)
+    ) {
+        Text(
+            text = etiqueta,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = valor,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+@Composable
+private fun DialogoEditarMateria(
+    materia: Asignatura,
+    viewModel: ControlV?,
+    onDismiss: () -> Unit
+) {
+    var codigoTexto by remember(materia.codigo) {
+        mutableStateOf(materia.codigo)
+    }
+
+    var semestreTexto by remember(materia.semestre) {
+        mutableStateOf(materia.semestre.toString())
+    }
+
+    var notaTexto by remember(materia.nota) {
+        mutableStateOf(
+            if (materia.nota > 0) materia.nota.toString() else ""
+        )
+    }
+
+    var notaEspecialSeleccionada by remember(materia.notaEspecial) {
+        mutableStateOf(materia.notaEspecial)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
+
+        title = {
+            Text(
+                text = "Editar asignatura",
+                fontWeight = FontWeight.Bold
+            )
+        },
+
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                OutlinedTextField(
+                    value = materia.nombre,
+                    onValueChange = {},
+                    label = { Text("Nombre") },
+                    enabled = false,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = codigoTexto,
+                    onValueChange = { codigoTexto = it },
+                    label = { Text("Código") },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = semestreTexto,
+                    onValueChange = { semestreTexto = it },
+                    label = { Text("Semestre") },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = notaTexto,
+                    onValueChange = { input ->
+                        notaTexto = input
+                        val upper = input.trim().uppercase()
+
+                        if (upper in listOf("C.U", "CU", "E.X", "EX", "A.P", "AP")) {
+                            val mapeada = when (upper) {
+                                "CU", "C.U" -> "C.U"
+                                "EX", "E.X" -> "E.X"
+                                "AP", "A.P" -> "A.P"
+                                else -> upper
+                            }
+
+                            notaEspecialSeleccionada = mapeada
+                            notaTexto = ""
+                        } else if (input.isNotBlank()) {
+                            notaEspecialSeleccionada = null
+                        }
+                    },
+                    label = { Text("Nota") },
+                    placeholder = {
+                        Text(
+                            notaEspecialSeleccionada
+                                ?: materia.notaEspecial
+                                ?: "-"
+                        )
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                Spacer(Modifier.height(8.dp))
+
+                Text(
+                    text = "Nota especial:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf("C.U", "E.X", "A.P").forEach { marca ->
+                        val seleccionada =
+                            notaEspecialSeleccionada == marca
+
+                        FilterChip(
+                            selected = seleccionada,
+                            onClick = {
+                                if (seleccionada) {
+                                    notaEspecialSeleccionada = null
+                                } else {
+                                    notaEspecialSeleccionada = marca
+                                    notaTexto = ""
+                                }
+                            },
+                            label = {
+                                Text(
+                                    text = marca,
+                                    fontWeight =
+                                        if (seleccionada)
+                                            FontWeight.Bold
+                                        else
+                                            FontWeight.Normal
+                                )
+                            },
+                            leadingIcon = if (seleccionada) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Filled.CheckCircle,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else null
+                        )
+                    }
+                }
+
+                if (notaEspecialSeleccionada != null) {
+                    Spacer(Modifier.height(4.dp))
+
+                    Text(
+                        text = "Marcada como $notaEspecialSeleccionada (cuenta para créditos, no para promedio)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        notaEspecialSeleccionada = null
+                        notaTexto = ""
+                        viewModel?.cambiarNotaAsignatura(
+                            materia.codigo,
+                            0f
+                        )
+                        onDismiss()
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Reiniciar nota")
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = materia.creditos.toString(),
+                    onValueChange = {},
+                    label = { Text("Créditos") },
+                    enabled = false,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        },
+
+        confirmButton = {
+            Button(
+                shape = RoundedCornerShape(50),
+                onClick = {
+                    val nuevoSemestre = semestreTexto.toIntOrNull()
+                    val nuevaNota = notaTexto.toFloatOrNull()
+                    val codigoValido = codigoTexto.isNotBlank()
+
+                    if (nuevoSemestre != null && codigoValido && viewModel != null) {
+                        viewModel.cambiarSemestreAsignatura(
+                            materia.codigo,
+                            nuevoSemestre
+                        )
+
+                        if (notaEspecialSeleccionada != null) {
+                            viewModel.cambiarNotaEspecialAsignatura(
+                                materia.codigo,
+                                notaEspecialSeleccionada!!
+                            )
+                        } else if (nuevaNota != null) {
+                            viewModel.cambiarNotaAsignatura(
+                                materia.codigo,
+                                nuevaNota
+                            )
+                        } else if (
+                            notaTexto.isBlank() &&
+                            materia.notaEspecial != null
+                        ) {
+                            viewModel.cambiarNotaAsignatura(
+                                materia.codigo,
+                                0f
+                            )
+                        }
+
+                        if (codigoTexto != materia.codigo) {
+                            viewModel.cambiarCodigoAsignatura(
+                                materia.codigo,
+                                codigoTexto
+                            )
+                        }
+
+                        onDismiss()
+                    }
+                }
+            ) {
+                Text("Guardar")
+            }
+        }
+    )
 }

@@ -758,7 +758,8 @@ private fun ModuloSemestreDeslizante(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val completo = materias.isNotEmpty() && materias.all { it.aprobo() }
+    val aprobadas = materias.count { it.aprobo() }
+    val completo = materias.isNotEmpty() && (aprobadas.toFloat() / materias.size) >= 0.70f
     val estado = if (completo) "Completado" else "Pendiente"
     val estadoColor = if (completo) AprobadoColor else MaterialTheme.colorScheme.primary
 
@@ -843,7 +844,8 @@ private fun CaraCuboSemestre(
     onMateriaClick: (Asignatura) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val todasAprobadas = materias.isNotEmpty() && materias.all { it.aprobo() }
+    val aprobadas = materias.count { it.aprobo() }
+    val todasAprobadas = materias.isNotEmpty() && (aprobadas.toFloat() / materias.size) >= 0.70f
 
     Card(
         modifier = modifier

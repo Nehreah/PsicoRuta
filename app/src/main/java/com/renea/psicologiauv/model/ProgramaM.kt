@@ -406,8 +406,9 @@ data class ProgramaM(
             .all { it.aprobo() }
 
     /**
-     * Cuenta cuántos de los 9 requisitos de prácticas profesionales están
-     * cumplidos: 4 asignaturas obligatorias + 4 líneas cursadas + electivas.
+     * Cuenta cuántos de los 8 requisitos de prácticas profesionales están
+     * cumplidos: 4 asignaturas obligatorias + 4 líneas de profundización.
+     * Las electivas se evalúan por separado en su propio banner de estado.
      */
     fun contarRequisitosAprobadosPracticas(): Int {
         val avanceLineas = avanceLineasProfundizacion()
@@ -419,8 +420,7 @@ data class ProgramaM(
             avanceLineas.containsKey("Social"),
             avanceLineas.containsKey("Organizacional"),
             avanceLineas.containsKey("Educativa"),
-            avanceLineas.containsKey("Clínica/NeuroClínica"),
-            requisitoElectivas()
+            avanceLineas.containsKey("Clínica/NeuroClínica")
         ).count { it }
     }
 

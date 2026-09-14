@@ -2,6 +2,7 @@ package com.renea.psicologiauv.model
 
 import kotlinx.serialization.Serializable
 import kotlin.collections.MutableList
+import com.renea.psicologiauv.model.ElectivaProfesionalCatalogo
 
 @Serializable
 data class Estudiante(

@@ -56,6 +56,8 @@ import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -2348,6 +2350,8 @@ private fun TarjetaSira(
     onImportar: () -> Unit,
     onGenerarInforme: () -> Unit
 ) {
+    var expandido by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -2368,7 +2372,9 @@ private fun TarjetaSira(
         ) {
             // CABECERA
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expandido = !expandido },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
@@ -2427,15 +2433,25 @@ private fun TarjetaSira(
                         )
                     }
                 }
+
+                Spacer(Modifier.width(4.dp))
+
+                Icon(
+                    imageVector = if (expandido) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expandido) "Colapsar" else "Expandir",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
             }
 
-            // EXPLICACIÓN
-            Text(
-                text = "Descarga tu historial académico desde SIRA y trae tus notas directamente a la aplicación. El proceso es rápido y conserva tus asignaturas existentes.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2
-            )
+            if (expandido) {
+                // EXPLICACIÓN
+                Text(
+                    text = "Descarga tu historial académico desde SIRA y trae tus notas directamente a la aplicación.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2
+                )
 
             // PASOS
             Row(
@@ -2595,7 +2611,7 @@ private fun TarjetaSira(
                 )
                 Spacer(Modifier.width(5.dp))
                 Text(
-                    text = "Usa el PDF oficial generado por SIRA.",
+                    text = "Las electivas complementarias requieren actualización manual.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
@@ -2603,6 +2619,7 @@ private fun TarjetaSira(
             }
         }
     }
+}
 }
 
 

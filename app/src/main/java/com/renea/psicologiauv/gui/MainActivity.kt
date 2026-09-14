@@ -480,7 +480,9 @@ fun PsicologiaUVApp(
 
                         PantallaPracticas(
                             programa =
-                                viewModel.programa
+                                viewModel.programa,
+                            viewModel =
+                                viewModel
                         )
                     }
 
