@@ -185,4 +185,72 @@ data class Estudiante(
         }
     }
 
+
+    /**
+     * Despues de extraer notas del PDF SIRA, este metodo rellena los slots de
+     * Electiva Profesional II/III/IV en orden de aparicion en el PDF.
+     *
+     * Logica:
+     * 1. Toma el [catalogoCompleto] de electivas profesionales del archivo JSON.
+     * 2. Filtra los codigos del [notasPorCodigo] que existen en el catalogo
+     *    pero NO en las asignaturas del estudiante (son electivas reales cursadas
+     *    que aun no tienen slot asignado).
+     * 3. Identifica los slots placeholder de II/III/IV (codigos "3", "4", "5")
+     *    que todavia no tienen nota, en ese orden.
+     * 4. Por cada electiva encontrada en el PDF, toma el siguiente slot vacio,
+     *    le cambia nombre y codigo segun el catalogo, y le aplica la nota.
+     *
+     * Devuelve el [Estudiante] actualizado y el numero de electivas resueltas.
+     */
+    fun resolverElectivasProfesionales(
+        notasPorCodigo: Map<String, NotaImportada>,
+        catalogoCompleto: List<ElectivaProfesionalCatalogo>
+    ): Pair<Estudiante, Int> {
+        // Codigos ya presentes en las asignaturas del estudiante.
+        val codigosEnPensum = asignaturas.map { it.codigo }.toSet()
+
+        // Codigos del catalogo que el PDF trajo pero el estudiante no tiene aun.
+        val codigosElectivasCatalogo = catalogoCompleto.map { it.codigo }.toSet()
+        val electivasNuevas = notasPorCodigo.keys
+            .filter { it in codigosElectivasCatalogo && it !in codigosEnPensum }
+            // Mantenemos el orden en que aparecen en el mapa (que ya viene
+            // ordenado por posicion en el PDF desde ImportadorNotas).
+            .mapNotNull { codigo -> catalogoCompleto.find { it.codigo == codigo } }
+
+        if (electivasNuevas.isEmpty()) return this to 0
+
+        // Slots placeholder vacios: codigos "3", "4", "5" sin nota aun,
+        // ordenados por su posicion en la lista de asignaturas.
+        val codigosPlaceholder = listOf("3", "4", "5")
+        val slotsVacios = asignaturas
+            .filter { it.codigo in codigosPlaceholder && !it.aprobo() }
+            .sortedBy { codigosPlaceholder.indexOf(it.codigo) }
+
+        var resueltas = 0
+        val asignaturasActualizadas = asignaturas.toMutableList()
+        val slotsIterador = slotsVacios.iterator()
+
+        for (electiva in electivasNuevas) {
+            if (!slotsIterador.hasNext()) break
+            val slot = slotsIterador.next()
+            val indice = asignaturasActualizadas.indexOfFirst { it.codigo == slot.codigo }
+            if (indice == -1) continue
+
+            val nota = notasPorCodigo[electiva.codigo]
+            val asignaturaActualizada = asignaturasActualizadas[indice]
+                .copy(nombre = electiva.nombre, codigo = electiva.codigo)
+                .let { a ->
+                    when (nota) {
+                        is NotaImportada.Numerica -> a.cambiarNota(nota.valor)
+                        is NotaImportada.Especial -> a.cambiarNotaEspecial(nota.marca)
+                        null -> a
+                    }
+                }
+            asignaturasActualizadas[indice] = asignaturaActualizada
+            resueltas++
+        }
+
+        return copy(asignaturas = asignaturasActualizadas) to resueltas
+    }
+
 }

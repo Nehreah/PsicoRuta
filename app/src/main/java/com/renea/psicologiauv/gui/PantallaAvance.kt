@@ -13,9 +13,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Translate
@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
+import com.renea.psicologiauv.model.DatosIdiomas
 import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AmberAccent
 import com.renea.psicologiauv.ui.theme.AprobadoColor
@@ -114,11 +116,11 @@ fun PantallaAvance(
                 ) {
                     CajonIdioma(
                         nombre = "Idiomas I",
-                        cumple = datos.idiomasIAprobado,
-                        habilitado = datos.existeIdiomasI,
+                        cumple = datos.idiomas.idiomasIAprobado,
+                        habilitado = datos.idiomas.existeIdiomasI,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            materiaIdiomaActiva(datos.idiomasICandidatas)?.let {
+                            programa.materiaIdiomaActiva(datos.idiomas.idiomasICandidatas)?.let {
                                 materiaIdiomaSeleccionada = it
                             }
                         }
@@ -126,11 +128,11 @@ fun PantallaAvance(
 
                     CajonIdioma(
                         nombre = "Idiomas II",
-                        cumple = datos.idiomasIIAprobado,
-                        habilitado = datos.existeIdiomasII,
+                        cumple = datos.idiomas.idiomasIIAprobado,
+                        habilitado = datos.idiomas.existeIdiomasII,
                         modifier = Modifier.weight(1f),
                         onClick = {
-                            materiaIdiomaActiva(datos.idiomasIICandidatas)?.let {
+                            programa.materiaIdiomaActiva(datos.idiomas.idiomasIICandidatas)?.let {
                                 materiaIdiomaSeleccionada = it
                             }
                         }
@@ -155,51 +157,27 @@ fun PantallaAvance(
 // DATOS DERIVADOS DE AVANCE
 // ========================================================================
 
+/**
+ * Agrega los campos de progreso general a los datos de idioma que ya
+ * provee el modelo, para usarlos como snapshot inmutable en la UI.
+ */
 private data class DatosAvance(
     val avanceCarrera: Float,
     val avances: Map<String, Float>,
     val creditosCursados: Int,
     val creditosCarreraTotal: Int,
     val creditosComplementariosAprobados: Int,
-    val existeIdiomasI: Boolean,
-    val existeIdiomasII: Boolean,
-    val idiomasIAprobado: Boolean,
-    val idiomasIIAprobado: Boolean,
-    val idiomasICandidatas: List<Asignatura>,
-    val idiomasIICandidatas: List<Asignatura>
+    val idiomas: DatosIdiomas
 )
 
-private fun calcularDatosAvance(programa: ProgramaM): DatosAvance {
-
-    val asignaturas = programa.estudiante?.asignaturas.orEmpty()
-    val creditosCursados = programa.creditosQueSirvenParaCarrera()
-
-    val idiomasICandidatas = asignaturas.filter { it.nombre == "Idiomas I" }
-    val idiomasIICandidatas = asignaturas.filter { it.nombre == "Idiomas II" }
-
-    return DatosAvance(
-        avanceCarrera = programa.avanceCarrera(),
-        avances = programa.avanceAreas(),
-        creditosCursados = creditosCursados,
-        creditosCarreraTotal = programa.creditosCarrera,
-        creditosComplementariosAprobados = programa.creditosComplementariosAprobados(),
-        existeIdiomasI = idiomasICandidatas.isNotEmpty(),
-        existeIdiomasII = idiomasIICandidatas.isNotEmpty(),
-        idiomasIAprobado = idiomasICandidatas.any { it.aprobo() },
-        idiomasIIAprobado = idiomasIICandidatas.any { it.aprobo() },
-        idiomasICandidatas = idiomasICandidatas,
-        idiomasIICandidatas = idiomasIICandidatas
-    )
-}
-
-// ========================================================================
-// MATERIA ACTIVA DE UN NOMBRE DE IDIOMA
-// ========================================================================
-
-private fun materiaIdiomaActiva(candidatas: List<Asignatura>): Asignatura? =
-    candidatas.firstOrNull { it.aprobo() }
-        ?: candidatas.firstOrNull { it.nota > 0f || it.notaEspecial != null }
-        ?: candidatas.firstOrNull()
+private fun calcularDatosAvance(programa: ProgramaM): DatosAvance = DatosAvance(
+    avanceCarrera = programa.avanceCarrera(),
+    avances = programa.avanceAreas(),
+    creditosCursados = programa.creditosQueSirvenParaCarrera(),
+    creditosCarreraTotal = programa.creditosCarrera,
+    creditosComplementariosAprobados = programa.creditosComplementariosAprobados(),
+    idiomas = programa.datosIdiomas()
+)
 
 // ========================================================================
 // TARJETA HÉROE: PROGRESO DE CARRERA (incluye el consejo rotativo)
@@ -261,7 +239,7 @@ private fun TarjetaHeroeProgreso(
 
     LaunchedEffect(consejos) {
         while (true) {
-            delay(intervaloMs)
+            delay(intervaloMs.milliseconds)
 
             if (ordenConsejos.isEmpty()) continue
 
@@ -427,8 +405,8 @@ private fun TarjetaHeroeProgreso(
                 // CONSEJO ROTATIVO (integrado al hero)
                 // -----------------------------------------------------
 
-                Divider(
-                    color = onSurfaceVariant.copy(alpha = 0.15f),
+                HorizontalDivider(
+                    color = colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f),
                     thickness = 1.dp
                 )
 
@@ -440,7 +418,7 @@ private fun TarjetaHeroeProgreso(
                     Icon(
                         imageVector = Icons.Filled.Psychology,
                         contentDescription = null,
-                        tint = rojo,
+                        tint = colorAcento,
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -460,7 +438,7 @@ private fun TarjetaHeroeProgreso(
                                 append(consejo)
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = onSurface,
+                            color = colorTexto,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -516,7 +494,7 @@ private fun AnilloProgreso(
 
 private fun iconoParaArea(indice: Int): ImageVector =
     when (indice) {
-        0 -> Icons.Filled.MenuBook
+        0 -> Icons.AutoMirrored.Filled.MenuBook
         1 -> Icons.Filled.WorkspacePremium
         else -> Icons.Filled.Science
     }

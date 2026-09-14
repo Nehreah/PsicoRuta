@@ -66,6 +66,15 @@ data class Asignatura (
         else
             this
 
+    /**
+     * Verdadero si la asignatura es una electiva (complementaria o profesional)
+     * o un idioma: son los únicos tipos cuyo nombre y código pueden editarse
+     * libremente desde la UI.
+     */
+    fun esElectivaOIdioma(): Boolean =
+        componente.contains("Electiva", ignoreCase = true) ||
+                componente.contains("Idioma", ignoreCase = true)
+
 
     /**
      * Aprobada si tiene una nota numérica suficiente, O si fue aprobada por

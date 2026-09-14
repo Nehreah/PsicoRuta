@@ -89,33 +89,19 @@ fun PantallaPensum(
     /* ================================================================== */
 
     val areasDisponibles = remember(estudiante.asignaturas) {
-        estudiante.asignaturas
-            .map { it.area }
-            .distinct()
-            .sorted()
+        programa.areasDelEstudiante()
     }
 
-    val asignaturasFiltradas =
-        estudiante.asignaturas.filter { materia ->
+    val asignaturasFiltradas = programa.asignaturasFiltradas(
+        filtroArea = filtroArea,
+        soloAprobadas = filtroAprobado
+    )
 
-            val cumpleArea =
-                filtroArea == null ||
-                        materia.area == filtroArea
+    val porSemestre = asignaturasFiltradas
+        .groupBy { it.semestre }
+        .toSortedMap()
 
-            val cumpleEstado =
-                filtroAprobado == null ||
-                        materia.aprobo() == filtroAprobado
-
-            cumpleArea && cumpleEstado
-        }
-
-    val porSemestre =
-        asignaturasFiltradas
-            .groupBy { it.semestre }
-            .toSortedMap()
-
-    val materiasElectivas =
-        porSemestre[0].orEmpty()
+    val materiasElectivas = porSemestre[0].orEmpty()
 
     /* ================================================================== */
     /* PROGRESO                                                            */
@@ -405,35 +391,16 @@ private data class DatosProgresoPensum(
 /* CÁLCULO DE PROGRESO                                                     */
 /* ====================================================================== */
 
+/** Delega todo el cálculo al modelo — la pantalla solo consume el resultado. */
 private fun calcularProgresoPensum(
     programa: com.renea.psicologiauv.model.ProgramaM
-): DatosProgresoPensum {
+): DatosProgresoPensum = DatosProgresoPensum(
+    progreso = (programa.avanceCarrera() / 100f).coerceIn(0f, 1f),
+    creditosHechos = programa.creditosQueSirvenParaCarrera(),
+    creditosFaltantes = programa.creditosFaltantesCarrera(),
+    creditosCarrera = programa.creditosCarrera
+)
 
-    val creditosHechos = programa.creditosQueSirvenParaCarrera()
-
-    val creditosFaltantes =
-        (
-                programa.creditosCarrera -
-                        creditosHechos
-                )
-            .coerceAtLeast(0)
-
-    val progreso =
-        (
-                programa.avanceCarrera() / 100f
-                )
-            .coerceIn(
-                0f,
-                1f
-            )
-
-    return DatosProgresoPensum(
-        progreso = progreso,
-        creditosHechos = creditosHechos,
-        creditosFaltantes = creditosFaltantes,
-        creditosCarrera = programa.creditosCarrera
-    )
-}
 
 /* ====================================================================== */
 /* HEADER MODERNO                                                          */
@@ -627,7 +594,7 @@ private fun AnilloPensum(
             )
         }
         Text(
-            text = "${(progreso * 100).toInt()}%",
+            text = "${"%.0f".format(progreso * 100)}%",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.ExtraBold,
             color = colorProgreso
@@ -791,8 +758,7 @@ private fun ModuloSemestreDeslizante(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val aprobadas = materias.count { it.aprobo() }
-    val completo = materias.isNotEmpty() && aprobadas == materias.size
+    val completo = materias.isNotEmpty() && materias.all { it.aprobo() }
     val estado = if (completo) "Completado" else "Pendiente"
     val estadoColor = if (completo) AprobadoColor else MaterialTheme.colorScheme.primary
 
@@ -2196,15 +2162,7 @@ private fun DialogoEditarAsignatura(
         )
     }
 
-    val esElectiva =
-        materia.componente.contains(
-            "Electiva",
-            ignoreCase = true
-        ) ||
-                materia.componente.contains(
-                    "Idioma",
-                    ignoreCase = true
-                )
+    val esElectiva = materia.esElectivaOIdioma()
 
     AlertDialog(
         onDismissRequest =

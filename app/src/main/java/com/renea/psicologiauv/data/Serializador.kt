@@ -6,7 +6,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import com.renea.psicologiauv.model.ElectivaProfesionalCatalogo
 import com.renea.psicologiauv.model.Estudiante
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
@@ -177,5 +179,27 @@ class Serializador(private val context: Context) {
         }
     }
 
+
+
+    /**
+     * Lee el catalogo de electivas profesionales empaquetado en
+     * assets/data/ElectivasProfesionales.json y lo devuelve como lista.
+     * Devuelve lista vacia si el archivo no existe o no se pudo leer.
+     * Esta lista se usa durante la importacion del PDF SIRA para rellenar
+     * los slots de Electiva Profesional II/III/IV en orden de aparicion.
+     */
+    fun leerElectivasProfesionales(): List<ElectivaProfesionalCatalogo> {
+        return try {
+            context.assets.open("data/ElectivasProfesionales.json").use { entrada ->
+                val texto = entrada.readBytes().toString(Charsets.UTF_8)
+                jsonEstudiante.decodeFromString(
+                    ListSerializer(ElectivaProfesionalCatalogo.serializer()),
+                    texto
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
 }

@@ -165,13 +165,23 @@ class ControlV (private val parse: Serializador): ViewModel() {
      */
     fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>): Int {
         val estudianteActual = programa.estudiante ?: return 0
-        val (nuevoEstudiante, actualizadas) = estudianteActual.actualizarNotasMasivo(notasPorCodigo)
-        if (actualizadas > 0) {
-            val sincronizado = nuevoEstudiante.sincronizarComplementarias()
+
+        // 1. Actualiza las asignaturas que ya tienen su código definitivo en el pensum.
+        val (estudianteConNotas, actualizadas) = estudianteActual.actualizarNotasMasivo(notasPorCodigo)
+
+        // 2. Rellena los slots de Electiva Profesional II/III/IV con las electivas
+        //    reales que el SIRA trajo y que aún no están asignadas a ningún slot.
+        val catalogo = parse.leerElectivasProfesionales()
+        val (estudianteConElectivas, electivasResueltas) =
+            estudianteConNotas.resolverElectivasProfesionales(notasPorCodigo, catalogo)
+
+        val totalCambios = actualizadas + electivasResueltas
+        if (totalCambios > 0) {
+            val sincronizado = estudianteConElectivas.sincronizarComplementarias()
             programa = programa.cambiarEstudiante(sincronizado)
             parse.guardarEstudiante(sincronizado)
         }
-        return actualizadas
+        return totalCambios
     }
 
     /**

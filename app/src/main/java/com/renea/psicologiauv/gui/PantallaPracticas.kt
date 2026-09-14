@@ -169,7 +169,7 @@ fun PantallaPracticas(
                     }
 
                     Surface(
-                        modifier = Modifier.size(30.dp),
+                        modifier = Modifier.size(26.dp),
                         shape = RoundedCornerShape(13.dp),
                         color = colorAcento.copy(alpha = if (isDark) 0.15f else 0.08f)
                     ) {
@@ -208,6 +208,34 @@ fun PantallaPracticas(
             )
         }
 
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            IndicadorCreditos(
+                titulo = "Electivas complementarias",
+                creditos = programa.creditoselectivasComplementarias(),
+                total = 6,
+                modifier = Modifier.weight(1f)
+            )
+
+            IndicadorCreditos(
+                titulo = "Electivas profesionales",
+                creditos = programa.creditoselectivasProfesionales(),
+                total = 12,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        BannerEstado(
+            texto = if (programa.requisitoElectivas()) {
+                "Cumple con los requisitos en electivas"
+            } else {
+                "No cumple con los requisitos en electivas"
+            },
+            cumple = programa.requisitoElectivas()
+        )
+
         // ================================================================
         // ESTADO DE REQUISITOS
         // ================================================================
@@ -224,17 +252,9 @@ fun PantallaPracticas(
                     .padding(horizontal = 10.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Los 8 requisitos cuentan por igual: 4 asignaturas + 4 líneas.
-                val requisitosAprobados = listOf(
-                    programa.requisitosPracticasEtica(),
-                    programa.requisitosPracticasDiagnostico(),
-                    programa.requisitosPracticasFundamentacionI(),
-                    programa.requisitosPracticasFundamentacionII(),
-                    datos.avanceLineas.containsKey("Social"),
-                    datos.avanceLineas.containsKey("Organizacional"),
-                    datos.avanceLineas.containsKey("Educativa"),
-                    datos.avanceLineas.containsKey("Clínica/NeuroClínica")
-                ).count { it }
+                // Requisitos: 4 asignaturas + 4 líneas + electivas.
+                // El modelo centraliza el conteo de los 9 requisitos.
+                val requisitosAprobados = programa.contarRequisitosAprobadosPracticas()
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -262,7 +282,7 @@ fun PantallaPracticas(
                         color = primary.copy(alpha = 0.09f)
                     ) {
                         Text(
-                            text = "$requisitosAprobados / 8",
+                            text = "$requisitosAprobados / 9",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = primary,
@@ -272,7 +292,7 @@ fun PantallaPracticas(
                 }
 
                 // ------------------------------------------------------------
-                // 8 requisitos compactos: 4 asignaturas + 4 líneas.
+                // Requisitos compactos: 4 asignaturas + 4 líneas + electivas.
                 // ------------------------------------------------------------
                 val lineas = listOf(
                     "Social" to Icons.Filled.Groups,
@@ -336,29 +356,18 @@ fun PantallaPracticas(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        lineas.take(2).forEach { (nombreLinea, icono) ->
+                        lineas.forEach { (nombreLinea, icono) ->
                             CajonNivelLinea(
                                 linea = nombreLinea,
                                 icono = icono,
                                 avance = datos.avanceLineas[nombreLinea],
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
                             )
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        lineas.drop(2).forEach { (nombreLinea, icono) ->
-                            CajonNivelLinea(
-                                linea = nombreLinea,
-                                icono = icono,
-                                avance = datos.avanceLineas[nombreLinea],
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
                 }
             }
         }
@@ -420,75 +429,42 @@ fun PantallaPracticas(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     // ====================================================
-                    // TODOS LOS BOTONES ORIGINALES SE CONSERVAN
+                    // BOTONES DE LÍNEAS EN UNA SOLA FILA HORIZONTAL
                     // ====================================================
-                    Column(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            listOf(
-                                "Educativa",
-                                "Social",
-                                "Organizacional"
-                            ).forEach { lineaSeleccionable ->
-                                FilterChip(
-                                    selected = otraLineaSeleccionada == lineaSeleccionable,
-                                    onClick = {
-                                        otraLineaSeleccionada = lineaSeleccionable
-                                    },
-                                    label = {
-                                        Text(
-                                            text = lineaSeleccionable,
-                                            maxLines = 1,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = 3.dp),
-                                    shape = RoundedCornerShape(50),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = softSurface.copy(alpha = 0.50f),
-                                        labelColor = secondaryText,
-                                        selectedContainerColor = primary.copy(alpha = 0.11f),
-                                        selectedLabelColor = primary
+                        listOf(
+                            "Educativa",
+                            "Social",
+                            "Organizacional",
+                            "Clínica",
+                            "NeuroClínica"
+                        ).forEach { lineaSeleccionable ->
+                            FilterChip(
+                                selected = otraLineaSeleccionada == lineaSeleccionable,
+                                onClick = {
+                                    otraLineaSeleccionada = lineaSeleccionable
+                                },
+                                label = {
+                                    Text(
+                                        text = lineaSeleccionable,
+                                        maxLines = 1,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        textAlign = TextAlign.Center
                                     )
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(50),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    containerColor = softSurface.copy(alpha = 0.50f),
+                                    labelColor = secondaryText,
+                                    selectedContainerColor = primary.copy(alpha = 0.11f),
+                                    selectedLabelColor = primary
                                 )
-                            }
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            listOf(
-                                "Clínica",
-                                "NeuroClínica"
-                            ).forEach { lineaSeleccionable ->
-                                FilterChip(
-                                    selected = otraLineaSeleccionada == lineaSeleccionable,
-                                    onClick = {
-                                        otraLineaSeleccionada = lineaSeleccionable
-                                    },
-                                    label = {
-                                        Text(
-                                            text = lineaSeleccionable,
-                                            maxLines = 1,
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
-                                    },
-                                    modifier = Modifier.padding(horizontal = 3.dp),
-                                    shape = RoundedCornerShape(50),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        containerColor = softSurface.copy(alpha = 0.50f),
-                                        labelColor = secondaryText,
-                                        selectedContainerColor = primary.copy(alpha = 0.11f),
-                                        selectedLabelColor = primary
-                                    )
-                                )
-                            }
+                            )
                         }
                     }
 
@@ -535,7 +511,7 @@ fun PantallaPracticas(
             }
         }
 
-        Spacer(modifier = Modifier.height(72.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
@@ -645,6 +621,11 @@ private fun IndicadorCreditos(
 // DATOS DERIVADOS DE PRÁCTICAS (cálculo centralizado y memoizado)
 // ========================================================================
 
+/**
+ * Snapshot inmutable de todos los datos que la pantalla de Prácticas
+ * necesita renderizar. La lógica de negocio vive en [ProgramaM];
+ * esta data class solo es un contenedor de UI.
+ */
 private data class DatosPracticas(
     val creditosLineaSeleccionada: Int,
     val creditosProfesionales: Int,
@@ -656,28 +637,15 @@ private data class DatosPracticas(
 private fun calcularDatosPracticas(
     programa: ProgramaM,
     otraLineaSeleccionada: String?
-): DatosPracticas {
+): DatosPracticas = DatosPracticas(
+    creditosLineaSeleccionada = if (otraLineaSeleccionada != null)
+        programa.creditosLineaProfesional(otraLineaSeleccionada) else 0,
+    creditosProfesionales = programa.creditosDeProfesionalizacion(),
+    todasLasLineasCursadas = programa.todasLasLineasCursadas(),
+    avanceLineas = programa.avanceLineasProfundizacion(),
+    materiasLinea = programa.asignaturasDeLinea(otraLineaSeleccionada)
+)
 
-    val asignaturas = programa.estudiante?.asignaturas.orEmpty()
-
-    val creditosLineaSeleccionada =
-        asignaturas
-            .filter { it.lineaProfesional == otraLineaSeleccionada && it.aprobo() }
-            .sumOf { it.creditos }
-
-    val lineasFaltantes = obtenerLineasFaltantes(programa)
-
-    val materiasLinea =
-        asignaturas.filter { it.lineaProfesional == otraLineaSeleccionada }
-
-    return DatosPracticas(
-        creditosLineaSeleccionada = creditosLineaSeleccionada,
-        creditosProfesionales = programa.creditosDeProfesionalizacion(),
-        todasLasLineasCursadas = lineasFaltantes.isEmpty(),
-        avanceLineas = programa.avanceLineasProfundizacion(),
-        materiasLinea = materiasLinea
-    )
-}
 
 // ========================================================================
 // BANNER DE ESTADO (cumple / no cumple)
@@ -817,31 +785,31 @@ private fun CajonNivelLinea(
     val scheme = MaterialTheme.colorScheme
     val aprobado = avance != null
     val color = if (aprobado) AprobadoColor else scheme.primary
-
-    val textoNivel = if (avance != null) {
-        when (avance.nivel) {
-            1 -> "Nivel I"
-            2 -> "Nivel II"
-            3 -> "Nivel III"
-            else -> "Nivel ${avance.nivel}"
-        }
-    } else {
-        "No cursó"
-    }
+    val textoNivel = avance?.textoNivel() ?: "No cursó"
 
     Surface(
-        modifier = modifier.height(60.dp),
+        modifier = modifier.height(92.dp),
         shape = RoundedCornerShape(16.dp),
         color = color.copy(alpha = 0.10f)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 7.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 4.dp, vertical = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
+            Text(
+                text = linea,
+                color = scheme.onSurface,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
+
             Surface(
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(30.dp),
                 shape = RoundedCornerShape(50),
                 color = color.copy(alpha = 0.10f)
             ) {
@@ -850,28 +818,19 @@ private fun CajonNivelLinea(
                         imageVector = icono,
                         contentDescription = null,
                         tint = color,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = linea,
-                    color = scheme.onSurface,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2
-                )
-
-                Text(
-                    text = textoNivel,
-                    color = color,
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
+            Text(
+                text = textoNivel,
+                color = color,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
         }
     }
 }
@@ -932,34 +891,4 @@ private fun TarjetaNivelMateria(
             )
         }
     }
-}
-
-// ========================================================================
-// LÍNEAS FALTANTES
-// ========================================================================
-
-private fun obtenerLineasFaltantes(programa: ProgramaM): List<String> {
-
-    val estudiante = programa.estudiante ?: return emptyList()
-
-    val gruposLinea = listOf("Social", "Organizacional", "Educativa", "Clínica/NeuroClínica")
-
-    val lineasCursadas =
-        estudiante.asignaturas
-            .filter { it.aprobo() }
-            .map { it.lineaProfesional }
-            .distinct()
-            .toMutableSet()
-
-    // ================================================================
-    // CLÍNICA Y NEUROCLÍNICA CUENTAN COMO UNA MISMA LÍNEA
-    // ================================================================
-
-    if (lineasCursadas.contains("Clínica") || lineasCursadas.contains("NeuroClínica")) {
-        lineasCursadas.remove("Clínica")
-        lineasCursadas.remove("NeuroClínica")
-        lineasCursadas.add("Clínica/NeuroClínica")
-    }
-
-    return gruposLinea.filter { it !in lineasCursadas }
 }
