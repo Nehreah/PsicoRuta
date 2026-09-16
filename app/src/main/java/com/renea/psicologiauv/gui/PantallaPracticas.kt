@@ -42,6 +42,13 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.CorporateFare
+import androidx.compose.material.icons.filled.Favorite
+
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.AvanceLineaProfesional
 import com.renea.psicologiauv.model.ProgramaM
@@ -94,6 +101,7 @@ fun PantallaPracticas(
     var expandidoRequisitos by remember { mutableStateOf(false) }
     var materiaSeleccionada by remember { mutableStateOf<Asignatura?>(null) }
     var indicadorExpandido by remember { mutableStateOf<String?>(null) }
+    var menuDesplegableLinea by remember { mutableStateOf(false) }
 
     val datos = remember(programa, otraLineaSeleccionada) {
         calcularDatosPracticas(programa, otraLineaSeleccionada)
@@ -152,10 +160,10 @@ fun PantallaPracticas(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                painter = painterResource(temaLinea.iconoRes),
+                                imageVector = obtenerIconoLinea(otraLineaSeleccionada),
                                 contentDescription = null,
                                 tint = colorAcento,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
@@ -184,18 +192,62 @@ fun PantallaPracticas(
                         )
                     }
 
-                    Surface(
-                        modifier = Modifier.size(26.dp),
-                        shape = RoundedCornerShape(13.dp),
-                        color = colorAcento.copy(alpha = if (isDark) 0.15f else 0.08f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
+                    Box {
+                        Surface(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clickable { menuDesplegableLinea = true },
+                            shape = RoundedCornerShape(16.dp),
+                            color = colorAcento.copy(alpha = if (isDark) 0.20f else 0.12f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.MoreVert,
+                                    contentDescription = "Cambiar línea",
+                                    tint = colorAcento,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = menuDesplegableLinea,
+                            onDismissRequest = { menuDesplegableLinea = false }
+                        ) {
                             Text(
-                                text = "⋮",
-                                style = MaterialTheme.typography.titleMedium,
+                                text = " Cambiar línea:",
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = colorAcento
+                                color = text,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
+                            HorizontalDivider()
+                            listOf("Educativa", "Social", "Organizacional", "Clínica", "NeuroClínica").forEach { lineaOpcion ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = obtenerIconoLinea(lineaOpcion),
+                                                contentDescription = null,
+                                                tint = if (otraLineaSeleccionada == lineaOpcion) colorAcento else secondaryText,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Text(
+                                                text = lineaOpcion,
+                                                fontWeight = if (otraLineaSeleccionada == lineaOpcion) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (otraLineaSeleccionada == lineaOpcion) colorAcento else text
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        otraLineaSeleccionada = lineaOpcion
+                                        menuDesplegableLinea = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -335,9 +387,9 @@ fun PantallaPracticas(
                 if (expandidoRequisitos) {
                     val lineas = listOf(
                         "Social" to Icons.Filled.Groups,
-                        "Organizacional" to Icons.Filled.Business,
+                        "Organizacional" to Icons.Filled.CorporateFare,
                         "Educativa" to Icons.Filled.School,
-                        "Clínica/NeuroClínica" to Icons.Filled.LocalHospital
+                        "Clínica/NeuroClínica" to Icons.Filled.Favorite
                     )
 
                     val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
@@ -443,7 +495,7 @@ fun PantallaPracticas(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Groups,
+                            imageVector = obtenerIconoLinea(lineaActual),
                             contentDescription = null,
                             tint = primary,
                             modifier = Modifier.size(20.dp)
@@ -477,23 +529,23 @@ fun PantallaPracticas(
 
                     // ====================================================
                     // BOTONES DE LÍNEAS EN UNA SOLA FILA HORIZONTAL
+                    // (Clínica y NeuroClínica agrupadas en un óvalo)
                     // ====================================================
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        listOf(
-                            "Educativa",
-                            "Social",
-                            "Organizacional",
-                            "Clínica",
-                            "NeuroClínica"
-                        ).forEach { lineaSeleccionable ->
+                        listOf("Educativa", "Social", "Organizacional").forEach { lineaSeleccionable ->
                             FilterChip(
                                 selected = otraLineaSeleccionada == lineaSeleccionable,
-                                onClick = {
-                                    otraLineaSeleccionada = lineaSeleccionable
+                                onClick = { otraLineaSeleccionada = lineaSeleccionable },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = obtenerIconoLinea(lineaSeleccionable),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(13.dp)
+                                    )
                                 },
                                 label = {
                                     Text(
@@ -512,6 +564,58 @@ fun PantallaPracticas(
                                     selectedLabelColor = primary
                                 )
                             )
+                        }
+
+                        // CÁPSULA AGRUPADORA PARA CLÍNICA Y NEUROCLÍNICA
+                        val esClinicaONeuro = otraLineaSeleccionada == "Clínica" || otraLineaSeleccionada == "NeuroClínica"
+                        val colorBordeAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.40f) else outline.copy(alpha = 0.35f)
+                        val colorFondoAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.06f) else softSurface.copy(alpha = 0.35f)
+
+                        Surface(
+                            modifier = Modifier.weight(2f),
+                            shape = RoundedCornerShape(50),
+                            color = colorFondoAgrupador,
+                            border = BorderStroke(1.dp, colorBordeAgrupador)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 2.dp, vertical = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                listOf("Clínica", "NeuroClínica").forEach { subLinea ->
+                                    val seleccionada = otraLineaSeleccionada == subLinea
+                                    FilterChip(
+                                        selected = seleccionada,
+                                        onClick = { otraLineaSeleccionada = subLinea },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = obtenerIconoLinea(subLinea),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        },
+                                        label = {
+                                            Text(
+                                                text = if (subLinea == "NeuroClínica") "Neuro" else "Clínica",
+                                                maxLines = 1,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                textAlign = TextAlign.Center
+                                            )
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(50),
+                                        border = null,
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            containerColor = if (seleccionada) primary.copy(alpha = 0.18f) else Color.Transparent,
+                                            labelColor = if (seleccionada) primary else secondaryText,
+                                            selectedContainerColor = primary.copy(alpha = 0.18f),
+                                            selectedLabelColor = primary
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
 
@@ -648,7 +752,9 @@ private fun IndicadorCreditos(
     Card(
         modifier = if (onClick != null) modifier.height(104.dp).clickable { onClick() } else modifier.height(104.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (seleccionado) scheme.primaryContainer.copy(alpha = 0.20f) else scheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = if (seleccionado) 4.dp else 2.dp),
         border = BorderStroke(
             width = if (seleccionado) 1.5.dp else 1.dp,
@@ -662,8 +768,10 @@ private fun IndicadorCreditos(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = titulo,
@@ -672,6 +780,14 @@ private fun IndicadorCreditos(
                     color = scheme.onSurfaceVariant,
                     maxLines = 2,
                     lineHeight = MaterialTheme.typography.labelMedium.lineHeight
+                )
+
+                // SÚTIL SIMBOLO CLICKEABLE
+                Text(
+                    text = "Ver materias ›",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = scheme.primary.copy(alpha = 0.70f)
                 )
             }
 
@@ -963,26 +1079,28 @@ private fun TarjetaNivelMateria(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
-    val colorTarjeta = MaterialTheme.colorScheme.surfaceContainerLow
+    val scheme = MaterialTheme.colorScheme
+    val colorTarjeta = scheme.surfaceContainerLow
     val colorEncabezado =
-        if (aprobada) AprobadoColor.copy(alpha = 0.18f) else MaterialTheme.colorScheme.secondaryContainer
+        if (aprobada) AprobadoColor.copy(alpha = 0.15f) else scheme.secondaryContainer
     val colorTextoEncabezado =
-        if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSecondaryContainer
+        if (aprobada) AprobadoColor else scheme.onSecondaryContainer
 
     Card(
-        modifier = if (onClick != null) modifier.height(54.dp).clickable { onClick() } else modifier.height(54.dp),
+        modifier = if (onClick != null) modifier.height(52.dp).clickable { onClick() } else modifier.height(52.dp),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(
-            width = 0.7.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+            width = 0.8.dp,
+            color = scheme.outlineVariant.copy(alpha = 0.60f)
         ),
         colors = CardDefaults.cardColors(containerColor = colorTarjeta)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .background(colorEncabezado),
+                .background(colorEncabezado)
+                .padding(horizontal = 8.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1002,6 +1120,15 @@ private fun TarjetaNivelMateria(
                 fontWeight = FontWeight.Bold,
                 color = colorTextoEncabezado,
                 textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.width(3.dp))
+
+            Text(
+                text = "›",
+                style = MaterialTheme.typography.labelSmall,
+                color = colorTextoEncabezado.copy(alpha = 0.60f),
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -1742,5 +1869,18 @@ private fun TarjetaMateriaBanner(
                 }
             }
         }
+    }
+}
+
+
+private fun obtenerIconoLinea(nombre: String?): ImageVector {
+    val normalizado = nombre?.trim()?.lowercase().orEmpty()
+    return when {
+        normalizado.contains("neuro") -> Icons.Filled.Psychology
+        normalizado.contains("clínica") || normalizado.contains("clinica") -> Icons.Filled.Favorite
+        normalizado.contains("organizacional") -> Icons.Filled.CorporateFare
+        normalizado.contains("social") -> Icons.Filled.Groups
+        normalizado.contains("educativa") -> Icons.Filled.School
+        else -> Icons.Filled.School
     }
 }

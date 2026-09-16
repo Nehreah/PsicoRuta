@@ -55,6 +55,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.CorporateFare
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Psychology
+
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -235,7 +240,7 @@ private fun abrirCorreo(
 
 private data class LineaInfo(
     val nombre: String,
-    val icono: Int,
+    val icono: ImageVector,
     val color: Color
 )
 
@@ -244,31 +249,31 @@ private val LINEAS_DISPONIBLES = listOf(
 
     LineaInfo(
         nombre = "Educativa",
-        icono = R.drawable.ic_linea_educativa,
+        icono = Icons.Filled.School,
         color = Color(0xFFD88523) // Ámbar / Dorado
     ),
 
     LineaInfo(
         nombre = "Social",
-        icono = R.drawable.ic_linea_social,
+        icono = Icons.Filled.Groups,
         color = Color(0xFF41835A) // Verde salvia
     ),
 
     LineaInfo(
         nombre = "Organizacional",
-        icono = R.drawable.ic_linea_organizacional,
+        icono = Icons.Filled.CorporateFare,
         color = Color(0xFF7A4FA3) // Lavanda / Violeta
     ),
 
     LineaInfo(
         nombre = "Clínica",
-        icono = R.drawable.ic_linea_clinica,
+        icono = Icons.Filled.Favorite,
         color = Color(0xFFD4465B) // Coral / Rosa clínico
     ),
 
     LineaInfo(
         nombre = "NeuroClínica",
-        icono = R.drawable.ic_linea_neuroclinica,
+        icono = Icons.Filled.Psychology,
         color = Color(0xFF2F76B9) // Azul acero
     )
 )
@@ -290,7 +295,7 @@ private fun infoDeLinea(
 
 @Composable
 private fun CirculoLinea(
-    icono: Int,
+    icono: ImageVector,
     color: Color,
     tamano: Dp,
     seleccionado: Boolean = false,
@@ -335,8 +340,7 @@ private fun CirculoLinea(
     ) {
 
         Icon(
-            painter =
-                painterResource(icono),
+            imageVector = icono,
 
             contentDescription = null,
 
