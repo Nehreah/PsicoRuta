@@ -3,6 +3,8 @@ package com.renea.psicologiauv.gui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -13,7 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lightbulb
@@ -41,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+
 import com.renea.psicologiauv.R
 
 // ========================================================================
@@ -64,14 +67,53 @@ import com.renea.psicologiauv.R
 // PALETA
 // ========================================================================
 
-private val HistoriaWine = Color(0xFF8F163B)
-private val HistoriaWineDark = Color(0xFF5B1029)
-private val HistoriaPink = Color(0xFFF8E5EA)
-private val HistoriaPinkSoft = Color(0xFFFCF3F5)
-private val HistoriaBackground = Color(0xFFFAF9FA)
-private val HistoriaText = Color(0xFF281820)
-private val HistoriaSecondaryText = Color(0xFF705D66)
-private val HistoriaBorder = Color(0xFFE8E2E5)
+
+// ========================================================================
+// ESQUEMA DE COLOR DINÁMICO (LIGHT / DARK THEME)
+// ========================================================================
+
+private data class EsquemaColorHistoria(
+    val wine: Color,
+    val heroBackground: Color,
+    val pink: Color,
+    val pinkSoft: Color,
+    val background: Color,
+    val text: Color,
+    val secondaryText: Color,
+    val border: Color,
+    val cardBackground: Color
+)
+
+@Composable
+private fun obtenerEsquemaHistoria(): EsquemaColorHistoria {
+    val isDark = isSystemInDarkTheme()
+    return if (isDark) {
+        EsquemaColorHistoria(
+            wine = Color(0xFFF28DA8),          // Rosa vívido / magenta suave
+            heroBackground = Color(0xFF38141F), // Borgoña oscuro para el Hero
+            pink = Color(0xFF3D202B),          // Fondo de contenedores / pastillas
+            pinkSoft = Color(0xFF281C23),      // Fondo de tarjetas secundarias
+            background = Color(0xFF161215),    // Fondo principal oscuro
+            text = Color(0xFFF8EFF3),          // Texto primario claro
+            secondaryText = Color(0xFFCFBFC8), // Texto secundario
+            border = Color(0xFF48353E),        // Borde
+            cardBackground = Color(0xFF221A20) // Fondo de tarjetas principales
+        )
+    } else {
+        EsquemaColorHistoria(
+            wine = Color(0xFF8F163B),
+            heroBackground = Color(0xFF8F163B), // Vino tinto clásico
+            pink = Color(0xFFF8E5EA),
+            pinkSoft = Color(0xFFFCF3F5),
+            background = Color(0xFFFAF9FA),
+            text = Color(0xFF281820),
+            secondaryText = Color(0xFF705D66),
+            border = Color(0xFFE8E2E5),
+            cardBackground = Color.White
+        )
+    }
+}
+
 
 
 // ========================================================================
@@ -100,6 +142,7 @@ fun PantallaHistoria(
     onAbrirCali: () -> Unit,
     onAbrirLatino: () -> Unit
 ) {
+    val esquema = obtenerEsquemaHistoria()
 
     BackHandler {
         onVolver()
@@ -108,11 +151,12 @@ fun PantallaHistoria(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(HistoriaBackground)
+            .background(esquema.background)
     ) {
 
         HistoriaTopBar(
-            onVolver = onVolver
+            onVolver = onVolver,
+            esquema = esquema
         )
 
         Column(
@@ -124,7 +168,7 @@ fun PantallaHistoria(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            HistoriaHero()
+            HistoriaHero(esquema = esquema)
 
             Spacer(modifier = Modifier.height(25.dp))
 
@@ -134,12 +178,13 @@ fun PantallaHistoria(
 
             SeccionHistoria(
                 numero = "01",
-                titulo = "Antes de comenzar..."
+                titulo = "Antes de comenzar...",
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(11.dp))
 
-            IntroduccionCard()
+            IntroduccionCard(esquema = esquema)
 
             Spacer(modifier = Modifier.height(27.dp))
 
@@ -149,7 +194,8 @@ fun PantallaHistoria(
 
             SeccionHistoria(
                 numero = "02",
-                titulo = "Explora la historia"
+                titulo = "Explora la historia",
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(7.dp))
@@ -157,7 +203,7 @@ fun PantallaHistoria(
             Text(
                 text = "Recorre dos escenarios fundamentales.",
                 style = MaterialTheme.typography.bodySmall,
-                color = HistoriaSecondaryText
+                color = esquema.secondaryText
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -170,7 +216,8 @@ fun PantallaHistoria(
                 descripcion =
                     "Acontecimientos, memorias y experiencias que marcaron " +
                             "la movilización estudiantil en Cali y Colombia.",
-                onClick = onAbrirCali
+                onClick = onAbrirCali,
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -183,7 +230,8 @@ fun PantallaHistoria(
                 descripcion =
                     "Del movimiento reformista de Córdoba a las nuevas formas " +
                             "de participación y organización estudiantil.",
-                onClick = onAbrirLatino
+                onClick = onAbrirLatino,
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(27.dp))
@@ -194,7 +242,8 @@ fun PantallaHistoria(
 
             SeccionHistoria(
                 numero = "03",
-                titulo = "Conceptos clave"
+                titulo = "Conceptos clave",
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(7.dp))
@@ -202,12 +251,12 @@ fun PantallaHistoria(
             Text(
                 text = "Desliza para descubrir las ideas que permiten comprender esta historia.",
                 style = MaterialTheme.typography.bodySmall,
-                color = HistoriaSecondaryText
+                color = esquema.secondaryText
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            CarruselConceptos()
+            CarruselConceptos(esquema = esquema)
 
             Spacer(modifier = Modifier.height(27.dp))
 
@@ -217,7 +266,8 @@ fun PantallaHistoria(
 
             SeccionHistoria(
                 numero = "04",
-                titulo = "Ven a ser parte de esta historia"
+                titulo = "Ven a ser parte de esta historia",
+                esquema = esquema
             )
 
             Spacer(modifier = Modifier.height(7.dp))
@@ -225,12 +275,12 @@ fun PantallaHistoria(
             Text(
                 text = "Una reflexión a la vez.",
                 style = MaterialTheme.typography.bodySmall,
-                color = HistoriaSecondaryText
+                color = esquema.secondaryText
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            CarruselReflexion()
+            CarruselReflexion(esquema = esquema)
 
             Spacer(modifier = Modifier.height(32.dp))
         }
@@ -244,14 +294,13 @@ fun PantallaHistoria(
 
 @Composable
 private fun HistoriaTopBar(
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    esquema: EsquemaColorHistoria
 ) {
-
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = HistoriaBackground
+        color = esquema.background
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -263,21 +312,18 @@ private fun HistoriaTopBar(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             Surface(
                 modifier = Modifier.size(44.dp),
                 shape = CircleShape,
-                color = HistoriaPink
+                color = esquema.pink
             ) {
-
                 IconButton(
                     onClick = onVolver
                 ) {
-
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Volver",
-                        tint = HistoriaWine
+                        tint = esquema.wine
                     )
                 }
             }
@@ -287,35 +333,32 @@ private fun HistoriaTopBar(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-
                 Text(
                     text = "Historia",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = HistoriaText
+                    color = esquema.text
                 )
 
                 Text(
                     text = "Movimiento estudiantil",
                     style = MaterialTheme.typography.labelMedium,
-                    color = HistoriaSecondaryText
+                    color = esquema.secondaryText
                 )
             }
 
             Surface(
                 modifier = Modifier.size(42.dp),
                 shape = CircleShape,
-                color = HistoriaPinkSoft
+                color = esquema.pinkSoft
             ) {
-
                 Box(
                     contentAlignment = Alignment.Center
                 ) {
-
                     Icon(
                         imageVector = Icons.Filled.History,
                         contentDescription = null,
-                        tint = HistoriaWine,
+                        tint = esquema.wine,
                         modifier = Modifier.size(21.dp)
                     )
                 }
@@ -330,14 +373,16 @@ private fun HistoriaTopBar(
 // ========================================================================
 
 @Composable
-private fun HistoriaHero() {
-
+private fun HistoriaHero(
+    esquema: EsquemaColorHistoria
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = HistoriaWine
+            containerColor = esquema.heroBackground
         ),
+        border = BorderStroke(1.dp, esquema.wine.copy(alpha = 0.35f)),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 3.dp
         )
@@ -369,7 +414,7 @@ private fun HistoriaHero() {
             Spacer(modifier = Modifier.height(17.dp))
 
             Text(
-                text = "Una historia que no muere",
+                text = "Una historia más viva que nunca",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
@@ -381,7 +426,7 @@ private fun HistoriaHero() {
                 text =
                     "Hay historias que terminan cuando dejan de contarse. " +
                             "Otras permanecen vivas porque siguen habitando la " +
-                            "memoria, el corazón y el espíritu de quienes llegaron después.",
+                            "memoria, el corazón y el espíritu de quienes aun están.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
                 color = Color.White.copy(alpha = 0.94f)
@@ -391,10 +436,10 @@ private fun HistoriaHero() {
 
             Text(
                 text =
-                    "La historia del movimiento estudiantil permanece porque " +
-                            "sigue habitando nuestras vidas: en las preguntas que " +
-                            "heredamos, en las luchas que recordamos y en aquello " +
-                            "que todavía nos atrevemos a transformar.",
+                    "En épocas como la actual la historia no solo vuelve a cobrar vida " +
+                            "sino que empezamos a protagonizarla. " +
+                            "Heredamos sus privilegios. También heredamos sus luchas " +
+                            "Es hora de transformar nuestro entorno.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
                 color = Color.White.copy(alpha = 0.94f)
@@ -409,7 +454,9 @@ private fun HistoriaHero() {
 // ========================================================================
 
 @Composable
-private fun IntroduccionCard() {
+private fun IntroduccionCard(
+    esquema: EsquemaColorHistoria
+) {
 
     var mostrarCompleto by remember {
         mutableStateOf(false)
@@ -442,8 +489,9 @@ private fun IntroduccionCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(23.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = esquema.cardBackground
         ),
+        border = BorderStroke(1.dp, esquema.border),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 1.dp
         )
@@ -460,7 +508,7 @@ private fun IntroduccionCard() {
                     parrafos.first()
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = HistoriaSecondaryText,
+                color = esquema.secondaryText,
                 textAlign = TextAlign.Justify
             )
 
@@ -470,7 +518,7 @@ private fun IntroduccionCard() {
                 text = if (mostrarCompleto) "Mostrar menos ↑" else "Leer introducción completa →",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = HistoriaWine,
+                color = esquema.wine,
                 modifier = Modifier.clickable {
                     mostrarCompleto = !mostrarCompleto
                 }
@@ -487,28 +535,25 @@ private fun IntroduccionCard() {
 @Composable
 private fun SeccionHistoria(
     numero: String,
-    titulo: String
+    titulo: String,
+    esquema: EsquemaColorHistoria
 ) {
-
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-
         Surface(
             modifier = Modifier.size(35.dp),
             shape = CircleShape,
-            color = HistoriaPink
+            color = esquema.pink
         ) {
-
             Box(
                 contentAlignment = Alignment.Center
             ) {
-
                 Text(
                     text = numero,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = HistoriaWine
+                    color = esquema.wine
                 )
             }
         }
@@ -519,7 +564,7 @@ private fun SeccionHistoria(
             text = titulo,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = HistoriaText
+            color = esquema.text
         )
     }
 }
@@ -536,100 +581,95 @@ private fun TarjetaExploracionPremium(
     kicker: String,
     titulo: String,
     descripcion: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    esquema: EsquemaColorHistoria
 ) {
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(25.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = esquema.cardBackground),
+        border = BorderStroke(1.dp, esquema.border),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
     ) {
-
         Column(
-            modifier = Modifier.padding(
-                horizontal = 17.dp,
-                vertical = 16.dp
-            ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth()
         ) {
-
-            Image(
-                painter = painterResource(id = imagenId),
-                contentDescription = imagenDescripcion,
+            // IMAGEN PANORÁMICA QUE DIRECCIONA A LA PÁGINA
+            Box(
                 modifier = Modifier
-                    .width(210.dp)
-                    .height(112.dp)
-                    .clip(RoundedCornerShape(18.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.height(11.dp))
-
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = HistoriaPink
+                    .fillMaxWidth()
+                    .height(150.dp)
             ) {
-
-                Text(
-                    text = kicker,
-                    modifier = Modifier.padding(
-                        horizontal = 11.dp,
-                        vertical = 5.dp
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = HistoriaWine
+                Image(
+                    painter = painterResource(id = imagenId),
+                    contentDescription = imagenDescripcion,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)),
+                    contentScale = ContentScale.Crop
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = HistoriaText,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            Text(
-                text = descripcion,
-                style = MaterialTheme.typography.bodySmall,
-                color = HistoriaSecondaryText,
-                textAlign = TextAlign.Center,
-                maxLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(11.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = esquema.pink
+                ) {
+                    Text(
+                        text = kicker,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = esquema.wine
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(7.dp))
 
                 Text(
-                    text = "Toca para explorar",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = HistoriaWine
+                    text = titulo,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = esquema.text,
+                    textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-                Icon(
-                    imageVector = Icons.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = HistoriaWine,
-                    modifier = Modifier.size(18.dp)
+                Text(
+                    text = descripcion,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = esquema.secondaryText,
+                    textAlign = TextAlign.Center,
+                    lineHeight = MaterialTheme.typography.labelSmall.lineHeight
                 )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Toca para explorar",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = esquema.wine
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = esquema.wine,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
             }
         }
     }
@@ -647,7 +687,9 @@ private fun TarjetaExploracionPremium(
 // ========================================================================
 
 @Composable
-private fun CarruselConceptos() {
+private fun CarruselConceptos(
+    esquema: EsquemaColorHistoria
+) {
 
     val conceptos = remember {
         listOf(
@@ -742,7 +784,8 @@ private fun CarruselConceptos() {
 
                         ConceptoCompletoCard(
                             numero = indice + 1,
-                            concepto = conceptos[indice]
+                            concepto = conceptos[indice],
+                            esquema = esquema
                         )
                     }
                 }
@@ -753,7 +796,8 @@ private fun CarruselConceptos() {
 
         IndicadorCarruselVertical(
             actual = pagerState.currentPage,
-            total = pagerState.pageCount
+            total = pagerState.pageCount,
+            esquema = esquema
         )
 
         Spacer(modifier = Modifier.height(7.dp))
@@ -767,7 +811,7 @@ private fun CarruselConceptos() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelSmall,
-            color = HistoriaSecondaryText
+            color = esquema.secondaryText
         )
     }
 }
@@ -780,20 +824,20 @@ private fun CarruselConceptos() {
 @Composable
 private fun ConceptoCompletoCard(
     numero: Int,
-    concepto: ConceptoHistoria
+    concepto: ConceptoHistoria,
+    esquema: EsquemaColorHistoria
 ) {
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = esquema.cardBackground
         ),
+        border = BorderStroke(1.dp, esquema.border),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         )
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -803,21 +847,18 @@ private fun ConceptoCompletoCard(
                 ),
             verticalAlignment = Alignment.Top
         ) {
-
             Surface(
                 modifier = Modifier.size(42.dp),
                 shape = RoundedCornerShape(14.dp),
-                color = HistoriaPink
+                color = esquema.pink
             ) {
-
                 Box(
                     contentAlignment = Alignment.Center
                 ) {
-
                     Icon(
                         imageVector = concepto.icon,
                         contentDescription = null,
-                        tint = HistoriaWine,
+                        tint = esquema.wine,
                         modifier = Modifier.size(21.dp)
                     )
                 }
@@ -828,16 +869,14 @@ private fun ConceptoCompletoCard(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
                     Text(
                         text = "0$numero",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = HistoriaWine
+                        color = esquema.wine
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -846,7 +885,7 @@ private fun ConceptoCompletoCard(
                         text = concepto.title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = HistoriaText
+                        color = esquema.text
                     )
                 }
 
@@ -855,7 +894,7 @@ private fun ConceptoCompletoCard(
                 Text(
                     text = concepto.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = HistoriaSecondaryText,
+                    color = esquema.secondaryText,
                     textAlign = TextAlign.Justify
                 )
             }
@@ -869,7 +908,9 @@ private fun ConceptoCompletoCard(
 // ========================================================================
 
 @Composable
-private fun CarruselReflexion() {
+private fun CarruselReflexion(
+    esquema: EsquemaColorHistoria
+) {
 
     val reflexiones = remember {
         listOf(
@@ -927,7 +968,7 @@ private fun CarruselReflexion() {
             ReflexionHistoria(
                 title = "Una historia que no muere",
                 paragraphs = listOf(
-                    "Una historia que no muere no es una historia que permanece intacta. " +
+                    "La historia estudiantil es una historia de resiliciencia. " +
                             "Es una historia que vuelve a nosotros cada vez que una nueva " +
                             "generación pregunta, recuerda, cuestiona y decide qué hacer " +
                             "con el mundo que recibió.",
@@ -957,7 +998,8 @@ private fun CarruselReflexion() {
         ) { page ->
 
             ReflexionCompletaCard(
-                reflexion = reflexiones[page]
+                reflexion = reflexiones[page],
+                esquema = esquema
             )
         }
 
@@ -965,7 +1007,8 @@ private fun CarruselReflexion() {
 
         IndicadorCarruselVertical(
             actual = pagerState.currentPage,
-            total = pagerState.pageCount
+            total = pagerState.pageCount,
+            esquema = esquema
         )
 
         Spacer(modifier = Modifier.height(7.dp))
@@ -975,7 +1018,7 @@ private fun CarruselReflexion() {
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelSmall,
-            color = HistoriaSecondaryText
+            color = esquema.secondaryText
         )
     }
 }
@@ -987,44 +1030,40 @@ private fun CarruselReflexion() {
 
 @Composable
 private fun ReflexionCompletaCard(
-    reflexion: ReflexionHistoria
+    reflexion: ReflexionHistoria,
+    esquema: EsquemaColorHistoria
 ) {
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(27.dp),
         colors = CardDefaults.cardColors(
-            containerColor = HistoriaPinkSoft
+            containerColor = esquema.pinkSoft
         ),
+        border = BorderStroke(1.dp, esquema.border),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
         )
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(21.dp)
         ) {
-
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Surface(
                     modifier = Modifier.size(46.dp),
                     shape = RoundedCornerShape(15.dp),
-                    color = HistoriaPink
+                    color = esquema.pink
                 ) {
-
                     Box(
                         contentAlignment = Alignment.Center
                     ) {
-
                         Icon(
                             imageVector = Icons.Filled.Lightbulb,
                             contentDescription = null,
-                            tint = HistoriaWine,
+                            tint = esquema.wine,
                             modifier = Modifier.size(23.dp)
                         )
                     }
@@ -1036,18 +1075,17 @@ private fun ReflexionCompletaCard(
                     text = reflexion.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = HistoriaText
+                    color = esquema.text
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             reflexion.paragraphs.forEachIndexed { index, paragraph ->
-
                 Text(
                     text = paragraph,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = HistoriaSecondaryText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = esquema.secondaryText,
                     textAlign = TextAlign.Justify
                 )
 
@@ -1067,16 +1105,14 @@ private fun ReflexionCompletaCard(
 @Composable
 private fun IndicadorCarruselVertical(
     actual: Int,
-    total: Int
+    total: Int,
+    esquema: EsquemaColorHistoria
 ) {
-
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-
         repeat(total) { indice ->
-
             Box(
                 modifier = Modifier
                     .padding(horizontal = 3.dp)
@@ -1087,9 +1123,9 @@ private fun IndicadorCarruselVertical(
                     .clip(RoundedCornerShape(50))
                     .background(
                         if (indice == actual) {
-                            HistoriaWine
+                            esquema.wine
                         } else {
-                            HistoriaPink
+                            esquema.pink
                         }
                     )
             )

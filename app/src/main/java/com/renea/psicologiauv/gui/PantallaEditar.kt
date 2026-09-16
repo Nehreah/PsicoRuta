@@ -1878,7 +1878,7 @@ private fun MemoriaEstudiantilFlotante(
                         style =
                             MaterialTheme
                                 .typography
-                                .labelLarge,
+                                .labelSmall,
 
                         fontWeight =
                             FontWeight.Bold,
