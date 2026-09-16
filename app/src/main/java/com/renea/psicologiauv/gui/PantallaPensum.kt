@@ -801,24 +801,7 @@ private fun ModuloSemestreDeslizante(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(Modifier.height(2.dp))
-
-            Text(
-                text = "${materias.size} Asig.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-
-            Text(
-                text = "${materias.sumOf { it.creditos }} cr.",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
-            )
-
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(6.dp))
 
             Surface(
                 shape = RoundedCornerShape(20.dp),

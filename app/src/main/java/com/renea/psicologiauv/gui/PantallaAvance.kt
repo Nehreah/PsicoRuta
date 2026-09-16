@@ -22,6 +22,12 @@ import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.School
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+
 import androidx.compose.runtime.*
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.ui.Alignment
@@ -796,68 +802,167 @@ private fun DialogoInformacionIdioma(
     var modoEdicion by remember { mutableStateOf(false) }
 
     if (!modoEdicion) {
-        AlertDialog(
+        val scheme = MaterialTheme.colorScheme
+        val aprobada = materia.aprobo()
+        val colorEstado = if (aprobada) AprobadoColor else scheme.primary
+
+        Dialog(
             onDismissRequest = onDismiss,
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            textContentColor = MaterialTheme.colorScheme.onSurface,
-            iconContentColor = MaterialTheme.colorScheme.primary,
-            shape = RoundedCornerShape(24.dp),
-
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Translate,
-                    contentDescription = null
-                )
-            },
-
-            title = {
-                Text(
-                    text = materia.nombre,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    InformacionIdioma(
-                        etiqueta = "Nombre",
-                        valor = materia.nombre
-                    )
-                    InformacionIdioma(
-                        etiqueta = "Código",
-                        valor = materia.codigo
-                    )
-                    InformacionIdioma(
-                        etiqueta = "Nota",
-                        valor = if (materia.nota > 0) {
-                            materia.nota.toString()
-                        } else {
-                            materia.notaEspecial ?: "-"
-                        }
-                    )
-                    InformacionIdioma(
-                        etiqueta = "Créditos",
-                        valor = materia.creditos.toString()
-                    )
-                }
-            },
-
-            dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text("Cerrar")
-                }
-            },
-
-            confirmButton = {
-                Button(
-                    onClick = { modoEdicion = true },
-                    shape = RoundedCornerShape(50)
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.90f)
+                    .wrapContentHeight(),
+                shape = RoundedCornerShape(28.dp),
+                color = scheme.surface,
+                tonalElevation = 6.dp,
+                shadowElevation = 16.dp,
+                border = BorderStroke(1.dp, colorEstado.copy(alpha = 0.20f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Editar")
+                    // HERO HEADER: Icon Badge
+                    Surface(
+                        modifier = Modifier.size(56.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        color = colorEstado.copy(alpha = 0.12f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Filled.Translate,
+                                contentDescription = null,
+                                tint = colorEstado,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // TITULO DE LA MATERIA (Nombre visible sólo aquí)
+                    Text(
+                        text = materia.nombre,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = scheme.onSurface,
+                        textAlign = TextAlign.Center,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // CHIP DE ESTADO Y NOTA
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = colorEstado.copy(alpha = 0.12f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (aprobada) Icons.Filled.CheckCircle else Icons.Filled.Description,
+                                contentDescription = null,
+                                tint = colorEstado,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = if (aprobada) "Aprobada · Nota ${materia.textoNota()}" else "Pendiente",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = colorEstado
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.40f))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // GRILLA DE DETALLES (Sin repetir el nombre)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FichaInformacionTile(
+                            etiqueta = "Código",
+                            valor = materia.codigo,
+                            modifier = Modifier.weight(1f)
+                        )
+                        FichaInformacionTile(
+                            etiqueta = "Créditos",
+                            valor = "${materia.creditos} CR",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FichaInformacionTile(
+                            etiqueta = "Calificación",
+                            valor = if (materia.nota > 0) materia.nota.toString() else (materia.notaEspecial ?: "Sin nota"),
+                            modifier = Modifier.weight(1f)
+                        )
+                        FichaInformacionTile(
+                            etiqueta = "Estado",
+                            valor = if (aprobada) "Aprobado" else "En curso",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // BOTONES DE ACCIÓN
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(50),
+                            border = BorderStroke(1.dp, scheme.outlineVariant)
+                        ) {
+                            Text(
+                                text = "Cerrar",
+                                color = scheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Button(
+                            onClick = { modoEdicion = true },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = colorEstado)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Editar",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
-        )
+        }
     } else {
         DialogoEditarIdioma(
             materia = materia,
@@ -867,31 +972,37 @@ private fun DialogoInformacionIdioma(
     }
 }
 
-// ========================================================================
-// FILA DE INFORMACIÓN DE IDIOMA
-// ========================================================================
-
 @Composable
-private fun InformacionIdioma(
+private fun FichaInformacionTile(
     etiqueta: String,
-    valor: String
+    valor: String,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 5.dp)
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
     ) {
-        Text(
-            text = etiqueta,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Text(
-            text = valor,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = etiqueta.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = valor,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
     }
 }
 
