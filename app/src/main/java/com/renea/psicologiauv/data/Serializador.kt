@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.util.AtomicFile
+import android.util.Log
 import android.os.Environment
 import android.provider.MediaStore
 import com.renea.psicologiauv.model.ElectivaProfesionalCatalogo
@@ -41,16 +43,29 @@ class Serializador(private val context: Context) {
 
     companion object {
         private const val CLAVE_PRIMERA_VEZ = "primera_vez"
+        private const val TAG = "PsicoRuta/Serializador"
     }
 
-    private fun copiarAInterno( destino: File) {
+    private fun copiarAInterno(destino: File) {
+        val archivoAtomico = AtomicFile(destino)
+        var salida: java.io.FileOutputStream? = null
         try {
+            destino.parentFile?.mkdirs()
+            salida = archivoAtomico.startWrite()
             context.assets.open("data/estudiante.json").use { input ->
-                destino.parentFile?.mkdirs()
-                destino.outputStream().use { output -> input.copyTo(output) }
+                input.copyTo(salida)
             }
+            salida.fd.sync()
+            archivoAtomico.finishWrite(salida)
         } catch (e: IOException) {
-            // No existe ese programa empaquetado en assets; cargarPrograma() devolverá null.
+            if (salida != null) {
+                try {
+                    archivoAtomico.failWrite(salida)
+                } catch (cleanupError: Exception) {
+                    Log.w(TAG, "No se pudo limpiar una copia inicial incompleta.", cleanupError)
+                }
+            }
+            Log.w(TAG, "No se pudo copiar la plantilla inicial del estudiante.", e)
         }
     }
 
@@ -60,8 +75,19 @@ class Serializador(private val context: Context) {
             copiarAInterno(rutaGuardado)
         }
         if(!rutaGuardado.exists()) return null
-        val estudianteTexto = rutaGuardado.readText(Charsets.UTF_8)
-        return jsonEstudiante.decodeFromString(Estudiante.serializer(), estudianteTexto)
+        return try {
+            val archivoAtomico = AtomicFile(rutaGuardado)
+            val estudianteTexto = archivoAtomico.openRead().bufferedReader(Charsets.UTF_8).use {
+                it.readText()
+            }
+            jsonEstudiante.decodeFromString(Estudiante.serializer(), estudianteTexto)
+        } catch (e: Exception) {
+            // No se elimina ni sobrescribe el archivo que falló: puede contener
+            // datos recuperables. El llamador recibe null, como en otros métodos
+            // de lectura, y el detalle técnico queda únicamente en Logcat.
+            Log.e(TAG, "No se pudo leer el archivo local del estudiante.", e)
+            null
+        }
     }
 
     /**
@@ -77,13 +103,37 @@ class Serializador(private val context: Context) {
                 jsonEstudiante.decodeFromString(Estudiante.serializer(), texto)
             }
         } catch (e: Exception) {
+            Log.w(TAG, "No se pudo cargar el archivo de estudiante solicitado desde assets.", e)
             null
         }
     }
 
+    /**
+     * Guarda el perfil mediante escritura atómica. Si el proceso se interrumpe
+     * durante la escritura, AtomicFile conserva el archivo anterior en lugar de
+     * dejar estudiante.json parcialmente escrito.
+     * Las excepciones de escritura se propagan para no ocultar un guardado fallido.
+     */
     fun guardarEstudiante(estudiante: Estudiante) {
         val estudianteTexto = jsonEstudiante.encodeToString(Estudiante.serializer(), estudiante)
-        File(filesDir, "estudiante.json").writeText(estudianteTexto, Charsets.UTF_8)
+        val archivoAtomico = AtomicFile(File(filesDir, "estudiante.json"))
+        var salida: java.io.FileOutputStream? = null
+        try {
+            salida = archivoAtomico.startWrite()
+            salida.write(estudianteTexto.toByteArray(Charsets.UTF_8))
+            salida.fd.sync()
+            archivoAtomico.finishWrite(salida)
+        } catch (e: Exception) {
+            if (salida != null) {
+                try {
+                    archivoAtomico.failWrite(salida)
+                } catch (cleanupError: Exception) {
+                    Log.w(TAG, "No se pudo restaurar el archivo anterior tras un error de escritura.", cleanupError)
+                }
+            }
+            Log.e(TAG, "No se pudo guardar el perfil del estudiante.", e)
+            throw e
+        }
     }
 
     /**
@@ -95,8 +145,15 @@ class Serializador(private val context: Context) {
      */
     fun eliminarEstudiante() {
         val archivoGuardado = File(filesDir, "estudiante.json")
-        if (archivoGuardado.exists()) {
-            archivoGuardado.delete()
+        try {
+            // AtomicFile también elimina los respaldos temporales que podría
+            // dejar una escritura interrumpida; borrar solo el archivo base
+            // podría permitir que un respaldo antiguo reapareciera después.
+            AtomicFile(archivoGuardado).delete()
+        } catch (e: Exception) {
+            // Se mantiene el contrato anterior: la operación no propaga errores
+            // de almacenamiento a la interfaz, pero deja diagnóstico en Logcat.
+            Log.e(TAG, "No se pudo eliminar el archivo local del estudiante.", e)
         }
     }
 
@@ -124,26 +181,53 @@ class Serializador(private val context: Context) {
                 put(MediaStore.Downloads.MIME_TYPE, "application/json")
                 put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
             }
+            var uriCreada: Uri? = null
             try {
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, valores)
                     ?: return null
-                resolver.openOutputStream(uri)?.use { salida ->
-                    salida.write(contenidoJson.toByteArray(Charsets.UTF_8))
-                }
+                uriCreada = uri
+                val salida = resolver.openOutputStream(uri)
+                    ?: throw IOException("No se pudo abrir el archivo de destino.")
+                salida.use { it.write(contenidoJson.toByteArray(Charsets.UTF_8)) }
                 uri
             } catch (e: Exception) {
+                // Evita dejar un archivo vacío o parcial si la exportación falla.
+                uriCreada?.let { uriFallida ->
+                    try {
+                        resolver.delete(uriFallida, null, null)
+                    } catch (cleanupError: Exception) {
+                        Log.w(TAG, "No se pudo limpiar una exportación incompleta.", cleanupError)
+                    }
+                }
+                Log.e(TAG, "No se pudo exportar el perfil a Descargas.", e)
                 null
             }
         } else {
+            var archivoCreado: File? = null
             try {
                 @Suppress("DEPRECATION")
                 val carpetaDescargas =
                     Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                carpetaDescargas.mkdirs()
+                if (!carpetaDescargas.exists() && !carpetaDescargas.mkdirs()) {
+                    throw IOException("No se pudo crear la carpeta Descargas.")
+                }
                 val archivo = File(carpetaDescargas, nombreArchivo)
+                archivoCreado = archivo
                 archivo.writeText(contenidoJson, Charsets.UTF_8)
                 Uri.fromFile(archivo)
             } catch (e: Exception) {
+                // Si la escritura falla, no dejar un JSON incompleto que el
+                // usuario pueda confundir con una copia de seguridad válida.
+                archivoCreado?.let { archivo ->
+                    try {
+                        if (archivo.exists() && !archivo.delete()) {
+                            Log.w(TAG, "No se pudo eliminar la exportación incompleta.")
+                        }
+                    } catch (cleanupError: Exception) {
+                        Log.w(TAG, "No se pudo limpiar una exportación incompleta.", cleanupError)
+                    }
+                }
+                Log.e(TAG, "No se pudo exportar el perfil a Descargas.", e)
                 null
             }
         }
@@ -170,11 +254,17 @@ class Serializador(private val context: Context) {
      */
     fun importarEstudianteDesdeUri(uri: Uri): Estudiante? {
         return try {
-            context.contentResolver.openInputStream(uri)?.use { entrada ->
+            val flujo = context.contentResolver.openInputStream(uri)
+            if (flujo == null) {
+                Log.w(TAG, "El proveedor de archivos no pudo abrir el JSON seleccionado.")
+                return null
+            }
+            flujo.use { entrada ->
                 val texto = entrada.readBytes().toString(Charsets.UTF_8)
                 jsonEstudiante.decodeFromString(Estudiante.serializer(), texto)
             }
         } catch (e: Exception) {
+            Log.w(TAG, "No se pudo importar el archivo JSON seleccionado.", e)
             null
         }
     }
@@ -198,6 +288,7 @@ class Serializador(private val context: Context) {
                 )
             }
         } catch (e: Exception) {
+            Log.w(TAG, "No se pudo leer el catálogo de electivas profesionales.", e)
             emptyList()
         }
     }
