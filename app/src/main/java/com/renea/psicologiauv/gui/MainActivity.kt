@@ -17,6 +17,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,18 +39,25 @@ import androidx.compose.foundation.pager.rememberPagerState
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
 
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,6 +78,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -100,17 +111,209 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
 
+        val preferenciasAviso = getSharedPreferences("psicoruta_ajustes", MODE_PRIVATE)
+
         setContent {
             PsicologiaUVTheme {
+                var avisoAceptado by remember {
+                    mutableStateOf(preferenciasAviso.getBoolean("aviso_uso_aceptado", false))
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    PsicologiaUVApp(
-                        viewModel = viewModel
-                    )
+                    if (avisoAceptado) {
+                        PsicologiaUVApp(viewModel = viewModel)
+                    } else {
+                        AvisoInicialPsicoRuta(
+                            onContinuar = {
+                                preferenciasAviso.edit()
+                                    .putBoolean("aviso_uso_aceptado", true)
+                                    .apply()
+                                avisoAceptado = true
+                            }
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+
+
+
+// ========================================================================
+// AVISO DE USO: se presenta en la primera apertura y queda disponible
+// como confirmación inicial, sin sustituir una política de privacidad web.
+// ========================================================================
+
+@Composable
+private fun AvisoInicialPsicoRuta(
+    onContinuar: () -> Unit
+) {
+    var confirmacionLectura by rememberSaveable { mutableStateOf(false) }
+    val colores = MaterialTheme.colorScheme
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colores.background)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(28.dp))
+                .background(colores.surface)
+                .border(1.dp, colores.outlineVariant.copy(alpha = 0.45f), RoundedCornerShape(28.dp))
+                .padding(22.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(colores.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.School,
+                    contentDescription = null,
+                    tint = colores.onPrimaryContainer,
+                    modifier = Modifier.size(39.dp)
+                )
+            }
+
+            Text(
+                text = "PsicoRuta UV",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "Antes de comenzar",
+                style = MaterialTheme.typography.titleMedium,
+                color = colores.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "Una herramienta educativa independiente para consultar y organizar información académica.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colores.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            AvisoItem(
+                icono = Icons.Filled.Info,
+                titulo = "Proyecto independiente",
+                descripcion = "PsicoRuta UV no es una aplicación oficial de la Universidad del Valle ni está patrocinada, administrada o respaldada por dicha institución."
+            )
+            AvisoItem(
+                icono = Icons.Filled.School,
+                titulo = "Uso informativo",
+                descripcion = "Contrasta la información académica importante con las fuentes y los canales oficiales de la Universidad. La aplicación no los sustituye."
+            )
+            AvisoItem(
+                icono = Icons.Filled.PrivacyTip,
+                titulo = "Privacidad",
+                descripcion = "Evita introducir datos personales sensibles o información que no sea necesaria. La política de privacidad completa debe consultarse en su enlace público cuando esté publicado."
+            )
+            AvisoItem(
+                icono = Icons.Filled.Save,
+                titulo = "Copias de seguridad",
+                descripcion = "Exporta periódicamente tus datos y guarda el archivo en un lugar seguro. No confíes en que la información se recuperará automáticamente al desinstalar la aplicación o cambiar de dispositivo."
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(colores.surfaceVariant.copy(alpha = 0.55f))
+                    .clickable { confirmacionLectura = !confirmacionLectura }
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = confirmacionLectura,
+                    onCheckedChange = { confirmacionLectura = it }
+                )
+                Text(
+                    text = "He leído y comprendido este aviso.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colores.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Button(
+                onClick = onContinuar,
+                enabled = confirmacionLectura,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colores.primary,
+                    contentColor = colores.onPrimary
+                )
+            ) {
+                Text("Continuar", fontWeight = FontWeight.Bold)
+            }
+            Text(
+                text = "Este aviso no sustituye la política de privacidad completa.",
+                style = MaterialTheme.typography.labelSmall,
+                color = colores.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun AvisoItem(
+    icono: ImageVector,
+    titulo: String,
+    descripcion: String
+) {
+    val colores = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(13.dp))
+                .background(colores.primaryContainer.copy(alpha = 0.75f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = null,
+                tint = colores.onPrimaryContainer,
+                modifier = Modifier.size(21.dp)
+            )
+        }
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Text(
+                text = titulo,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface
+            )
+            Text(
+                text = descripcion,
+                style = MaterialTheme.typography.bodySmall,
+                color = colores.onSurfaceVariant
+            )
         }
     }
 }

@@ -1,25 +1,27 @@
-# PsicologiaUV 🧠
+# PsicologiaUV
 
 Aplicación Android para estudiantes de la carrera de **Psicología** de la **Universidad del Valle (UV)**, desarrollada de forma nativa con **Kotlin** y **Jetpack Compose**.
 
-> ✨ **Proyecto independiente**: esta aplicación fue creada por una sola persona con mucho amor para democratizar el acceso a la información académica, brindando a cada estudiante una herramienta clara, accesible y transparente para gestionar y planificar su trayectoria universitaria.
+> **Proyecto independiente**: esta aplicación fue creada de forma independiente para facilitar el acceso a la información académica y ayudar a los estudiantes a gestionar y planificar su trayectoria universitaria.
+>
+> **Aviso de independencia institucional:** PsicologiaUV es un proyecto independiente y **no es una aplicación oficial de la Universidad del Valle, ni está afiliada, patrocinada, aprobada o avalada por dicha institución**, salvo que exista una autorización expresa que indique lo contrario. El nombre de la Universidad del Valle y las referencias a sus programas, normativas o sistemas se utilizan únicamente con fines informativos. La aplicación no reemplaza los canales, documentos ni las fuentes oficiales de la Universidad; se recomienda verificar allí cualquier información académica o normativa antes de tomar decisiones.
 
 ---
 
-## ✨ Características principales
+## Características principales
 
-- 📚 **Malla curricular y Pensum interactivo**: visualización ordenada por semestres, seguimiento de materias (aprobadas, pendientes, matriculadas), créditos académicos y verificación de prerrequisitos.
-- 📈 **Seguimiento de avance**: cálculo en tiempo real del progreso de la carrera, créditos cursados vs. totales, gráficos de anillo y avance detallado por áreas curriculares.
-- 💼 **Gestión de Prácticas Profesionales**: control del cumplimiento de requisitos previos (Ética, Diagnóstico, Fundamentaciones) y avance por niveles (I, II, III).
-- 🎨 **Personalización por línea de profundización**: diseños visuales temáticos adaptados a cada línea profesional (**Clínica**, **Educativa**, **Organizacional**, **Social**, **Neuroclínica**), con soporte completo para modo claro y modo oscuro.
-- 🎓 **Candidatura a grado**: monitoreo automatizado de los requisitos obligatorios para saber cuándo se está listo para el proceso de graduación.
-- 📥 **Integración con SIRA y reportes PDF**: importación de calificaciones oficiales directamente desde el PDF del SIRA y exportación de informes académicos en PDF.
-- ✊ **Memoria e historia estudiantil**: cronología interactiva de hitos históricos del movimiento estudiantil en Cali y Latinoamérica.
-- 🔗 **Accesos rápidos**: consulta directa de normativas universitarias (Resolución 091, Acuerdo 009, malla oficial y enlaces institucionales).
+- **Malla curricular y Pensum interactivo**: visualización ordenada por semestres, seguimiento de materias (aprobadas, pendientes, matriculadas), créditos académicos y verificación de prerrequisitos.
+- **Seguimiento de avance**: cálculo en tiempo real del progreso de la carrera, créditos cursados vs. totales, gráficos de anillo y avance detallado por áreas curriculares.
+- **Gestión de Prácticas Profesionales**: control del cumplimiento de requisitos previos (Ética, Diagnóstico, Fundamentaciones) y avance por niveles (I, II, III).
+- **Personalización por línea de profundización**: diseños visuales temáticos adaptados a cada línea profesional (**Clínica**, **Educativa**, **Organizacional**, **Social**, **Neuroclínica**), con soporte completo para modo claro y modo oscuro.
+- **Candidatura a grado**: monitoreo automatizado de los requisitos obligatorios para saber cuándo se está listo para el proceso de graduación.
+- **Integración con SIRA y reportes PDF**: importación de calificaciones oficiales directamente desde el PDF del SIRA y exportación de informes académicos en PDF.
+- **Memoria e historia estudiantil**: cronología interactiva de hitos históricos del movimiento estudiantil en Cali y Latinoamérica.
+- **Accesos rápidos**: consulta directa de normativas universitarias (Resolución 091, Acuerdo 009, malla oficial y enlaces institucionales).
 
 ---
 
-## 🛠️ Stack tecnológico
+## Stack tecnológico
 
 | Tecnología | Rol en el proyecto |
 |---|---|
@@ -32,7 +34,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la **Un
 
 ---
 
-## 🚀 Cómo ejecutar el proyecto
+## Cómo ejecutar el proyecto
 
 ### Requisitos previos
 
@@ -55,7 +57,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la **Un
 
 ---
 
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 app/
@@ -73,13 +75,13 @@ app/
 
 ---
 
-## 🤝 Contribuciones
+## Contribuciones
 
 Las contribuciones son bienvenidas. Si tienes sugerencias de mejora o encuentras algún error en la información del pensum o las normativas, siéntete libre de abrir un *issue* o enviar un *pull request*.
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto está bajo la licencia **GNU General Public License v3.0 (GPL-3.0)** — consulta el archivo [LICENSE](LICENSE) para más detalles.
 
