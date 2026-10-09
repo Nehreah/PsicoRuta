@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
 
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
@@ -222,7 +223,7 @@ private fun AvisoInicialPsicoRuta(
             AvisoItem(
                 icono = Icons.Filled.PrivacyTip,
                 titulo = "Privacidad",
-                descripcion = "Evita introducir datos personales sensibles o información que no sea necesaria. La política de privacidad completa debe consultarse en su enlace público cuando esté publicado."
+                descripcion = "Evita introducir datos personales sensibles o información que no sea necesaria. La política de privacidad completa está disponible en la ficha de la aplicación en Google Play."
             )
             AvisoItem(
                 icono = Icons.Filled.Save,
@@ -316,6 +317,78 @@ private fun AvisoItem(
             )
         }
     }
+}
+
+
+// ========================================================================
+// AVISO PERMANENTE DE INDEPENDENCIA (política de Play contra suplantación)
+// Siempre visible sobre la barra de navegación; al tocarlo abre el detalle.
+// ========================================================================
+
+@Composable
+private fun BannerIndependencia(onClick: () -> Unit) {
+    val colores = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colores.surfaceVariant.copy(alpha = 0.55f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = colores.onSurfaceVariant,
+            modifier = Modifier.size(14.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "App independiente · No oficial de la Universidad del Valle",
+            style = MaterialTheme.typography.labelSmall,
+            color = colores.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun DialogoAcercaDe(onCerrar: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onCerrar,
+        icon = { Icon(Icons.Filled.Info, contentDescription = null) },
+        title = { Text("Acerca de PsicoRuta UV") },
+        text = {
+            androidx.compose.foundation.layout.Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    "PsicoRuta UV es una aplicación independiente, creada por un estudiante, " +
+                        "con fines educativos e informativos.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "NO es una aplicación oficial de la Universidad del Valle, ni está afiliada, " +
+                        "patrocinada, aprobada o avalada por dicha institución. No utiliza sus " +
+                        "logotipos ni símbolos oficiales. El nombre de la Universidad y las " +
+                        "referencias a su programa de Psicología se usan únicamente para " +
+                        "identificar el plan de estudios al que se refiere la información.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "La aplicación no reemplaza los canales, documentos ni sistemas oficiales " +
+                        "(como SIRA). Verifica allí cualquier información académica o normativa " +
+                        "antes de tomar decisiones.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onCerrar) { Text("Entendido") }
+        }
+    )
 }
 
 
@@ -535,6 +608,12 @@ fun PsicologiaUVApp(
     // SCAFFOLD
     // ====================================================================
 
+    var mostrarAcercaDe by rememberSaveable { mutableStateOf(false) }
+
+    if (mostrarAcercaDe) {
+        DialogoAcercaDe(onCerrar = { mostrarAcercaDe = false })
+    }
+
     Scaffold(
 
         containerColor =
@@ -542,17 +621,23 @@ fun PsicologiaUVApp(
 
         bottomBar = {
 
-            BarraNavegacionModerna(
+            androidx.compose.foundation.layout.Column {
 
-                destinos = pantallasVisibles,
+                // Aviso permanente: la app es independiente y no oficial.
+                BannerIndependencia(onClick = { mostrarAcercaDe = true })
 
-                destinoActual = destinoActual,
+                BarraNavegacionModerna(
 
-                onDestinoSeleccionado = { destino ->
+                    destinos = pantallasVisibles,
 
-                    destinoActual = destino
-                }
-            )
+                    destinoActual = destinoActual,
+
+                    onDestinoSeleccionado = { destino ->
+
+                        destinoActual = destino
+                    }
+                )
+            }
         }
 
     ) { paddingInterno ->

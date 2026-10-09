@@ -30,8 +30,7 @@ class ControlV (private val parse: Serializador): ViewModel() {
      * correspondiente en esa misma carpeta de assets.
      */
     private val ESTUDIANTES_ESPECIALES: Map<String, String> = mapOf(
-        "melson nolima" to "estudiante_melson_nolima.json",
-        "pedro rodriguez" to "estudiante_pedro_rodriguez.json",
+        "melson nolima" to "estudiante_melson.json",
         "luke skywalker" to "estudiante_luke_skywalker.json"
     )
 

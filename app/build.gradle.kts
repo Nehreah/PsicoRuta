@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,11 +24,47 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+
+    // ------------------------------------------------------------------
+    // FIRMA DE RELEASE
+    // Las credenciales NO van en el repositorio: se leen de
+    // `keystore.properties` (en la raíz, ignorado por git). Ver
+    // `keystore.properties.example` y `PUBLICAR_EN_PLAY.md`.
+    // ------------------------------------------------------------------
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties()
+    val tieneKeystore = keystorePropertiesFile.exists()
+    if (tieneKeystore) {
+        FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+    }
+
+    signingConfigs {
+        if (tieneKeystore) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
                 enable = false
             }
+            if (tieneKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
+    }
+
+    // Google Play entrega el idioma del dispositivo sin dividirlo en
+    // paquetes aparte, evitando problemas si el usuario cambia de idioma.
+    bundle {
+        language {
+            enableSplit = false
         }
     }
     compileOptions {
