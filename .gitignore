@@ -6,8 +6,9 @@
 /build/
 **/build/
 
-# Archivos locales de configuración (contienen rutas absolutas del SDK, etc.)
+# Archivos locales de configuración (contienen rutas absolutas del SDK, Key, etc.)
 local.properties
+keystore.properties
 
 # Archivos de módulo de IntelliJ / Android Studio
 *.iml
