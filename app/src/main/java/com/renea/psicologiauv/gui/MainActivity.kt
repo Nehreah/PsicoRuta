@@ -227,7 +227,7 @@ private fun AvisoInicialPsicoRuta(
             AvisoItem(
                 icono = Icons.Filled.Save,
                 titulo = "Copias de seguridad",
-                descripcion = "Exporta periódicamente tus datos y guarda el archivo en un lugar seguro. No confíes en que la información se recuperará automáticamente al desinstalar la aplicación o cambiar de dispositivo."
+                descripcion = "Tus datos se guardan estrictamente de forma local por privacidad y NO se suben a la nube. Desinstalar la app o perder el dispositivo borrará tus datos locales de forma definitiva. Exporta periódicamente una copia de seguridad y guárdala en un lugar seguro."
             )
 
             Row(
