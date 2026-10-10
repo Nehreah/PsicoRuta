@@ -9,6 +9,8 @@
 # Archivos locales de configuración (contienen rutas absolutas del SDK, Key, etc.)
 local.properties
 keystore.properties
+*.aab
+psicoruta-release.jks
 
 # Archivos de módulo de IntelliJ / Android Studio
 *.iml

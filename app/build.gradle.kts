@@ -19,7 +19,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "2.0"
+        versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -45,17 +45,6 @@ android {
                 storePassword = keystoreProperties.getProperty("storePassword")
                 keyAlias = keystoreProperties.getProperty("keyAlias")
                 keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
-        }
-    }
-
-    buildTypes {
-        release {
-            optimization {
-                enable = false
-            }
-            if (tieneKeystore) {
-                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
