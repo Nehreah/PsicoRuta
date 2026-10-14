@@ -37,6 +37,7 @@ gradle-app.setting
 # Keystore (¡NUNCA versionar claves de firma!)
 *.jks
 *.keystore
+keystore.properties
 release.properties
 
 # ============================================================
