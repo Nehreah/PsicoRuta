@@ -122,7 +122,7 @@ class MainActivity : ComponentActivity() {
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = Color.Transparent
                 ) {
                     if (avisoAceptado) {
                         PsicologiaUVApp(viewModel = viewModel)
@@ -682,13 +682,27 @@ fun PsicologiaUVApp(
         // PÁGINAS
         // ================================================================
 
+        // Fondo temático global: la ilustración depende de la línea profesional
+        // del estudiante y queda detrás de todas las pantallas, no dentro del hero.
+        val temaPantalla = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(estudiante.linea)
+        val temaOscuro = androidx.compose.foundation.isSystemInDarkTheme()
+        val fondoTematico = if (temaOscuro) temaPantalla.fondoOscuro else temaPantalla.fondoClaro
+
+        Box(
+            modifier = Modifier
+                .padding(paddingInterno)
+                .fillMaxSize()
+                .background(fondoTematico)
+        ) {
+            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
+                tipo = temaPantalla.tipo,
+                colorAcento = temaPantalla.colorPrimario,
+                isDark = temaOscuro,
+                modifier = Modifier.fillMaxSize()
+            )
+
         ZoomableAnyScreen(
-
-            modifier =
-                Modifier
-                    .padding(paddingInterno)
-                    .fillMaxSize()
-
+            modifier = Modifier.fillMaxSize()
         ) {
 
             HorizontalPager(
@@ -778,6 +792,7 @@ fun PsicologiaUVApp(
                     null -> Unit
                 }
             }
+        }
         }
     }
 }

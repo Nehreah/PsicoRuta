@@ -135,9 +135,9 @@ fun PantallaPracticas(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = fondoCabecera),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f))
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = null
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(

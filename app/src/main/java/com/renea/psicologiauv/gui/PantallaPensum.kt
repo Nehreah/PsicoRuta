@@ -123,9 +123,7 @@ fun PantallaPensum(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                MaterialTheme.colorScheme.background
-            )
+            .background(Color.Transparent)
     ) {
 
         Column(
@@ -432,10 +430,10 @@ private fun PensumHeaderModerno(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = fondo
+            containerColor = Color.Transparent
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, colorAcento.copy(alpha = if (isDark) 0.25f else 0.15f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = null
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
@@ -836,9 +834,9 @@ private fun CaraCuboSemestre(
             .padding(horizontal = 2.dp),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.Transparent
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier

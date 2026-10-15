@@ -35,12 +35,8 @@ fun PantallaGrado(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 6.dp
-                ),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
             ) {
 
                 Column(
@@ -100,9 +96,8 @@ fun PantallaGrado(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 4.dp
-                )
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
             ) {
 
                 Column(
