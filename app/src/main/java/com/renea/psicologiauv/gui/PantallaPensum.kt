@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -125,7 +127,7 @@ fun PantallaPensum(
                     start = 12.dp,
                     end = 12.dp,
                     top = 10.dp,
-                    bottom = 82.dp
+                    bottom = 20.dp
                 ),
             verticalArrangement =
                 Arrangement.spacedBy(9.dp)
@@ -135,7 +137,7 @@ fun PantallaPensum(
             /* HEADER                                                      */
             /* ========================================================== */
 
-         
+
 
             /* ========================================================== */
             /* FILTROS                                                     */
@@ -175,6 +177,18 @@ fun PantallaPensum(
                 }
             )
 
+            // La cinta permanece flotante visualmente, pero ahora fluye debajo
+            // de "Cambiar semestre" y baja de forma natural si crece la lista.
+            CintaOpcionesPensum(
+                modifier = Modifier
+                    .wrapContentWidth(Alignment.CenterHorizontally),
+                filtrosActivos = filtroArea != null || filtroAprobado != null,
+                tieneElectivas = materiasElectivas.isNotEmpty(),
+                onFiltros = { mostrarFiltros = !mostrarFiltros },
+                onElectivas = { mostrarElectivas = true },
+                onAgregar = { mostrarMenuAgregarComplementaria = true }
+            )
+
             /* ========================================================== */
             /* ESTADO VACÍO                                                */
             /* ========================================================== */
@@ -189,39 +203,6 @@ fun PantallaPensum(
             }
         }
 
-        /* ================================================================== */
-        /* CINTA DE OPCIONES INFERIOR                                         */
-        /* ================================================================== */
-
-        CintaOpcionesPensum(
-            modifier =
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        start = 12.dp,
-                        end = 12.dp,
-                        bottom = 10.dp
-                    ),
-
-            filtrosActivos =
-                filtroArea != null ||
-                        filtroAprobado != null,
-
-            tieneElectivas =
-                materiasElectivas.isNotEmpty(),
-
-            onFiltros = {
-                mostrarFiltros = !mostrarFiltros
-            },
-
-            onElectivas = {
-                mostrarElectivas = true
-            },
-
-            onAgregar = {
-                mostrarMenuAgregarComplementaria = true
-            }
-        )
     }
 
     /* ====================================================================== */
@@ -434,7 +415,40 @@ private fun CuboSemestres(
     val semestresNoActivos = semestresDisponibles.filter { it != semestreActual }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .pointerInput(semestreActual, semestresDisponibles) {
+                var desplazamientoHorizontal = 0f
+                var yaCambioSemestre = false
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { _, delta ->
+                        if (!yaCambioSemestre) {
+                            desplazamientoHorizontal += delta
+                            if (desplazamientoHorizontal <= -72f) {
+                                val indice = semestresDisponibles.indexOf(semestreActual)
+                                if (indice in 0 until semestresDisponibles.lastIndex) {
+                                    seleccionarSemestre(semestresDisponibles[indice + 1])
+                                }
+                                yaCambioSemestre = true
+                            } else if (desplazamientoHorizontal >= 72f) {
+                                val indice = semestresDisponibles.indexOf(semestreActual)
+                                if (indice > 0) {
+                                    seleccionarSemestre(semestresDisponibles[indice - 1])
+                                }
+                                yaCambioSemestre = true
+                            }
+                        }
+                    },
+                    onDragEnd = {
+                        desplazamientoHorizontal = 0f
+                        yaCambioSemestre = false
+                    },
+                    onDragCancel = {
+                        desplazamientoHorizontal = 0f
+                        yaCambioSemestre = false
+                    }
+                )
+            },
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         /* ================================================================ */
