@@ -366,21 +366,21 @@ private fun DialogoAcercaDe(onCerrar: () -> Unit) {
             ) {
                 Text(
                     "PsicoRuta UV es una aplicación independiente, creada por un estudiante, " +
-                        "con fines educativos e informativos.",
+                            "con fines educativos e informativos.",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     "NO es una aplicación oficial de la Universidad del Valle, ni está afiliada, " +
-                        "patrocinada, aprobada o avalada por dicha institución. No utiliza sus " +
-                        "logotipos ni símbolos oficiales. El nombre de la Universidad y las " +
-                        "referencias a su programa de Psicología se usan únicamente para " +
-                        "identificar el plan de estudios al que se refiere la información.",
+                            "patrocinada, aprobada o avalada por dicha institución. No utiliza sus " +
+                            "logotipos ni símbolos oficiales. El nombre de la Universidad y las " +
+                            "referencias a su programa de Psicología se usan únicamente para " +
+                            "identificar el plan de estudios al que se refiere la información.",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     "La aplicación no reemplaza los canales, documentos ni sistemas oficiales " +
-                        "(como SIRA). Verifica allí cualquier información académica o normativa " +
-                        "antes de tomar decisiones.",
+                            "(como SIRA). Verifica allí cualquier información académica o normativa " +
+                            "antes de tomar decisiones.",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -443,13 +443,7 @@ fun PsicologiaUVApp(
 
     var destinoActual by rememberSaveable {
 
-        mutableStateOf(
-            if (viewModel.primeraVezQueAbreLaApp) {
-                PantallasApp.USUARIO
-            } else {
-                PantallasApp.AVANCE
-            }
-        )
+        mutableStateOf(PantallasApp.USUARIO)
     }
 
 
@@ -628,7 +622,8 @@ fun PsicologiaUVApp(
 
                 BarraNavegacionModerna(
 
-                    destinos = pantallasVisibles,
+                    // Avance sigue existiendo como pantalla, pero se abre desde el gráfico del perfil.
+                    destinos = pantallasVisibles.filter { it != PantallasApp.AVANCE },
 
                     destinoActual = destinoActual,
 
@@ -701,98 +696,99 @@ fun PsicologiaUVApp(
                 modifier = Modifier.fillMaxSize()
             )
 
-        ZoomableAnyScreen(
-            modifier = Modifier.fillMaxSize()
-        ) {
+            ZoomableAnyScreen(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-            HorizontalPager(
+                HorizontalPager(
 
-                state = pagerState,
+                    state = pagerState,
 
-                modifier =
-                    Modifier.fillMaxSize()
+                    modifier =
+                        Modifier.fillMaxSize()
 
-            ) { pagina ->
+                ) { pagina ->
 
-                when (
-                    pantallasVisibles.getOrNull(
-                        pagina
-                    )
-                ) {
-
-                    // ====================================================
-                    // PERFIL
-                    // ====================================================
-
-                    PantallasApp.USUARIO -> {
-
-                        PantallaEditar(
-                            viewModel = viewModel
+                    when (
+                        pantallasVisibles.getOrNull(
+                            pagina
                         )
+                    ) {
+
+                        // ====================================================
+                        // PERFIL
+                        // ====================================================
+
+                        PantallasApp.USUARIO -> {
+
+                            PantallaPerfil(
+                                viewModel = viewModel,
+                                onNavigate = { destino -> destinoActual = destino }
+                            )
+                        }
+
+
+                        // ====================================================
+                        // PENSUM
+                        // ====================================================
+
+                        PantallasApp.PENSUM -> {
+
+                            PantallaPensum(
+                                estudiante = estudiante,
+                                viewModel = viewModel
+                            )
+                        }
+
+
+                        // ====================================================
+                        // GRADO
+                        // ====================================================
+
+                        PantallasApp.GRADO -> {
+
+                            PantallaGrado(
+                                programa =
+                                    viewModel.programa
+                            )
+                        }
+
+
+                        // ====================================================
+                        // AVANCE
+                        // ====================================================
+
+                        PantallasApp.AVANCE -> {
+
+                            PantallaAvance(
+                                programa =
+                                    viewModel.programa,
+
+                                viewModel =
+                                    viewModel
+                            )
+                        }
+
+
+                        // ====================================================
+                        // PRÁCTICAS
+                        // ====================================================
+
+                        PantallasApp.PRACTICAS -> {
+
+                            PantallaPracticas(
+                                programa =
+                                    viewModel.programa,
+                                viewModel =
+                                    viewModel
+                            )
+                        }
+
+
+                        null -> Unit
                     }
-
-
-                    // ====================================================
-                    // PENSUM
-                    // ====================================================
-
-                    PantallasApp.PENSUM -> {
-
-                        PantallaPensum(
-                            estudiante = estudiante,
-                            viewModel = viewModel
-                        )
-                    }
-
-
-                    // ====================================================
-                    // GRADO
-                    // ====================================================
-
-                    PantallasApp.GRADO -> {
-
-                        PantallaGrado(
-                            programa =
-                                viewModel.programa
-                        )
-                    }
-
-
-                    // ====================================================
-                    // AVANCE
-                    // ====================================================
-
-                    PantallasApp.AVANCE -> {
-
-                        PantallaAvance(
-                            programa =
-                                viewModel.programa,
-
-                            viewModel =
-                                viewModel
-                        )
-                    }
-
-
-                    // ====================================================
-                    // PRÁCTICAS
-                    // ====================================================
-
-                    PantallasApp.PRACTICAS -> {
-
-                        PantallaPracticas(
-                            programa =
-                                viewModel.programa,
-                            viewModel =
-                                viewModel
-                        )
-                    }
-
-
-                    null -> Unit
                 }
             }
-        }
         }
     }
 }

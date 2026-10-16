@@ -288,16 +288,7 @@ private fun TarjetaHeroeProgreso(
                 .background(Color.White)
         ) {
 
-            // =========================================================
-            // ILUSTRACIÓN VECTORIAL DE FONDO (MARCA DE AGUA POR LÍNEA)
-            // =========================================================
-
-            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
-                tipo = temaLinea.tipo,
-                colorAcento = colorAcento,
-                isDark = isDark,
-                modifier = Modifier.matchParentSize()
-            )
+            // Fondo blanco sólido e independiente de la ilustración de la línea académica.
 
             // =========================================================
             // CONTENIDO PRINCIPAL (progreso arriba + consejo abajo)

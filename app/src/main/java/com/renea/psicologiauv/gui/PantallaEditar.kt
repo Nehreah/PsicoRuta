@@ -13,11 +13,14 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +34,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -65,6 +69,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,6 +93,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -95,6 +102,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.renea.psicologiauv.R
@@ -360,9 +368,10 @@ private fun CirculoLinea(
 // ========================================================================
 
 @Composable
-fun PantallaEditar(
+fun PantallaPerfil(
     modifier: Modifier = Modifier,
-    viewModel: ControlV
+    viewModel: ControlV,
+    onNavigate: (PantallasApp) -> Unit = {}
 ) {
 
     val estudiante =
@@ -404,10 +413,6 @@ fun PantallaEditar(
         mutableStateOf(false)
     }
 
-    var mostrandoMemoriaEstudiantil by remember {
-        mutableStateOf(false)
-    }
-
     var mostrandoReporteBugs by remember {
         mutableStateOf(false)
     }
@@ -439,7 +444,6 @@ fun PantallaEditar(
                     mostrandoHistoriaCali ||
                     mostrandoHistoriaLatino ||
                     mostrandoHistoria ||
-                    mostrandoMemoriaEstudiantil ||
                     mostrandoReporteBugs
     ) {
 
@@ -459,9 +463,6 @@ fun PantallaEditar(
 
             mostrandoDatosPersonales ->
                 mostrandoDatosPersonales = false
-
-            mostrandoMemoriaEstudiantil ->
-                mostrandoMemoriaEstudiantil = false
 
             mostrandoReporteBugs ->
                 mostrandoReporteBugs = false
@@ -763,36 +764,16 @@ fun PantallaEditar(
             // ============================================================
 
             TarjetaPerfilHero(
-
                 linea = lineaActual,
-
-                nombre =
-                    nombre.ifBlank {
-                        "Estudiante"
-                    },
-
+                nombre = nombre.ifBlank { "Estudiante" },
                 codigo = codigoTexto,
-
-                mostrandoSelector =
-                    mostrandoSelectorLinea,
-
-                onLineaClick = {
-
-                    mostrandoSelectorLinea =
-                        !mostrandoSelectorLinea
-                },
-
-                onSettingsClick = {
-
-                    mostrandoDatosPersonales =
-                        true
-                },
-
-                onMemoriaClick = {
-
-                    mostrandoMemoriaEstudiantil =
-                        !mostrandoMemoriaEstudiantil
-                }
+                progreso = viewModel.programa.avanceCarrera(),
+                creditosCursados = viewModel.programa.creditosQueSirvenParaCarrera(),
+                creditosCarrera = viewModel.programa.creditosCarrera,
+                mostrandoSelector = mostrandoSelectorLinea,
+                onLineaClick = { mostrandoSelectorLinea = !mostrandoSelectorLinea },
+                onSettingsClick = { mostrandoDatosPersonales = true },
+                onNavigate = onNavigate
             )
 
 
@@ -1038,6 +1019,76 @@ fun PantallaEditar(
             Spacer(Modifier.height(6.dp))
 
             // ============================================================
+            // ATAJOS A PENSUM Y PRÁCTICAS
+            // ============================================================
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigate(PantallasApp.PENSUM) },
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 1.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 13.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.School,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(19.dp)
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text(
+                            text = "Pensum",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigate(PantallasApp.PRACTICAS) },
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 1.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 13.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Work,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(19.dp)
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text(
+                            text = "Prácticas",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            // ============================================================
             // REPORTAR BUGS
             // ============================================================
 
@@ -1149,30 +1200,7 @@ fun PantallaEditar(
         }
 
 
-        // =================================================================
-        // MEMORIA ESTUDIANTIL
-        // =================================================================
 
-        MemoriaEstudiantilFlotante(
-
-            abierta =
-                mostrandoMemoriaEstudiantil,
-
-            onAbrir = {
-
-                mostrandoMemoriaEstudiantil =
-                    !mostrandoMemoriaEstudiantil
-            },
-
-            onAbrirHistoria = {
-
-                mostrandoMemoriaEstudiantil =
-                    false
-
-                mostrandoHistoria =
-                    true
-            }
-        )
     }
 
 
@@ -2326,229 +2354,160 @@ private fun TarjetaSira(
     onImportar: () -> Unit,
     onGenerarInforme: () -> Unit
 ) {
-    var expandido by remember { mutableStateOf(false) }
     val colores = MaterialTheme.colorScheme
+    var expandida by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colores.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.8f))
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 13.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Cabecera sencilla y desplegable
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { expandido = !expandido },
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable { expandida = !expandida }
+                    .padding(vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Sync,
-                    contentDescription = null,
-                    tint = colores.onSurfaceVariant,
-                    modifier = Modifier.size(21.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Importar desde SIRA",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colores.onSurface,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = "Sincroniza tu historial académico",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colores.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-                Text(
-                    text = "SIRA",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colores.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(Modifier.width(5.dp))
-                Icon(
-                    imageVector = if (expandido) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expandido) "Colapsar" else "Expandir",
-                    tint = colores.onSurfaceVariant,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            AnimatedVisibility(visible = expandido) {
-                Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
-                    Text(
-                        text = "1. Ingresa al portal SIRA 2. Accede a tus notas 3. Descargalas como PDF 4. Importa tus nostas desde pdf",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colores.onSurfaceVariant
-                    )
-
-                    // Pasos del proceso, con colores neutros
-
-                    // Acceso al portal académico
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .clickable(onClick = onAbrirSira),
-                        shape = RoundedCornerShape(11.dp),
-                        color = colores.surfaceVariant.copy(alpha = 0.35f),
-                        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.7f))
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                                contentDescription = null,
-                                tint = colores.onSurfaceVariant,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Abrir SIRA",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = colores.onSurface,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1
-                                )
-                                Text(
-                                    text = "Ir al portal académico",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colores.onSurfaceVariant,
-                                    maxLines = 1
-                                )
-                            }
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = null,
-                                tint = colores.onSurfaceVariant,
-                                modifier = Modifier.size(17.dp)
-                            )
-                        }
-                    }
-
-                    // Acciones: un único color destacado para la acción principal
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .clickable(onClick = onImportar),
-                            shape = RoundedCornerShape(11.dp),
-                            color = Red
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.FileDownload,
-                                    contentDescription = null,
-                                    tint = White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = "Importar notas",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = White,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "Desde PDF",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = White.copy(alpha = 0.85f),
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-
-                        Surface(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .clickable(onClick = onGenerarInforme),
-                            shape = RoundedCornerShape(11.dp),
-                            color = colores.surfaceVariant.copy(alpha = 0.35f),
-                            border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.7f))
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PictureAsPdf,
-                                    contentDescription = null,
-                                    tint = colores.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = "Generar informe",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = colores.onSurface,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1
-                                    )
-                                    Text(
-                                        text = "PDF académico",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = colores.onSurfaceVariant,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Top
-                    ) {
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = colores.surfaceVariant.copy(alpha = 0.65f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.Description,
+                            imageVector = Icons.Default.Sync,
                             contentDescription = null,
                             tint = colores.onSurfaceVariant,
-                            modifier = Modifier
-                                .padding(top = 1.dp)
-                                .size(15.dp)
+                            modifier = Modifier.size(19.dp)
                         )
-                        Spacer(Modifier.width(7.dp))
+                    }
+                }
+                Spacer(Modifier.width(9.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Importar y exportar datos",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
+                    )
+                    Text(
+                        text = "Notas del SIRA e informe académico",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colores.onSurfaceVariant
+                    )
+                }
+                Icon(
+                    imageVector = if (expandida) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expandida) "Contraer importar y exportar datos" else "Expandir importar y exportar datos",
+                    tint = colores.onSurfaceVariant,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = expandida,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFF7F8FA))
+                            .padding(horizontal = 10.dp, vertical = 9.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Text(
-                            text = "Las electivas complementarias requieren actualización manual.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colores.onSurfaceVariant
+                            text = "Cómo usarlo",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colores.onSurface
+                        )
+                        PasoSira("1", "Descarga tus notas en PDF desde el SIRA.")
+                        PasoSira("2", "Da click en Importar y selecciona el archivo descargado.")
+                        PasoSira("3", "¡Disfruta la app!")
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)
+                    ) {
+                        AccionSiraCompacta(
+                            modifier = Modifier.weight(1f),
+                            texto = "Abrir SIRA",
+                            icono = Icons.AutoMirrored.Filled.OpenInNew,
+                            onClick = onAbrirSira
+                        )
+                        AccionSiraCompacta(
+                            modifier = Modifier.weight(1f),
+                            texto = "Importar datos",
+                            icono = Icons.Default.FileDownload,
+                            onClick = onImportar
+                        )
+                        AccionSiraCompacta(
+                            modifier = Modifier.weight(1f),
+                            texto = "Generar informe",
+                            icono = Icons.Default.PictureAsPdf,
+                            onClick = onGenerarInforme
                         )
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AccionSiraCompacta(
+    modifier: Modifier = Modifier,
+    texto: String,
+    icono: ImageVector,
+    onClick: () -> Unit
+) {
+    val colores = MaterialTheme.colorScheme
+
+    Surface(
+        modifier = modifier.height(60.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(10.dp),
+        color = Color(0xFFF7F8FA),
+        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.7f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 3.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = null,
+                tint = colores.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = texto,
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+                color = colores.onSurface,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
@@ -2563,38 +2522,31 @@ private fun PasoSira(
     texto: String,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.height(38.dp),
-        shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-        border = BorderStroke(
-            1.dp,
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
-        )
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Surface(
+            modifier = Modifier.size(22.dp),
+            shape = RoundedCornerShape(7.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
         ) {
-            Text(
-                text = numero,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = texto,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                softWrap = false
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = numero,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = texto,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -2607,156 +2559,177 @@ private fun TarjetaPerfilHero(
     linea: LineaInfo?,
     nombre: String,
     codigo: String,
+    progreso: Float,
+    creditosCursados: Int,
+    creditosCarrera: Int,
     mostrandoSelector: Boolean,
     onLineaClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onMemoriaClick: () -> Unit
+    onNavigate: (PantallasApp) -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
     val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea?.nombre)
     val colorAcento = temaLinea.colorPrimario
-    val colorTexto = if (isDark) Color.White else Color(0xFF17151A)
-    val colorTextoSecundario = if (isDark) Color.White.copy(alpha = 0.88f) else Color(0xFF39313A)
-    val chipFondo = if (isDark) temaLinea.chipFondoOscuro else temaLinea.chipFondoClaro
+    val progresoAnimado by animateFloatAsState(
+        targetValue = (progreso / 100f).coerceIn(0f, 1f),
+        animationSpec = tween(durationMillis = 850),
+        label = "avancePerfilHero"
+    )
 
-    // Hero sin tarjeta ni marco: conserva la ilustración de fondo y toda la información.
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(184.dp)
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, Color(0xFFE9E7EB))
     ) {
-        com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
-            tipo = temaLinea.tipo,
-            colorAcento = colorAcento,
-            isDark = isDark,
-            modifier = Modifier.matchParentSize()
-        )
-
-        Surface(
+        Row(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(5.dp)
-                .size(36.dp)
-                .clickable(onClick = onSettingsClick),
-            shape = CircleShape,
-            color = if (isDark) MaterialTheme.colorScheme.surfaceVariant else Color.White,
-            shadowElevation = 3.dp,
-            border = BorderStroke(1.dp, colorAcento.copy(alpha = 0.28f))
+                .fillMaxWidth()
+                .background(Color.White)
+                .padding(horizontal = 14.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Editar datos",
-                    tint = colorAcento,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-
-        Surface(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(5.dp)
-                .height(34.dp)
-                .clickable(onClick = onMemoriaClick),
-            shape = RoundedCornerShape(18.dp),
-            color = Burgundy,
-            shadowElevation = 2.dp
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 11.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.History,
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(15.dp)
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = "Memoria es",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(Modifier.height(36.dp))
-
-            Text(
-                text = nombre,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold,
-                color = colorTexto,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-
-            Spacer(Modifier.height(1.dp))
-
-            Text(
-                text = if (codigo.isNotBlank()) "Código $codigo" else "Código no definido",
-                style = MaterialTheme.typography.labelMedium,
-                color = colorTextoSecundario
-            )
-
-            Spacer(Modifier.height(7.dp))
-
-            Surface(
+            // El gráfico queda a la izquierda y funciona como acceso a la pantalla de avance.
+            Box(
                 modifier = Modifier
-                    .height(36.dp)
-                    .clickable(onClick = onLineaClick),
-                shape = RoundedCornerShape(20.dp),
-                color = chipFondo,
-                border = BorderStroke(1.dp, colorAcento.copy(alpha = 0.55f))
+                    .size(94.dp)
+                    .clickable { onNavigate(PantallasApp.AVANCE) },
+                contentAlignment = Alignment.Center
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = if (isDark) colorAcento else temaLinea.colorTextoChip,
-                        modifier = Modifier.size(15.dp)
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val strokeWidth = 8.dp.toPx()
+                    drawArc(
+                        color = Color(0xFFE9E7ED),
+                        startAngle = -90f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                     )
-                    Spacer(Modifier.width(6.dp))
+                    drawArc(
+                        color = colorAcento,
+                        startAngle = -90f,
+                        sweepAngle = 360f * progresoAnimado,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = temaLinea.nombreVisible,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (isDark) Color.White else temaLinea.colorTextoChip,
-                        fontWeight = FontWeight.Bold
+                        text = "${progreso.toInt().coerceIn(0, 100)}%",
+                        fontSize = 21.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = colorAcento,
+                        maxLines = 1
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = if (isDark) colorAcento else temaLinea.colorTextoChip,
-                        modifier = Modifier.size(15.dp)
+                    Text(
+                        text = "Click acá",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF6B6670),
+                        maxLines = 1
                     )
                 }
             }
 
-            Spacer(Modifier.height(5.dp))
+            // El bloque de datos queda centrado en el espacio disponible del hero.
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 3.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = nombre,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF17151A),
+                        textAlign = TextAlign.Center,
+                        maxLines = 2
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = if (codigo.isNotBlank()) "Código $codigo" else "Código no definido",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF514B55),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Surface(
+                        modifier = Modifier
+                            .heightIn(min = 32.dp)
+                            .clickable(onClick = onLineaClick),
+                        shape = RoundedCornerShape(16.dp),
+                        color = temaLinea.chipFondoClaro,
+                        border = BorderStroke(1.dp, colorAcento.copy(alpha = 0.38f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = temaLinea.colorTextoChip,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = temaLinea.nombreVisible,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = temaLinea.colorTextoChip,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Cambiar línea",
+                                tint = temaLinea.colorTextoChip,
+                                modifier = Modifier.size(13.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        text = "$creditosCursados de $creditosCarrera créditos",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF625C66),
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
+                    )
+                    if (mostrandoSelector) {
+                        Text(
+                            text = "Selecciona una nueva línea",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colorAcento,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
-            Text(
-                text = if (mostrandoSelector) {
-                    "Selecciona una nueva línea"
-                } else {
-                    "Toca la tuerca para editar tus datos"
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = colorTextoSecundario,
-                textAlign = TextAlign.Center
-            )
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(30.dp)
+                        .clickable(onClick = onSettingsClick),
+                    shape = CircleShape,
+                    color = Color(0xFFF7F6F8),
+                    border = BorderStroke(1.dp, Color(0xFFE9E7EB))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Editar datos personales",
+                            tint = Color(0xFF55505B),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }
