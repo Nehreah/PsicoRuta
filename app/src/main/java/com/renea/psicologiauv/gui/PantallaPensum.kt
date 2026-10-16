@@ -103,18 +103,7 @@ fun PantallaPensum(
 
     val materiasElectivas = porSemestre[0].orEmpty()
 
-    /* ================================================================== */
-    /* PROGRESO                                                            */
-    /* ================================================================== */
 
-    val datosProgreso = remember(
-        programa,
-        estudiante.asignaturas
-    ) {
-        calcularProgresoPensum(
-            programa = programa
-        )
-    }
 
     /* ================================================================== */
     /* INTERFAZ                                                            */
@@ -146,13 +135,7 @@ fun PantallaPensum(
             /* HEADER                                                      */
             /* ========================================================== */
 
-            PensumHeaderModerno(
-                progreso = datosProgreso.progreso,
-                creditosHechos = datosProgreso.creditosHechos,
-                creditosFaltantes = datosProgreso.creditosFaltantes,
-                creditosTotales = datosProgreso.creditosCarrera,
-                linea = estudiante.linea
-            )
+         
 
             /* ========================================================== */
             /* FILTROS                                                     */
@@ -385,177 +368,6 @@ private data class DatosProgresoPensum(
     val creditosCarrera: Int
 )
 
-/* ====================================================================== */
-/* CÁLCULO DE PROGRESO                                                     */
-/* ====================================================================== */
-
-/** Delega todo el cálculo al modelo — la pantalla solo consume el resultado. */
-private fun calcularProgresoPensum(
-    programa: com.renea.psicologiauv.model.ProgramaM
-): DatosProgresoPensum = DatosProgresoPensum(
-    progreso = (programa.avanceCarrera() / 100f).coerceIn(0f, 1f),
-    creditosHechos = programa.creditosQueSirvenParaCarrera(),
-    creditosFaltantes = programa.creditosFaltantesCarrera(),
-    creditosCarrera = programa.creditosCarrera
-)
-
-
-/* ====================================================================== */
-/* HEADER MODERNO                                                          */
-/* ====================================================================== */
-
-@Composable
-private fun PensumHeaderModerno(
-    progreso: Float,
-    creditosHechos: Int,
-    creditosFaltantes: Int,
-    creditosTotales: Int,
-    linea: String? = null
-) {
-    val progresoAnimado by animateFloatAsState(
-        targetValue = progreso,
-        animationSpec = tween(durationMillis = 700),
-        label = "pensumProgress"
-    )
-
-    val isDark = isSystemInDarkTheme()
-    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea)
-    val colorAcento = temaLinea.colorPrimario
-    val fondo = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
-    val colorTexto = if (isDark) Color.White else Color(0xFF17151A)
-    val colorSubtexto = if (isDark) Color.White.copy(alpha = 0.70f) else temaLinea.colorSecundario
-    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.16f) else Color(0xFFE5E5EB)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = null
-    ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
-                tipo = temaLinea.tipo,
-                colorAcento = colorAcento,
-                isDark = isDark,
-                modifier = Modifier.matchParentSize()
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(82.dp)
-                            .clip(RoundedCornerShape(41.dp))
-                            .background(colorAcento.copy(alpha = if (isDark) 0.18f else 0.10f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AnilloPensum(
-                            progreso = progresoAnimado,
-                            colorProgreso = colorAcento,
-                            colorFondo = pistaProgreso
-                        )
-                    }
-
-                    Spacer(Modifier.width(13.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Créditos de carrera",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colorSubtexto
-                        )
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
-                                text = "$creditosHechos",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = colorTexto
-                            )
-                            Text(
-                                text = " / $creditosTotales cr.",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colorSubtexto
-                            )
-                        }
-                        Spacer(Modifier.height(5.dp))
-                        LinearProgressIndicator(
-                            progress = { progresoAnimado },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(50.dp)),
-                            color = colorAcento,
-                            trackColor = pistaProgreso
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    MiniStatPensum("Hechos", "$creditosHechos cr.", colorAcento, Modifier.weight(1f))
-                    MiniStatPensum("Faltan", "$creditosFaltantes cr.", colorAcento, Modifier.weight(1f))
-                    MiniStatPensum(
-                        "Lo haces bien",
-                        "No te rindas",
-                        colorAcento,
-                        Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/* ====================================================================== */
-/* MINI ESTADÍSTICA                                                        */
-/* ====================================================================== */
-
-@Composable
-private fun MiniStatPensum(
-    titulo: String,
-    valor: String,
-    colorAcento: Color = MaterialTheme.colorScheme.primary,
-    modifier: Modifier = Modifier
-) {
-    val isDark = isSystemInDarkTheme()
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = colorAcento.copy(alpha = if (isDark) 0.14f else 0.08f)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isDark) Color.White.copy(alpha = 0.70f) else MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = valor,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
 
 @Composable
 private fun AnilloPensum(
@@ -943,226 +755,49 @@ private fun MateriaCompacta(
     materia: Asignatura,
     onClick: () -> Unit
 ) {
+    val aprobada = materia.aprobo()
 
-    val tieneNota =
-        materia.nota > 0 ||
-                materia.notaEspecial != null
-
-    val aprobada =
-        materia.aprobo()
-
-    val fondoNota =
-        when {
-
-            aprobada ->
-                MaterialTheme.colorScheme.surfaceVariant.copy(
-                    alpha = 0.55f
-                )
-
-            tieneNota ->
-                MaterialTheme.colorScheme
-                    .errorContainer
-                    .copy(
-                        alpha = 0.72f
-                    )
-
-            else ->
-                MaterialTheme.colorScheme
-                    .surfaceVariant
-        }
-
-    Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable {
-                    onClick()
-                },
-
-        shape =
-            RoundedCornerShape(11.dp),
-
-        colors =
-            CardDefaults.cardColors(
-                containerColor =
-                    MaterialTheme.colorScheme
-                        .surface
-            ),
-
-        elevation =
-            CardDefaults.cardElevation(
-                defaultElevation = 0.dp
-            )
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick),
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(8.dp)
     ) {
-
         Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = 8.dp,
-                        vertical = 5.dp
-                    ),
-
-            verticalAlignment =
-                Alignment.CenterVertically
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Box(
-                modifier =
-                    Modifier
-                        .size(29.dp)
-                        .clip(
-                            RoundedCornerShape(8.dp)
-                        )
-                        .background(
-                            fondoNota
-                        ),
-
-                contentAlignment =
-                    Alignment.Center
-            ) {
-
-                if (aprobada) {
-
-                    Icon(
-                        imageVector =
-                            Icons.Default.CheckCircle,
-
-                        contentDescription =
-                            null,
-
-                        modifier =
-                            Modifier.size(16.dp),
-
-                        tint =
-                            AprobadoColor
-                    )
-
-                } else {
-
-                    Text(
-                        text =
-                            materia.notaEspecial
-                                ?: "?",
-
-                        style =
-                            MaterialTheme.typography
-                                .labelSmall,
-
-                        fontWeight =
-                            FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(
-                Modifier.width(7.dp)
+            Text(
+                text = materia.nombre,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Column(
-                modifier =
-                    Modifier.weight(1f)
-            ) {
+            Spacer(Modifier.width(10.dp))
 
-                Text(
-                    text =
-                        materia.nombre,
-
-                    style =
-                        MaterialTheme.typography
-                            .bodySmall,
-
-                    fontWeight =
-                        FontWeight.Bold,
-
-                    maxLines = 1,
-
-                    overflow =
-                        TextOverflow.Ellipsis
-                )
-
-                Text(
-                    text =
-                        buildString {
-
-                            append(
-                                materia.codigo
-                            )
-
-                            append(" • ")
-
-                            append(
-                                materia.area
-                            )
-                        },
-
-                    style =
-                        MaterialTheme.typography
-                            .labelSmall,
-
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant,
-
-                    maxLines = 1,
-
-                    overflow =
-                        TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(
-                Modifier.width(5.dp)
+            Text(
+                text = materia.textoNota(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
 
-            Column(
-                horizontalAlignment =
-                    Alignment.End
-            ) {
-
-                Surface(
-                    shape =
-                        RoundedCornerShape(6.dp),
-
-                    color =
-                        fondoNota
-                ) {
-
-                    Text(
-                        text =
-                            materia.textoNota(),
-
-                        modifier =
-                            Modifier.padding(
-                                horizontal = 5.dp,
-                                vertical = 2.dp
-                            ),
-
-                        style =
-                            MaterialTheme.typography
-                                .labelSmall,
-
-                        fontWeight =
-                            FontWeight.ExtraBold,
-
-                        color =
-                            MaterialTheme.colorScheme
-                                .onSurface
-                    )
-                }
-
-                Text(
-                    text =
-                        "${materia.creditos} cr.",
-
-                    style =
-                        MaterialTheme.typography
-                            .labelSmall,
-
-                    color =
-                        MaterialTheme.colorScheme
-                            .onSurfaceVariant
+            if (aprobada) {
+                Spacer(Modifier.width(5.dp))
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Asignatura aprobada",
+                    modifier = Modifier.size(13.dp),
+                    tint = AprobadoColor
                 )
             }
         }
