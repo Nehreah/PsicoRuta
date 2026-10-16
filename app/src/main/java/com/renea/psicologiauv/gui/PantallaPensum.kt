@@ -446,114 +446,70 @@ private fun CuboSemestres(
             onMateriaClick = materiaSeleccionada
         )
 
-        /* ================================================================ */
-        /* SELECTOR DESLIZANTE: tres semestres visibles a la vez.          */
-        /* ================================================================ */
-        BoxWithConstraints(
-            modifier = Modifier.fillMaxWidth()
+        // Selector compacto: permite cambiar de semestre sin una fila de tarjetas repetidas.
+        var selectorAbierto by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.CenterStart
         ) {
-            val anchoModulo = ((maxWidth - 12.dp) / 3f).coerceAtLeast(84.dp)
-            val estadoDeslizamiento = rememberLazyListState()
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+            OutlinedButton(
+                onClick = { selectorAbierto = true },
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 9.dp)
             ) {
-                LazyRow(
-                    state = estadoDeslizamiento,
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    contentPadding = PaddingValues(horizontal = 1.dp)
-                ) {
-                    items(
-                        count = semestresNoActivos.size,
-                        key = { indice -> semestresNoActivos[indice] }
-                    ) { indice ->
-                        val semestre = semestresNoActivos[indice]
-                        ModuloSemestreDeslizante(
-                            semestre = semestre,
-                            materias = porSemestre[semestre].orEmpty(),
-                            modifier = Modifier.width(anchoModulo),
-                            onClick = { seleccionarSemestre(semestre) }
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Filled.School,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Cambiar semestre")
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "S$semestreActual",
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Filled.Tune,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
 
-                /* ======================================================== */
-                /* INDICADOR: queda debajo del LazyRow, nunca superpuesto. */
-                /* ======================================================== */
-                if (semestresNoActivos.size > 3) {
-                    val primeroVisible = estadoDeslizamiento.firstVisibleItemIndex
-                    val progresoDeslizamiento =
-                        (primeroVisible.toFloat() /
-                                (semestresNoActivos.size - 3).coerceAtLeast(1))
-                            .coerceIn(0f, 1f)
-
-                    val colorBarra =
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                    val colorIndicador =
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "‹",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(Modifier.width(5.dp))
-
-                        Canvas(
-                            modifier = Modifier
-                                .fillMaxWidth(0.42f)
-                                .height(4.dp)
-                        ) {
-                            val radio = size.height / 2f
-                            drawRoundRect(
-                                color = colorBarra,
-                                size = size,
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                                    radio,
-                                    radio
+            DropdownMenu(
+                expanded = selectorAbierto,
+                onDismissRequest = { selectorAbierto = false }
+            ) {
+                semestresDisponibles.forEach { semestre ->
+                    DropdownMenuItem(
+                        text = {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text("Semestre $semestre", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    "${porSemestre[semestre].orEmpty().size} asignaturas",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                            )
-
-                            val anchoIndicador =
-                                (size.width * 3f / semestresNoActivos.size)
-                                    .coerceIn(24.dp.toPx(), size.width)
-                            val desplazamientoMaximo =
-                                (size.width - anchoIndicador).coerceAtLeast(0f)
-
-                            drawRoundRect(
-                                color = colorIndicador,
-                                topLeft = Offset(
-                                    desplazamientoMaximo * progresoDeslizamiento,
-                                    0f
-                                ),
-                                size = Size(anchoIndicador, size.height),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                                    radio,
-                                    radio
+                            }
+                        },
+                        leadingIcon = {
+                            if (semestre == semestreActual) {
+                                Icon(
+                                    imageVector = Icons.Filled.CheckCircle,
+                                    contentDescription = "Seleccionado",
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
-                            )
+                            }
+                        },
+                        onClick = {
+                            seleccionarSemestre(semestre)
+                            selectorAbierto = false
                         }
-
-                        Spacer(Modifier.width(5.dp))
-
-                        Text(
-                            text = "›",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    )
                 }
             }
         }
-
     }
 }
 
@@ -656,21 +612,6 @@ private fun CaraCuboSemestre(
                 .padding(10.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(MaterialTheme.colorScheme.primary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = semestre.toString(),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = "Semestre $semestre",

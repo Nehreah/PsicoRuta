@@ -1765,9 +1765,7 @@ private fun MemoriaEstudiantilFlotante(
                     ),
 
                 color =
-                    Burgundy.copy(
-                        alpha = 0.84f
-                    ),
+                    Burgundy,
 
                 shadowElevation =
                     7.dp,
@@ -1807,8 +1805,8 @@ private fun MemoriaEstudiantilFlotante(
                             CircleShape,
 
                         color =
-                            Red.copy(
-                                alpha = 0.20f
+                            White.copy(
+                                alpha = 0.12f
                             )
                     ) {
 
