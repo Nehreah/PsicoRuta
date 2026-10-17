@@ -123,8 +123,8 @@ data class ProgramaM(
      * se permiten hasta 6 créditos pendientes y en 8 hasta 9.
      */
     private fun toleranciaCreditosSemestre(semestre: Int): Int = when (semestre) {
-        6, 7 -> 6
-        8 -> 9
+        6 -> 6
+        7, 8 -> 9
         else -> 0
     }
 
@@ -239,12 +239,20 @@ data class ProgramaM(
         return creditosPendientes <= toleranciaCreditosSemestre(semestre)
     }
 
-    /** Semestre que debe abrirse inicialmente en la pantalla de Pensum. */
+    /**
+     * Semestre en el que se encuentra el estudiante: el inmediatamente
+     * siguiente al ÚLTIMO semestre completado. Si no ha completado ninguno,
+     * está en el semestre 1. Nunca supera el último semestre del plan (10, o
+     * 11 si el estudiante tiene materias en ese semestre).
+     *
+     * Con este valor se abre la pantalla de Pensum y se elige el consejo que
+     * se muestra en el inicio.
+     */
     fun semestreEnCurso(): Int {
         val semestres = semestresDelPlan()
-        return semestres.firstOrNull { !semestreCompletado(it) }
-            ?: semestres.lastOrNull()
-            ?: 1
+        val ultimoCompletado = semestres.lastOrNull { semestreCompletado(it) }
+            ?: return semestres.firstOrNull() ?: 1
+        return (ultimoCompletado + 1).coerceAtMost(semestres.lastOrNull() ?: ultimoCompletado)
     }
 
     /**

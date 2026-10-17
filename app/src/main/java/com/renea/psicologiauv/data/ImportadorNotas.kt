@@ -46,15 +46,19 @@ import com.renea.psicologiauv.model.NotaImportada
  */
 class ImportadorNotas(private val context: Context) {
 
-    init {
-        // Necesario una única vez antes de usar cualquier clase de PdfBox-Android:
-        // carga las fuentes/recursos que la librería necesita desde los assets.
-        // Llamarlo varias veces no genera problema, PdfBox lo controla internamente.
+    // PdfBox-Android necesita inicializarse una única vez antes de usarse. Se
+    // hace de forma perezosa (la primera vez que realmente se lee un PDF) y no
+    // al construir el importador: así no se ejecuta en el hilo principal
+    // durante la composición de la pantalla, sino en el hilo de E/S donde ya
+    // se llama a [extraerTexto].
+    private val pdfBoxInicializado: Boolean by lazy {
         PDFBoxResourceLoader.init(context.applicationContext)
+        true
     }
 
     /** Extrae todo el texto plano del PDF ubicado en [uri]. */
     fun extraerTexto(uri: Uri): String {
+        check(pdfBoxInicializado)
         context.contentResolver.openInputStream(uri).use { entrada ->
             requireNotNull(entrada) { "No se pudo abrir el archivo seleccionado." }
             PDDocument.load(entrada).use { documento ->
