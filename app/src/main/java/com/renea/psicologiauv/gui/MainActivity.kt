@@ -104,12 +104,22 @@ class MainActivity : ComponentActivity() {
                     color = Color.Transparent
                 ) {
                     if (avisoAceptado) {
-                        PsicologiaUVApp(viewModel = viewModel)
+                        PsicologiaUVApp(
+                            viewModel = viewModel,
+                            mostrarBienvenidaInicial = preferenciasAviso
+                                .getBoolean("bienvenida_pendiente", false),
+                            onBienvenidaTerminada = {
+                                preferenciasAviso.edit()
+                                    .putBoolean("bienvenida_pendiente", false)
+                                    .apply()
+                            }
+                        )
                     } else {
                         AvisoInicialPsicoRuta(
                             onContinuar = {
                                 preferenciasAviso.edit()
                                     .putBoolean("aviso_uso_aceptado", true)
+                                    .putBoolean("bienvenida_pendiente", true)
                                     .apply()
                                 avisoAceptado = true
                             }
@@ -351,7 +361,9 @@ enum class PantallasApp(
 
 @Composable
 fun PsicologiaUVApp(
-    viewModel: ControlV
+    viewModel: ControlV,
+    mostrarBienvenidaInicial: Boolean = false,
+    onBienvenidaTerminada: () -> Unit = {}
 ) {
 
     // ====================================================================
@@ -584,6 +596,8 @@ fun PsicologiaUVApp(
 
                             PantallaPerfil(
                                 viewModel = viewModel,
+                                mostrarBienvenidaInicial = mostrarBienvenidaInicial,
+                                onBienvenidaTerminada = onBienvenidaTerminada,
                                 onNavigate = { destino ->
                                     destinoActual = if (destino == PantallasApp.PRACTICAS) {
                                         PantallasApp.PRACTICAS_INTRO

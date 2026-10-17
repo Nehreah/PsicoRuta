@@ -72,6 +72,13 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AlertDialog
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -373,7 +380,9 @@ private fun CirculoLinea(
 fun PantallaPerfil(
     modifier: Modifier = Modifier,
     viewModel: ControlV,
-    onNavigate: (PantallasApp) -> Unit = {}
+    onNavigate: (PantallasApp) -> Unit = {},
+    mostrarBienvenidaInicial: Boolean = false,
+    onBienvenidaTerminada: () -> Unit = {}
 ) {
 
     val estudiante =
@@ -417,6 +426,19 @@ fun PantallaPerfil(
 
     var mostrandoReporteBugs by remember {
         mutableStateOf(false)
+    }
+
+    // Módulos emergentes: importación, accesos rápidos y bienvenida inicial.
+    var mostrandoImportacion by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var menuAccionesAbierto by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var mostrandoBienvenida by rememberSaveable {
+        mutableStateOf(mostrarBienvenidaInicial)
     }
 
 
@@ -683,6 +705,80 @@ fun PantallaPerfil(
 
 
     // ====================================================================
+    // MÓDULOS EMERGENTES
+    // ====================================================================
+
+    if (mostrandoBienvenida) {
+
+        DialogoBienvenida(
+            onComenzar = {
+                mostrandoBienvenida = false
+                mostrandoImportacion = true
+                onBienvenidaTerminada()
+            },
+            onOmitir = {
+                mostrandoBienvenida = false
+                onBienvenidaTerminada()
+            }
+        )
+    }
+
+    if (mostrandoImportacion) {
+
+        ModuloEmergente(
+            onCerrar = { mostrandoImportacion = false }
+        ) {
+
+            TarjetaSira(
+
+                onCerrar = { mostrandoImportacion = false },
+
+                onAbrirSira = {
+
+                    abrirEnlace(
+                        contexto,
+                        ENLACE_SIRA
+                    )
+                },
+
+                onImportar = {
+
+                    mostrandoImportacion = false
+
+                    selectorPdfNotas.launch(
+                        arrayOf("application/pdf")
+                    )
+                },
+
+                onGenerarInforme = {
+
+                    mostrandoImportacion = false
+
+                    val necesitaPermiso =
+                        Build.VERSION.SDK_INT <=
+                                Build.VERSION_CODES.P &&
+                                ContextCompat.checkSelfPermission(
+                                    contexto,
+                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                ) != PackageManager.PERMISSION_GRANTED
+
+                    if (necesitaPermiso) {
+
+                        permisoAlmacenamiento.launch(
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        )
+
+                    } else {
+
+                        generarYAbrirInformePdf()
+                    }
+                }
+            )
+        }
+    }
+
+
+    // ====================================================================
     // CONTENEDOR PRINCIPAL
     // ====================================================================
 
@@ -825,208 +921,6 @@ fun PantallaPerfil(
             )
 
 
-            // ============================================================
-            // SIRA
-            // ============================================================
-
-            TarjetaSira(
-
-                onAbrirSira = {
-
-                    abrirEnlace(
-                        contexto,
-                        ENLACE_SIRA
-                    )
-                },
-
-                onImportar = {
-
-                    selectorPdfNotas.launch(
-                        arrayOf("application/pdf")
-                    )
-                },
-
-                onGenerarInforme = {
-
-                    val necesitaPermiso =
-                        Build.VERSION.SDK_INT <=
-                                Build.VERSION_CODES.P &&
-                                ContextCompat.checkSelfPermission(
-                                    contexto,
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                ) != PackageManager.PERMISSION_GRANTED
-
-                    if (necesitaPermiso) {
-
-                        permisoAlmacenamiento.launch(
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        )
-
-                    } else {
-
-                        generarYAbrirInformePdf()
-                    }
-                }
-            )
-
-
-            // ============================================================
-            // ACCESOS RÁPIDOS — MÓDULO DESPLEGABLE
-            // ============================================================
-
-            var accesosRapidosExpandidos by remember { mutableStateOf(false) }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(9.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable {
-                                accesosRapidosExpandidos = !accesosRapidosExpandidos
-                            }
-                            .padding(horizontal = 4.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            modifier = Modifier.size(38.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.GridView,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(Modifier.width(9.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Accesos rápidos",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Documentos y contactos importantes",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Icon(
-                            imageVector = if (accesosRapidosExpandidos) {
-                                Icons.Default.KeyboardArrowUp
-                            } else {
-                                Icons.Default.KeyboardArrowDown
-                            },
-                            contentDescription = if (accesosRapidosExpandidos) {
-                                "Contraer accesos rápidos"
-                            } else {
-                                "Expandir accesos rápidos"
-                            },
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(25.dp)
-                        )
-                    }
-
-                    AnimatedVisibility(
-                        visible = accesosRapidosExpandidos,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(
-                                    MaterialTheme.colorScheme.surface
-                                )
-                                .padding(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(7.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                AccesoCuadrado(
-                                    icono = Icons.Default.Description,
-                                    titulo = "Res. 091",
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        abrirEnlace(contexto, ENLACE_RESOLUCION_091)
-                                    }
-                                )
-
-                                AccesoCuadrado(
-                                    icono = Icons.Default.Description,
-                                    titulo = "Acuerdo 009",
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        abrirEnlace(contexto, ENLACE_ACUERDO_009)
-                                    }
-                                )
-
-                                AccesoCuadrado(
-                                    icono = Icons.Default.GridView,
-                                    titulo = "Malla",
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        abrirEnlace(contexto, ENLACE_MALLA_CURRICULAR)
-                                    }
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                AccesoCuadrado(
-                                    icono = Icons.Default.Email,
-                                    titulo = "Rep. Facultad",
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        abrirCorreo(contexto, CORREO_REPRESENTANTE_FACULTAD)
-                                    }
-                                )
-
-                                AccesoCuadrado(
-                                    icono = Icons.Default.Email,
-                                    titulo = "Dir. Programa",
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        abrirCorreo(contexto, CORREO_DIRECCION_PROGRAMA)
-                                    }
-                                )
-
-                                Spacer(Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
-            }
-
             Spacer(Modifier.height(6.dp))
 
             // ============================================================
@@ -1131,10 +1025,16 @@ fun PantallaPerfil(
                 }
             }
 
+            // ============================================================
+            // ACCESOS RÁPIDOS — MÓDULO DESPLEGABLE (debajo de los atajos)
+            // ============================================================
+
+            ModuloAccesosRapidos(contexto = contexto)
+
             Spacer(Modifier.height(10.dp))
 
             // ============================================================
-            // REPORTAR BUGS
+            // CONSEJERÍA ESTUDIANTIL
             // ============================================================
 
             Spacer(Modifier.height(18.dp))
@@ -1162,8 +1062,8 @@ fun PantallaPerfil(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Default.BugReport,
-                                contentDescription = "Reportar bugs",
+                                imageVector = Icons.Default.Psychology,
+                                contentDescription = "Consejería estudiantil",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(17.dp)
                             )
@@ -1171,7 +1071,7 @@ fun PantallaPerfil(
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Reportar bugs",
+                        text = "Consejería estudiantil",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1182,7 +1082,7 @@ fun PantallaPerfil(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = "¿Encontraste un fallo? Ayúdanos a mejorarlo.",
+                text = "Un espacio privado para acompañarte.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -1200,17 +1100,11 @@ fun PantallaPerfil(
 
 
         // =================================================================
-        // BOTÓN ELIMINAR
+        // MENÚ DE ACCIONES (mismo lugar que el antiguo botón de basura)
+        // Al tocarlo se despliegan dos círculos: importar datos y eliminar.
         // =================================================================
 
-        FloatingActionButton(
-
-            onClick = {
-
-                mostrarConfirmacionEliminar =
-                    true
-            },
-
+        Column(
             modifier =
                 Modifier
                     .align(Alignment.BottomStart)
@@ -1218,31 +1112,74 @@ fun PantallaPerfil(
                         start = 18.dp,
                         bottom = 18.dp
                     ),
-
-            containerColor =
-                MaterialTheme.colorScheme.primary,
-
-            contentColor =
-                MaterialTheme.colorScheme.onPrimary,
-
-            shape =
-                CircleShape
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            Icon(
+            AnimatedVisibility(
+                visible = menuAccionesAbierto,
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit = fadeOut() + slideOutVertically { it / 2 }
+            ) {
 
-                imageVector =
-                    Icons.Default.Delete,
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
 
-                contentDescription =
-                    "Eliminar estudiante",
+                    AccionFlotante(
+                        icono = Icons.Default.FileDownload,
+                        etiqueta = "Importar datos",
+                        descripcion = "Importar datos",
+                        onClick = {
+                            menuAccionesAbierto = false
+                            mostrandoImportacion = true
+                        }
+                    )
 
-                modifier =
-                    Modifier.size(18.dp)
-            )
+                    AccionFlotante(
+                        icono = Icons.Default.Delete,
+                        etiqueta = "Borrar estudiante",
+                        descripcion = "Eliminar estudiante",
+                        onClick = {
+                            menuAccionesAbierto = false
+                            mostrarConfirmacionEliminar = true
+                        }
+                    )
+                }
+            }
+
+            FloatingActionButton(
+
+                onClick = {
+                    menuAccionesAbierto = !menuAccionesAbierto
+                },
+
+                containerColor =
+                    MaterialTheme.colorScheme.primary,
+
+                contentColor =
+                    MaterialTheme.colorScheme.onPrimary,
+
+                shape =
+                    CircleShape
+            ) {
+
+                Icon(
+
+                    imageVector =
+                        if (menuAccionesAbierto) Icons.Default.Close
+                        else Icons.Default.Add,
+
+                    contentDescription =
+                        if (menuAccionesAbierto) "Cerrar menú de acciones"
+                        else "Abrir menú de acciones",
+
+                    modifier =
+                        Modifier.size(22.dp)
+                )
+            }
         }
-
-
 
     }
 
@@ -1527,7 +1464,7 @@ fun PantallaPerfil(
 
 
     // ====================================================================
-    // DIÁLOGO REPORTAR BUGS
+    // DIÁLOGO CONSEJERÍA ESTUDIANTIL
     // ====================================================================
 
     if (mostrandoReporteBugs) {
@@ -1550,7 +1487,7 @@ fun PantallaPerfil(
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Default.BugReport,
+                            imageVector = Icons.Default.Psychology,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
@@ -1561,7 +1498,7 @@ fun PantallaPerfil(
 
             title = {
                 Text(
-                    text = "Reportar bugs y fallos",
+                    text = "Consejería estudiantil",
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -1574,37 +1511,14 @@ fun PantallaPerfil(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Antes que nada, te pido disculpas a ti queridx usuarix si por alguna razón encuentras algún error, fallo o incoveniente. Este proyecto de software libre ha sido desarrollado por una sola persona(egresada), que con mucho amor, esfuerzo y cariño la ha desarrollado para mejorar la experiencia académica de lxs estudiantes de la Facultad de Psicología sin costo alguno.",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = "La Consejería Estudiantil es un espacio privado con el que te puedes comunicar para asuntos psicológicos, académicos y socioeconómicos, de forma privada.",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
 
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Text(
-                                text = "¿Qué puedes reportar?",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "Errores, mecanicas que faltan, pantallas que no cargan, botones que no responden, datos incorrectos o cualquier comportamiento extraño. Si puedes, describe qué hiciste y qué esperabas que ocurriera.",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
                     Text(
-                        text = "Puedes escribir directamente a cualquiera de estos correos, con el asunto <Bug en PsicoRuta>",
+                        text = "Puedes escribirles directamente al correo:",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -1613,7 +1527,7 @@ fun PantallaPerfil(
 
                     Button(
                         onClick = {
-                            abrirCorreo(contexto, "contreras.javier@correounivalle.edu.co")
+                            abrirCorreo(contexto, "consejeriaestudiantil.psicologia@correounivalle.edu.co")
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
@@ -1628,27 +1542,13 @@ fun PantallaPerfil(
                             modifier = Modifier.size(17.dp)
                         )
                         Spacer(Modifier.width(7.dp))
-                        Text("contreras.javier@correounivalle.edu.co", fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Button(
-                        onClick = {
-                            abrirCorreo(contexto, "reneadev@gmail.com")
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurface
+                        Text(
+                            text = "consejeriaestudiantil.psicologia@correounivalle.edu.co",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Email,
-                            contentDescription = null,
-                            modifier = Modifier.size(17.dp)
-                        )
-                        Spacer(Modifier.width(7.dp))
-                        Text("reneadev@gmail.com", fontWeight = FontWeight.SemiBold)
                     }
                 }
             },
@@ -2385,12 +2285,12 @@ private fun MemoriaEstudiantilFlotante(
 
 @Composable
 private fun TarjetaSira(
+    onCerrar: () -> Unit,
     onAbrirSira: () -> Unit,
     onImportar: () -> Unit,
     onGenerarInforme: () -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
-    var expandida by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2408,8 +2308,6 @@ private fun TarjetaSira(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable { expandida = !expandida }
                     .padding(vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -2441,19 +2339,20 @@ private fun TarjetaSira(
                         color = colores.onSurfaceVariant
                     )
                 }
-                Icon(
-                    imageVector = if (expandida) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expandida) "Contraer importar y exportar datos" else "Expandir importar y exportar datos",
-                    tint = colores.onSurfaceVariant,
-                    modifier = Modifier.size(25.dp)
-                )
+                IconButton(
+                    onClick = onCerrar,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cerrar importar y exportar datos",
+                        tint = colores.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
 
-            AnimatedVisibility(
-                visible = expandida,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
+            run {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -2505,6 +2404,338 @@ private fun TarjetaSira(
         }
     }
 }
+
+// ========================================================================
+// MÓDULO EMERGENTE (contenedor común)
+// ========================================================================
+
+@Composable
+private fun ModuloEmergente(
+    onCerrar: () -> Unit,
+    contenido: @Composable () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onCerrar,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .heightIn(max = 640.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            contenido()
+        }
+    }
+}
+
+
+// ========================================================================
+// DIÁLOGO DE BIENVENIDA (primera apertura)
+// ========================================================================
+
+@Composable
+private fun DialogoBienvenida(
+    onComenzar: () -> Unit,
+    onOmitir: () -> Unit
+) {
+    val colores = MaterialTheme.colorScheme
+
+    Dialog(
+        onDismissRequest = onOmitir,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(28.dp))
+                .background(colores.surface)
+                .border(
+                    1.dp,
+                    colores.outlineVariant.copy(alpha = 0.45f),
+                    RoundedCornerShape(28.dp)
+                )
+                .padding(22.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(colores.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.School,
+                    contentDescription = null,
+                    tint = colores.onPrimaryContainer,
+                    modifier = Modifier.size(39.dp)
+                )
+            }
+
+            Text(
+                text = "¡Bienvenido a PsicoRuta UV!",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Text(
+                text = "Aquí podrás seguir tu avance en el pensum, tus prácticas y tu trabajo de grado.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colores.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(colores.surfaceVariant.copy(alpha = 0.55f))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = "Para empezar",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colores.onSurface
+                )
+                PasoSira("1", "Descarga tus notas en PDF desde el SIRA.")
+                PasoSira("2", "Impórtalas en la app con un solo toque.")
+                PasoSira("3", "¡Disfruta la app!")
+            }
+
+            Button(
+                onClick = onComenzar,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colores.primary,
+                    contentColor = colores.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FileDownload,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Importar mis datos", fontWeight = FontWeight.Bold)
+            }
+
+            TextButton(onClick = onOmitir) {
+                Text("Más tarde")
+            }
+        }
+    }
+}
+
+
+// ========================================================================
+// ACCIÓN FLOTANTE (círculo del menú de acciones)
+// ========================================================================
+
+@Composable
+private fun AccionFlotante(
+    icono: ImageVector,
+    etiqueta: String,
+    descripcion: String,
+    onClick: () -> Unit
+) {
+    val colores = MaterialTheme.colorScheme
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        FloatingActionButton(
+            onClick = onClick,
+            modifier = Modifier.size(46.dp),
+            containerColor = colores.secondaryContainer,
+            contentColor = colores.onSecondaryContainer,
+            shape = CircleShape
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = descripcion,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = colores.surface,
+            shadowElevation = 3.dp,
+            border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.6f))
+        ) {
+            Text(
+                text = etiqueta,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colores.onSurface,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+            )
+        }
+    }
+}
+
+
+// ========================================================================
+// ACCESOS RÁPIDOS — MÓDULO DESPLEGABLE
+// ========================================================================
+
+@Composable
+private fun ModuloAccesosRapidos(
+    contexto: Context
+) {
+    var accesosRapidosExpandidos by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable {
+                        accesosRapidosExpandidos = !accesosRapidosExpandidos
+                    }
+                    .padding(horizontal = 4.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(38.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.GridView,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.width(9.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Accesos rápidos",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Documentos y contactos importantes",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Icon(
+                    imageVector = if (accesosRapidosExpandidos) {
+                        Icons.Default.KeyboardArrowUp
+                    } else {
+                        Icons.Default.KeyboardArrowDown
+                    },
+                    contentDescription = if (accesosRapidosExpandidos) {
+                        "Contraer accesos rápidos"
+                    } else {
+                        "Expandir accesos rápidos"
+                    },
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
+
+            AnimatedVisibility(
+                visible = accesosRapidosExpandidos,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        AccesoCuadrado(
+                            icono = Icons.Default.Description,
+                            titulo = "Res. 091",
+                            modifier = Modifier.weight(1f),
+                            onClick = { abrirEnlace(contexto, ENLACE_RESOLUCION_091) }
+                        )
+
+                        AccesoCuadrado(
+                            icono = Icons.Default.Description,
+                            titulo = "Acuerdo 009",
+                            modifier = Modifier.weight(1f),
+                            onClick = { abrirEnlace(contexto, ENLACE_ACUERDO_009) }
+                        )
+
+                        AccesoCuadrado(
+                            icono = Icons.Default.GridView,
+                            titulo = "Malla",
+                            modifier = Modifier.weight(1f),
+                            onClick = { abrirEnlace(contexto, ENLACE_MALLA_CURRICULAR) }
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        AccesoCuadrado(
+                            icono = Icons.Default.Email,
+                            titulo = "Rep. Facultad",
+                            modifier = Modifier.weight(1f),
+                            onClick = { abrirCorreo(contexto, CORREO_REPRESENTANTE_FACULTAD) }
+                        )
+
+                        AccesoCuadrado(
+                            icono = Icons.Default.Email,
+                            titulo = "Dir. Programa",
+                            modifier = Modifier.weight(1f),
+                            onClick = { abrirCorreo(contexto, CORREO_DIRECCION_PROGRAMA) }
+                        )
+
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun AccionSiraCompacta(
