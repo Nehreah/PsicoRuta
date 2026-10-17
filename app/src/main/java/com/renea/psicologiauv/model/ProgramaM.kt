@@ -1,5 +1,32 @@
 package com.renea.psicologiauv.model
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+
 /**
  * Resultado de evaluar el avance de un estudiante en una línea de
  * profundización profesional.
@@ -252,7 +279,7 @@ data class ProgramaM(
         )
         8 -> ConsejoPensum(
             titulo = "Semestre 8:",
-            texto = "Termina tu línea de practicas y revisa tus requisitos faltantes para aplicar a las practicas profesionales<Acá puedo agregar un link que lleve a la pagina de practcias, te pregunto a ti chatpgt>."
+            texto = "Termina tu línea de prácticas y revisa tus requisitos faltantes para aplicar a las prácticas profesionales."
         )
         9 -> ConsejoPensum(
             titulo = "Semestre 9:",
@@ -759,4 +786,144 @@ data class ProgramaM(
                 requisitoTrabajoDeGradoCumplido() &&
                 requisitoCreditosComplementariosCumplido() &&
                 requisitoInglesCumplido()
+}
+
+
+// ========================================================================
+// CONSEJOS: PARTE GRÁFICA (compartida por Perfil y Pensum)
+// ========================================================================
+
+/** Tarjeta de consejo con bombillo, usada en la pantalla de Perfil. */
+@Composable
+fun ModuloConsejoPrincipal(
+    consejo: ConsejoPensum,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
+        color = scheme.secondaryContainer.copy(alpha = 0.78f),
+        border = BorderStroke(1.dp, scheme.secondary.copy(alpha = 0.18f)),
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(42.dp),
+                shape = CircleShape,
+                color = scheme.secondary.copy(alpha = 0.15f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.Lightbulb,
+                        contentDescription = "Consejo",
+                        tint = scheme.secondary,
+                        modifier = Modifier.size(23.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = consejo.titulo,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = scheme.onSecondaryContainer
+                )
+                Text(
+                    text = consejo.texto,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onSecondaryContainer.copy(alpha = 0.88f),
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Consejo compacto del hero de cada semestre en el Pensum.
+ * En los semestres 8 y 9 incluye enlaces de navegación.
+ */
+@Composable
+fun ModuloConsejoPensum(
+    programa: ProgramaM,
+    semestre: Int,
+    onIrPracticas: () -> Unit,
+    onIrTrabajoGrado: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val scheme = MaterialTheme.colorScheme
+    val consejo = programa.consejoPensum(semestre)
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = scheme.surfaceVariant,
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.55f))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when (semestre) {
+                8 -> {
+                    Text(
+                        text = "Termina tu línea de prácticas y revisa tus requisitos faltantes para aplicar a las",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Ir a prácticas profesionales",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF2F76B9),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.clickable { onIrPracticas() }
+                    )
+                }
+
+                9 -> {
+                    Text(
+                        text = "Elige un director de trabajo de grado e inicia tu ciclo de trabajo de grado, el cual dura mínimo un año y máximo 2-3. En caso de interrumpir un semestre, el ciclo se reinicia.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Ir a Trabajo de grado",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF2F76B9),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.clickable { onIrTrabajoGrado() }
+                    )
+                }
+
+                else -> {
+                    Text(
+                        text = consejo.texto,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = scheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
 }

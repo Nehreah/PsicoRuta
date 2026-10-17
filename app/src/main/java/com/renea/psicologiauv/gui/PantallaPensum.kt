@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.Estudiante
+import com.renea.psicologiauv.model.ModuloConsejoPensum
 import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AprobadoColor
 
@@ -52,7 +53,8 @@ import com.renea.psicologiauv.ui.theme.AprobadoColor
 fun PantallaPensum(
     modifier: Modifier = Modifier,
     estudiante: Estudiante,
-    viewModel: ControlV
+    viewModel: ControlV,
+    onNavigate: (PantallasApp) -> Unit
 ) {
 
     val programa = viewModel.programa
@@ -186,7 +188,9 @@ fun PantallaPensum(
 
                 onFiltros = {
                     mostrarFiltros = !mostrarFiltros
-                }
+                },
+
+                onNavigate = onNavigate
             )
 
             /* ========================================================== */
@@ -445,7 +449,8 @@ private fun CuboSemestres(
     semestreInicial: Int,
     programa: ProgramaM,
     materiaSeleccionada: (Asignatura) -> Unit,
-    onFiltros: () -> Unit
+    onFiltros: () -> Unit,
+    onNavigate: (PantallasApp) -> Unit
 ) {
     // Al entrar al Pensum, abrir el semestre que todavía está en curso.
     // Si el progreso cambia y el semestre inicial calculado cambia, actualizarlo.
@@ -516,7 +521,8 @@ private fun CuboSemestres(
             selectorAbierto = selectorAbierto,
             onAbrirSelector = { selectorAbierto = true },
             onCerrarSelector = { selectorAbierto = false },
-            onSeleccionarSemestre = { seleccionarSemestre(it) }
+            onSeleccionarSemestre = { seleccionarSemestre(it) },
+            onNavigate = onNavigate
         )
     }
 }
@@ -757,6 +763,7 @@ private fun CaraCuboSemestre(
     onAbrirSelector: () -> Unit,
     onCerrarSelector: () -> Unit,
     onSeleccionarSemestre: (Int) -> Unit,
+    onNavigate: (PantallasApp) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val todasAprobadas = programa.semestreCompletado(semestre)
@@ -898,25 +905,12 @@ private fun CaraCuboSemestre(
 
                 Spacer(Modifier.height(11.dp))
 
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = programa.consejoPensum(semestre).texto,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    }
-                }
+                ModuloConsejoPensum(
+                    programa = programa,
+                    semestre = semestre,
+                    onIrPracticas = { onNavigate(PantallasApp.PRACTICAS_INTRO) },
+                    onIrTrabajoGrado = { onNavigate(PantallasApp.TRABAJO_GRADO) }
+                )
 
             }
         }

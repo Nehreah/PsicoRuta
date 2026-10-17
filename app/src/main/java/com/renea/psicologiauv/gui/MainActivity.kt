@@ -596,7 +596,10 @@ fun PsicologiaUVApp(
 
                             PantallaPensum(
                                 estudiante = estudiante,
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                onNavigate = { destino ->
+                                    destinoActual = destino
+                                }
                             )
                         }
 

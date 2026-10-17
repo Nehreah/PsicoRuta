@@ -67,7 +67,6 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Work
@@ -110,6 +109,7 @@ import com.renea.psicologiauv.R
 import com.renea.psicologiauv.data.ImportadorNotas
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
+import com.renea.psicologiauv.model.ModuloConsejoPrincipal
 import com.renea.psicologiauv.ui.theme.AmberAccent
 import com.renea.psicologiauv.ui.theme.Burgundy
 import com.renea.psicologiauv.ui.theme.DarkRed
@@ -778,12 +778,6 @@ fun PantallaPerfil(
             )
 
 
-            // Consejo contextual del Pensum, compartido con su hero.
-            ModuloConsejoPrincipal(
-                consejo = viewModel.programa.consejoPensum(viewModel.programa.semestreEnCurso())
-            )
-
-
             // ============================================================
             // SELECTOR DE LÍNEA
             // ============================================================
@@ -811,6 +805,12 @@ fun PantallaPerfil(
                     }
                 )
             }
+
+
+            // Consejo contextual del Pensum, compartido con su hero.
+            ModuloConsejoPrincipal(
+                consejo = viewModel.programa.consejoPensum(viewModel.programa.semestreEnCurso())
+            )
 
 
             // ============================================================
@@ -2771,67 +2771,6 @@ private fun TarjetaPerfilHero(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-// ========================================================================
-// CONSEJO PRINCIPAL
-// ========================================================================
-
-@Composable
-private fun ModuloConsejoPrincipal(
-    consejo: com.renea.psicologiauv.model.ConsejoPensum
-) {
-    val scheme = MaterialTheme.colorScheme
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = scheme.secondaryContainer.copy(alpha = 0.78f),
-        border = BorderStroke(1.dp, scheme.secondary.copy(alpha = 0.18f)),
-        tonalElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(42.dp),
-                shape = CircleShape,
-                color = scheme.secondary.copy(alpha = 0.15f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Filled.Lightbulb,
-                        contentDescription = "Consejo",
-                        tint = scheme.secondary,
-                        modifier = Modifier.size(23.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = consejo.titulo,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = scheme.onSecondaryContainer
-                )
-                Text(
-                    text = consejo.texto,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = scheme.onSecondaryContainer.copy(alpha = 0.88f),
-                    fontWeight = FontWeight.Medium
-                )
             }
         }
     }
