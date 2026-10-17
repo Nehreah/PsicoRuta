@@ -336,6 +336,11 @@ enum class PantallasApp(
     PRACTICAS_INTRO(
         leyenda = "Prácticas profesionales",
         icono = Icons.Filled.Work
+    ),
+
+    REGLAMENTO_TRABAJO_GRADO(
+        leyenda = "Reglamento de trabajo de grado",
+        icono = Icons.Filled.Description
     )
 }
 
@@ -393,6 +398,7 @@ fun PsicologiaUVApp(
         remember(cumpleRequisitosGrado) {
             PantallasApp.entries.filter { pantalla ->
                 pantalla != PantallasApp.PRACTICAS_INTRO &&
+                pantalla != PantallasApp.REGLAMENTO_TRABAJO_GRADO &&
                 (pantalla != PantallasApp.GRADO || cumpleRequisitosGrado)
             }
         }
@@ -625,8 +631,22 @@ fun PsicologiaUVApp(
                         PantallasApp.TRABAJO_GRADO -> {
 
                             PantallaTrabajoGrado(
-                                programa = viewModel.programa
+                                programa = viewModel.programa,
+                                onVerReglamento = {
+                                    destinoActual =
+                                        PantallasApp.REGLAMENTO_TRABAJO_GRADO
+                                }
                             )
+                        }
+
+
+                        // ====================================================
+                        // REGLAMENTO DEL TRABAJO DE GRADO
+                        // ====================================================
+
+                        PantallasApp.REGLAMENTO_TRABAJO_GRADO -> {
+
+                            PantallaReglamentoTrabajoGrado()
                         }
 
 
