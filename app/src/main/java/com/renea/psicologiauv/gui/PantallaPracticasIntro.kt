@@ -97,7 +97,7 @@ fun PantallaPracticasIntro(
                         color = scheme.onSurface
                     )
                     Text(
-                        text = "Tu preparación para la experiencia profesional",
+                        text = "Aprovecha tu formación",
                         style = MaterialTheme.typography.bodyMedium,
                         color = scheme.onSurfaceVariant
                     )
@@ -105,10 +105,10 @@ fun PantallaPracticasIntro(
             }
 
             Text(
-                text = "Las prácticas profesionales son el espacio en el que integras los conocimientos, habilidades y competencias desarrollados durante tu formación en Psicología, llevándolos a contextos reales de actuación profesional.",
+                text = "Las prácticas profesionales son el espacio en el que integras los conocimientos, habilidades y competencias desarrolladas bajo la supervición profesional.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = scheme.onSurface,
-                textAlign = TextAlign.Start,
+                textAlign = TextAlign.Justify,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -123,14 +123,16 @@ fun PantallaPracticasIntro(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "¿Cómo iniciar?",
+                        text = "Lo primero:",
+                        textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = scheme.onSurface
                     )
                     Text(
-                        text = "Para iniciar las prácticas profesionales es necesario elegir una de las cuatro líneas de profesionalización. La línea Clínica cuenta con dos enfoques: Clínica y Neuropsicología.",
+                        text = "Antes de dar inicio a las prácticas profesionales es necesario elegir una de las cuatro líneas de profesionalización en una de sus 5 modalidades:",
                         style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Justify,
                         color = scheme.onSurfaceVariant
                     )
 

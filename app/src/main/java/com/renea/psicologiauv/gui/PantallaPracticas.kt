@@ -141,7 +141,7 @@ fun PantallaPracticas(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 border = BorderStroke(1.dp, outline.copy(alpha = 0.40f))
             ) {
@@ -236,16 +236,7 @@ fun PantallaPracticas(
                 materiasProfesionales = materiasProfesionales,
                 onMateriaClick = { materia -> materiaSeleccionada = materia }
             )
-
-            Text(
-                text = "Es posible iniciar practicas debiendo hasta 2 asignaturas electivas",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
+            
 
             // ================================================================
             // LÍNEAS PROFESIONALES

@@ -2360,7 +2360,7 @@ private fun TarjetaSira(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = colores.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f))
     ) {
@@ -2427,7 +2427,7 @@ private fun TarjetaSira(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFF7F8FA))
+                            .background(colores.surfaceVariant)
                             .padding(horizontal = 10.dp, vertical = 9.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -2483,7 +2483,7 @@ private fun AccionSiraCompacta(
     Surface(
         modifier = modifier.height(60.dp).clickable(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
-        color = Color(0xFFF7F8FA),
+        color = colores.surfaceVariant,
         border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.7f))
     ) {
         Column(
@@ -2567,6 +2567,7 @@ private fun TarjetaPerfilHero(
     onSettingsClick: () -> Unit,
     onNavigate: (PantallasApp) -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
     val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea?.nombre)
     val colorAcento = temaLinea.colorPrimario
     val progresoAnimado by animateFloatAsState(
@@ -2578,14 +2579,14 @@ private fun TarjetaPerfilHero(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        border = BorderStroke(1.dp, Color(0xFFE9E7EB))
+        border = BorderStroke(1.dp, scheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
+                .background(scheme.surface)
                 .padding(horizontal = 14.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -2600,7 +2601,7 @@ private fun TarjetaPerfilHero(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 8.dp.toPx()
                     drawArc(
-                        color = Color(0xFFE9E7ED),
+                        color = scheme.outlineVariant,
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
@@ -2626,7 +2627,7 @@ private fun TarjetaPerfilHero(
                         text = "Click acá",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF6B6670),
+                        color = scheme.onSurfaceVariant,
                         maxLines = 1
                     )
                 }
@@ -2646,7 +2647,7 @@ private fun TarjetaPerfilHero(
                         text = nombre,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF17151A),
+                        color = scheme.onSurface,
                         textAlign = TextAlign.Center,
                         maxLines = 2
                     )
@@ -2654,7 +2655,7 @@ private fun TarjetaPerfilHero(
                     Text(
                         text = if (codigo.isNotBlank()) "Código $codigo" else "Código no definido",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF514B55),
+                        color = scheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         maxLines = 1
                     )
@@ -2697,7 +2698,7 @@ private fun TarjetaPerfilHero(
                     Text(
                         text = "$creditosCursados de $creditosCarrera créditos",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF625C66),
+                        color = scheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         maxLines = 1
                     )
@@ -2717,14 +2718,14 @@ private fun TarjetaPerfilHero(
                         .size(30.dp)
                         .clickable(onClick = onSettingsClick),
                     shape = CircleShape,
-                    color = Color(0xFFF7F6F8),
+                    color = scheme.surfaceVariant,
                     border = BorderStroke(1.dp, Color(0xFFE9E7EB))
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Editar datos personales",
-                            tint = Color(0xFF55505B),
+                            tint = scheme.onSurfaceVariant,
                             modifier = Modifier.size(16.dp)
                         )
                     }

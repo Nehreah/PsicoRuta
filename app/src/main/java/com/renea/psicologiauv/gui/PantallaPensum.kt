@@ -107,6 +107,19 @@ fun PantallaPensum(
 
     val materiasElectivas = porSemestre[0].orEmpty()
 
+    // El semestre en curso se calcula con todas las asignaturas del estudiante,
+    // sin tener en cuenta los filtros visuales del Pensum. Se conserva el mismo
+    // criterio de finalización que muestran las tarjetas: al menos el 70 % de
+    // las asignaturas del semestre aprobadas.
+    val asignaturasPorSemestreCompleto = estudiante.asignaturas
+        .filter { it.semestre in 1..11 }
+        .groupBy { it.semestre }
+    val semestresDelPlan = (1..10).toList() +
+        if (asignaturasPorSemestreCompleto[11].orEmpty().isNotEmpty()) listOf(11) else emptyList()
+    val semestreEnCurso = semestresDelPlan.firstOrNull { semestre ->
+        val materias = asignaturasPorSemestreCompleto[semestre].orEmpty()
+        materias.isEmpty() || materias.count { it.aprobo() }.toFloat() / materias.size < 0.70f
+    } ?: semestresDelPlan.lastOrNull() ?: 1
 
 
     /* ================================================================== */
@@ -173,6 +186,7 @@ fun PantallaPensum(
 
             CuboSemestres(
                 porSemestre = porSemestre,
+                semestreInicial = semestreEnCurso,
 
                 materiaSeleccionada = { materia ->
                     materiaSeleccionada = materia
@@ -440,10 +454,15 @@ private fun AnilloPensum(
 @Composable
 private fun CuboSemestres(
     porSemestre: Map<Int, List<Asignatura>>,
+    semestreInicial: Int,
     materiaSeleccionada: (Asignatura) -> Unit,
     onFiltros: () -> Unit
 ) {
-    var semestreActual by remember { mutableIntStateOf(1) }
+    // Al entrar al Pensum, abrir el semestre que todavía está en curso.
+    // Si el progreso cambia y el semestre inicial calculado cambia, actualizarlo.
+    var semestreActual by remember(semestreInicial) {
+        mutableIntStateOf(semestreInicial.coerceIn(1, 11))
+    }
 
     fun seleccionarSemestre(semestre: Int) {
         semestreActual = semestre.coerceIn(1, 11)

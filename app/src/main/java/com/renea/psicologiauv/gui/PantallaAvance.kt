@@ -237,10 +237,11 @@ private fun TarjetaHeroeProgreso(
     val isDark = isSystemInDarkTheme()
     val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea)
     val colorAcento = temaLinea.colorPrimario
-    val fondo = Color.White
-    val colorTexto = Color(0xFF17151A)
-    val colorSubtexto = Color(0xFF55515D)
-    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.16f) else Color(0xFFE5E5EB)
+    val scheme = MaterialTheme.colorScheme
+    val fondo = scheme.surface
+    val colorTexto = scheme.onSurface
+    val colorSubtexto = scheme.onSurfaceVariant
+    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.22f) else Color(0xFFE5E5EB)
 
     // Orden aleatorio de consejos:
     // cada vez que se crea esta pantalla se baraja la lista, por lo que
@@ -282,7 +283,7 @@ private fun TarjetaHeroeProgreso(
             .height(233.dp),
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = fondo
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = null
@@ -290,7 +291,7 @@ private fun TarjetaHeroeProgreso(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(fondo)
         ) {
 
             // Fondo blanco sólido e independiente de la ilustración de la línea académica.
@@ -506,18 +507,19 @@ private fun iconoParaArea(indice: Int): ImageVector =
 
 @Composable
 private fun TarjetaAvancePorArea(avances: Map<String, Float>) {
+    val scheme = MaterialTheme.colorScheme
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = scheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
+                .background(scheme.surface)
                 .padding(horizontal = 14.dp, vertical = 16.dp)
         ) {
             Row(
@@ -635,19 +637,16 @@ private fun CajonIdioma(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val scheme = MaterialTheme.colorScheme
     val containerColor =
         when {
-            !habilitado -> Color(0xFFF0F1F4)
-            cumple -> Color(0xFFE4F4E8)
-            else -> Color(0xFFF3F4F7)
+            !habilitado -> scheme.surfaceVariant.copy(alpha = 0.55f)
+            cumple -> if (isSystemInDarkTheme()) Color(0xFF173A28) else Color(0xFFE4F4E8)
+            else -> scheme.surfaceVariant.copy(alpha = 0.72f)
         }
 
     val colorTexto =
-        if (!habilitado) {
-            Color(0xFF777782)
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }
+        if (!habilitado) scheme.onSurfaceVariant else scheme.onSurface
 
     Surface(
         modifier = Modifier
