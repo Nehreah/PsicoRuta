@@ -120,7 +120,7 @@ fun TarjetaHito(
                 Text(
                     text = hito.periodo,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold
                 )
 

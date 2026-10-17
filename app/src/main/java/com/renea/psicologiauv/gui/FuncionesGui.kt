@@ -123,7 +123,7 @@ private fun CajonRequisitoTarjeta(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (cumple) {
-                Color(0xFFE8F5E9)  // Verde claro para aprobado
+                AprobadoColor.copy(alpha = 0.14f)  // Verde suave para aprobado
             } else if (habilitado) {
                 MaterialTheme.colorScheme.surface
             } else {

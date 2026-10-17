@@ -1,5 +1,9 @@
 package com.renea.psicologiauv.gui
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -596,7 +600,7 @@ private fun BarraProgresoComplementariosPensum(
                                 .height(10.dp)
                                 .clickable { onCreditoClick(indice) },
                             shape = RoundedCornerShape(50),
-                            color = if (completado) AprobadoColor else scheme.surfaceVariant
+                            color = if (completado) scheme.primary else scheme.surfaceVariant
                         ) {}
                     }
                 }
@@ -657,13 +661,13 @@ private fun BarrasElectivasPensum(
                                 .height(10.dp)
                                 .clickable { onMateriaClick(codigos[index]) },
                             shape = RoundedCornerShape(50),
-                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                            color = if (cursada) scheme.primary else scheme.surfaceVariant
                         ) {}
 
                         Text(
                             text = etiquetas[index],
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            color = if (cursada) scheme.onSurface else scheme.onSurfaceVariant,
                             fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1
@@ -732,13 +736,13 @@ private fun BarrasIdiomasPensum(
                                     }
                                 ),
                             shape = RoundedCornerShape(50),
-                            color = if (aprobado) AprobadoColor else scheme.surfaceVariant
+                            color = if (aprobado) scheme.primary else scheme.surfaceVariant
                         ) {}
 
                         Text(
                             text = nombre,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (aprobado) AprobadoColor else scheme.onSurfaceVariant,
+                            color = if (aprobado) scheme.onSurface else scheme.onSurfaceVariant,
                             fontWeight = if (aprobado) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1
@@ -821,7 +825,7 @@ private fun CaraCuboSemestre(
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = estadoColor.copy(alpha = 0.90f),
+                            color = (if (todasAprobadas) AprobadoColor else MaterialTheme.colorScheme.onSurface).copy(alpha = 0.90f),
                             maxLines = 1
                         )
                     }
@@ -979,8 +983,24 @@ private fun MateriaCompacta(
                 .padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Nombre de la asignatura con su código al lado, en letra más pequeña.
+            val colorCodigo = MaterialTheme.colorScheme.onSurfaceVariant
             Text(
-                text = materia.nombre,
+                text = buildAnnotatedString {
+                    append(materia.nombre)
+                    if (materia.codigo.trim().length > 2) {
+                        append("  ")
+                        withStyle(
+                            SpanStyle(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colorCodigo
+                            )
+                        ) {
+                            append(materia.codigo.trim())
+                        }
+                    }
+                },
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
@@ -1704,7 +1724,7 @@ private fun DialogoAgregarAsignaturaComplementaria(
                     Text(
                         text = "Marcada como $notaEspecialSeleccionada ",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -2154,7 +2174,7 @@ private fun DialogoEditarAsignatura(
                     Text(
                         text = "Marcada como $notaEspecialSeleccionada ",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

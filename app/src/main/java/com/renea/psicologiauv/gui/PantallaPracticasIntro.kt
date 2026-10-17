@@ -1,5 +1,7 @@
 package com.renea.psicologiauv.gui
 
+import com.renea.psicologiauv.ui.theme.AprobadoColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,11 +53,11 @@ fun PantallaPracticasIntro(
 ) {
     val requisitosCompletos = programa.contarRequisitosAprobadosPracticas() == 8
     val scheme = MaterialTheme.colorScheme
-    val estadoColor = if (requisitosCompletos) {
-        scheme.primary
-    } else {
-        scheme.onSurfaceVariant
-    }
+    // Mientras falten requisitos el botón usa el color de la línea;
+    // cuando se cumplen todos pasa a verde.
+    val colorBoton = if (requisitosCompletos) AprobadoColor else scheme.primary
+    val contenidoBoton = if (requisitosCompletos) Color.White else scheme.onPrimary
+    val estadoColor = if (requisitosCompletos) AprobadoColor else scheme.onSurfaceVariant
 
     Box(
         modifier = modifier
@@ -151,10 +153,10 @@ fun PantallaPracticasIntro(
                     .clip(CircleShape)
                     .clickable(onClick = onEvaluar),
                 shape = CircleShape,
-                color = if (requisitosCompletos) scheme.primary else scheme.surface,
+                color = colorBoton,
                 border = BorderStroke(
                     width = 2.dp,
-                    color = if (requisitosCompletos) scheme.primary else scheme.outlineVariant
+                    color = colorBoton
                 ),
                 shadowElevation = 8.dp
             ) {
@@ -169,7 +171,7 @@ fun PantallaPracticasIntro(
                             Icons.Filled.Work
                         },
                         contentDescription = "Evaluar requisitos de prácticas",
-                        tint = if (requisitosCompletos) scheme.onPrimary else scheme.primary,
+                        tint = contenidoBoton,
                         modifier = Modifier.size(43.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -177,7 +179,7 @@ fun PantallaPracticasIntro(
                         text = "Evaluar",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (requisitosCompletos) scheme.onPrimary else scheme.primary
+                        color = contenidoBoton
                     )
                 }
             }

@@ -527,13 +527,13 @@ private fun BarrasLineasProfesionalesPracticas(
                                 .height(10.dp)
                                 .then(if (materia != null) Modifier.clickable { onMateriaClick(materia) } else Modifier),
                             shape = RoundedCornerShape(50),
-                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                            color = if (cursada) scheme.primary else scheme.surfaceVariant
                         ) {}
 
                         Text(
                             text = linea,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            color = if (cursada) scheme.onSurface else scheme.onSurfaceVariant,
                             fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1
@@ -600,13 +600,13 @@ private fun BarrasElectivasPracticas(
                                 .height(10.dp)
                                 .then(if (materia != null) Modifier.clickable { onMateriaClick(materia) } else Modifier),
                             shape = RoundedCornerShape(50),
-                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                            color = if (cursada) scheme.primary else scheme.surfaceVariant
                         ) {}
 
                         Text(
                             text = etiqueta,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            color = if (cursada) scheme.onSurface else scheme.onSurfaceVariant,
                             fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1
@@ -641,7 +641,7 @@ private fun BarrasProgresoPracticas(
     val scheme = MaterialTheme.colorScheme
     val progreso = creditos.coerceIn(0, creditosTotales)
     val completo = creditos >= creditosTotales && creditosTotales > 0
-    val colorProgreso = AprobadoColor
+    val colorProgreso = scheme.primary
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -768,7 +768,7 @@ private fun IndicadorCreditos(
                     text = "Ver materias ›",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
-                    color = scheme.primary.copy(alpha = 0.70f)
+                    color = scheme.onSurfaceVariant
                 )
             }
 
@@ -1204,7 +1204,7 @@ private fun DialogoInformacionMateria(
                                 text = if (aprobada) "Aprobada · Nota ${materia.textoNota()}" else "Pendiente",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = colorEstado
+                                color = if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1495,7 +1495,7 @@ private fun DialogoEditarMateria(
                     Text(
                         text = "Marcada como $notaEspecialSeleccionada (cuenta para créditos, no para promedio)",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -1644,7 +1644,7 @@ private fun PanelAsignaturas(
                 Text(
                     text = if (materias.isEmpty()) "Sin asignaturas" else "${materias.size} asignaturas",
                     style = MaterialTheme.typography.labelSmall,
-                    color = primary,
+                    color = scheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -1786,7 +1786,7 @@ private fun TarjetaMateriaBanner(
                             text = if (aprobada) materia.textoNota() else "Pendiente",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = acento
+                            color = if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -1844,7 +1844,7 @@ private fun TarjetaMateriaBanner(
                             text = "Editar",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = acento
+                            color = if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }

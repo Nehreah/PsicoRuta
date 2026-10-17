@@ -42,10 +42,10 @@ val SuccessLight = Color(0xFF1B7A3D)
 val SuccessDark = Color(0xFF7FE3A0)
 
 // Rojo oscuro para texto sobre fondos claros
-val ErrorLight = Color(0xFFC4123B)
+val ErrorLight = Color(0xFFD90021)
 
 // Rojo claro para texto sobre fondos oscuros
-val ErrorDark = Color(0xFFFF8FA3)
+val ErrorDark = Color(0xFFFF4D5E)
 
 // ============================================================
 // APROBACIÓN DE MATERIAS / REQUISITOS
@@ -53,7 +53,9 @@ val ErrorDark = Color(0xFFFF8FA3)
 // Usar junto con colorEstado() en ui.common.Estado.kt
 
 val AprobadoColor = Color(0xFF1FA35C)
-val NoAprobadoColor = Color(0xFFE0294B)
+// Rojo intenso y universal: se conserva igual en todas las líneas para
+// que un "no cumple" siempre se lea de inmediato.
+val NoAprobadoColor = Color(0xFFE5001F)
 
 // ============================================================
 // ACENTOS DE MARCA (tarjetas destacadas / héroes)

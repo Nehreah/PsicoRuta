@@ -151,13 +151,13 @@ private fun BarrasIdiomasAvance(
                                 } else Modifier
                             ),
                         shape = RoundedCornerShape(50),
-                        color = if (aprobado) AprobadoColor else scheme.surfaceVariant
+                        color = if (aprobado) scheme.primary else scheme.surfaceVariant
                     ) {}
 
                     Text(
                         text = nombre,
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (aprobado) AprobadoColor else scheme.onSurfaceVariant,
+                        color = if (aprobado) scheme.onSurface else scheme.onSurfaceVariant,
                         fontWeight = if (aprobado) FontWeight.Bold else FontWeight.Medium,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
@@ -241,7 +241,7 @@ private fun TarjetaHeroeProgreso(
     val fondo = scheme.surface
     val colorTexto = scheme.onSurface
     val colorSubtexto = scheme.onSurfaceVariant
-    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.22f) else Color(0xFFE5E5EB)
+    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.22f) else colorAcento.copy(alpha = 0.14f)
 
     // Orden aleatorio de consejos:
     // cada vez que se crea esta pantalla se baraja la lista, por lo que
@@ -334,7 +334,7 @@ private fun TarjetaHeroeProgreso(
                                 text = "${"%.0f".format(progreso)}%",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = colorAcento,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -641,7 +641,7 @@ private fun CajonIdioma(
     val containerColor =
         when {
             !habilitado -> scheme.surfaceVariant.copy(alpha = 0.55f)
-            cumple -> if (isSystemInDarkTheme()) Color(0xFF173A28) else Color(0xFFE4F4E8)
+            cumple -> AprobadoColor.copy(alpha = if (isSystemInDarkTheme()) 0.20f else 0.13f)
             else -> scheme.surfaceVariant.copy(alpha = 0.72f)
         }
 
@@ -795,7 +795,7 @@ private fun DialogoInformacionIdioma(
                                 text = if (aprobada) "Aprobada · Nota ${materia.textoNota()}" else "Pendiente",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = colorEstado
+                                color = if (aprobada) AprobadoColor else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1118,7 +1118,7 @@ private fun DialogoEditarIdioma(
                     Text(
                         text = "Marcada como $notaEspecialSeleccionada (cuenta para créditos, no para promedio)",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 

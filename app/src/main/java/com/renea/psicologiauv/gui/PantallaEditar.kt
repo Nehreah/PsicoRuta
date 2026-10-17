@@ -1,5 +1,6 @@
 package com.renea.psicologiauv.gui
 
+import com.renea.psicologiauv.ui.theme.LocalTemaLinea
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -868,16 +869,12 @@ fun PantallaPerfil(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isSystemInDarkTheme()) {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    } else {
-                        Color(0xFFFFF5F2)
-                    }
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
                 border = BorderStroke(
                     1.dp,
-                    Red.copy(alpha = 0.38f)
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
                 )
             ) {
                 Column(
@@ -899,13 +896,13 @@ fun PantallaPerfil(
                         Surface(
                             modifier = Modifier.size(38.dp),
                             shape = RoundedCornerShape(12.dp),
-                            color = Red.copy(alpha = 0.14f)
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.GridView,
                                     contentDescription = null,
-                                    tint = Red,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -938,7 +935,7 @@ fun PantallaPerfil(
                             } else {
                                 "Expandir accesos rápidos"
                             },
-                            tint = Red,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(25.dp)
                         )
                     }
@@ -953,11 +950,7 @@ fun PantallaPerfil(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(
-                                    if (isSystemInDarkTheme()) {
-                                        MaterialTheme.colorScheme.surface
-                                    } else {
-                                        Color(0xFFFFFFFF)
-                                    }
+                                    MaterialTheme.colorScheme.surface
                                 )
                                 .padding(8.dp),
                             verticalArrangement = Arrangement.spacedBy(7.dp)
@@ -1145,7 +1138,7 @@ fun PantallaPerfil(
                 shape = RoundedCornerShape(50.dp),
                 color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 4.dp,
-                border = BorderStroke(1.dp, Red.copy(alpha = 0.14f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
@@ -1154,13 +1147,13 @@ fun PantallaPerfil(
                     Surface(
                         modifier = Modifier.size(30.dp),
                         shape = CircleShape,
-                        color = Red.copy(alpha = 0.10f)
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.BugReport,
                                 contentDescription = "Reportar bugs",
-                                tint = Red,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(17.dp)
                             )
                         }
@@ -1216,12 +1209,10 @@ fun PantallaPerfil(
                     ),
 
             containerColor =
-                DarkRed.copy(
-                    alpha = 0.90f
-                ),
+                MaterialTheme.colorScheme.primary,
 
             contentColor =
-                White,
+                MaterialTheme.colorScheme.onPrimary,
 
             shape =
                 CircleShape
@@ -1276,7 +1267,7 @@ fun PantallaPerfil(
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = Red
+                    tint = MaterialTheme.colorScheme.primary
                 )
             },
 
@@ -1484,11 +1475,8 @@ fun PantallaPerfil(
                     colors =
                         ButtonDefaults
                             .filledTonalButtonColors(
-                                containerColor =
-                                    Red,
-
-                                contentColor =
-                                    White
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                             )
                 ) {
 
@@ -1547,13 +1535,13 @@ fun PantallaPerfil(
                 Surface(
                     modifier = Modifier.size(48.dp),
                     shape = CircleShape,
-                    color = Red.copy(alpha = 0.10f)
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.BugReport,
                             contentDescription = null,
-                            tint = Red,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -1619,8 +1607,8 @@ fun PantallaPerfil(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Red.copy(alpha = 0.10f),
-                            contentColor = Red
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                            contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Icon(
@@ -1689,7 +1677,7 @@ fun PantallaPerfil(
                 Icon(
                     Icons.Default.Warning,
                     contentDescription = null,
-                    tint = Red
+                    tint = MaterialTheme.colorScheme.primary
                 )
             },
 
@@ -1729,11 +1717,8 @@ fun PantallaPerfil(
 
                     colors =
                         ButtonDefaults.buttonColors(
-                            containerColor =
-                                Red,
-
-                            contentColor =
-                                White
+                            containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
 
                     shape =
@@ -1834,7 +1819,7 @@ private fun MemoriaEstudiantilFlotante(
                     ),
 
                 color =
-                    Burgundy,
+                    MaterialTheme.colorScheme.surface,
 
                 shadowElevation =
                     7.dp,
@@ -1842,7 +1827,7 @@ private fun MemoriaEstudiantilFlotante(
                 border =
                     BorderStroke(
                         1.dp,
-                        White.copy(
+                        MaterialTheme.colorScheme.onSurface.copy(
                             alpha = 0.12f
                         )
                     )
@@ -1874,7 +1859,7 @@ private fun MemoriaEstudiantilFlotante(
                             CircleShape,
 
                         color =
-                            White.copy(
+                            MaterialTheme.colorScheme.onSurface.copy(
                                 alpha = 0.12f
                             )
                     ) {
@@ -1893,7 +1878,7 @@ private fun MemoriaEstudiantilFlotante(
                                     "Memoria estudiantil",
 
                                 tint =
-                                    White,
+                                    MaterialTheme.colorScheme.onSurface,
 
                                 modifier =
                                     Modifier.size(17.dp)
@@ -1925,7 +1910,7 @@ private fun MemoriaEstudiantilFlotante(
                             FontWeight.Bold,
 
                         color =
-                            White,
+                            MaterialTheme.colorScheme.onSurface,
 
                         maxLines = 1,
 
@@ -1982,9 +1967,7 @@ private fun MemoriaEstudiantilFlotante(
                 colors =
                     CardDefaults.cardColors(
                         containerColor =
-                            Burgundy.copy(
-                                alpha = 0.96f
-                            )
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
                     ),
 
                 elevation =
@@ -1996,7 +1979,7 @@ private fun MemoriaEstudiantilFlotante(
                 border =
                     BorderStroke(
                         1.dp,
-                        White.copy(
+                        MaterialTheme.colorScheme.onSurface.copy(
                             alpha = 0.10f
                         )
                     )
@@ -2044,7 +2027,7 @@ private fun MemoriaEstudiantilFlotante(
                                 ),
 
                             color =
-                                Red.copy(
+                                MaterialTheme.colorScheme.primary.copy(
                                     alpha = 0.18f
                                 )
                         ) {
@@ -2063,7 +2046,7 @@ private fun MemoriaEstudiantilFlotante(
                                         null,
 
                                     tint =
-                                        White,
+                                        MaterialTheme.colorScheme.onSurface,
 
                                     modifier =
                                         Modifier.size(19.dp)
@@ -2096,7 +2079,7 @@ private fun MemoriaEstudiantilFlotante(
                                     FontWeight.Bold,
 
                                 color =
-                                    White,
+                                    MaterialTheme.colorScheme.onSurface,
 
                                 maxLines = 1,
 
@@ -2120,7 +2103,7 @@ private fun MemoriaEstudiantilFlotante(
                                         .labelSmall,
 
                                 color =
-                                    White.copy(
+                                    MaterialTheme.colorScheme.onSurface.copy(
                                         alpha = 0.62f
                                     ),
 
@@ -2153,14 +2136,14 @@ private fun MemoriaEstudiantilFlotante(
                                 CircleShape,
 
                             color =
-                                White.copy(
+                                MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.09f
                                 ),
 
                             border =
                                 BorderStroke(
                                     1.dp,
-                                    White.copy(
+                                    MaterialTheme.colorScheme.onSurface.copy(
                                         alpha = 0.08f
                                     )
                                 )
@@ -2180,7 +2163,7 @@ private fun MemoriaEstudiantilFlotante(
                                         "Cerrar memoria estudiantil",
 
                                     tint =
-                                        White.copy(
+                                        MaterialTheme.colorScheme.onSurface.copy(
                                             alpha = 0.85f
                                         ),
 
@@ -2208,7 +2191,7 @@ private fun MemoriaEstudiantilFlotante(
                                 .fillMaxWidth()
                                 .height(1.dp)
                                 .background(
-                                    White.copy(
+                                    MaterialTheme.colorScheme.onSurface.copy(
                                         alpha = 0.09f
                                     )
                                 )
@@ -2274,7 +2257,7 @@ private fun MemoriaEstudiantilFlotante(
                                     CircleShape,
 
                                 color =
-                                    Red.copy(
+                                    MaterialTheme.colorScheme.primary.copy(
                                         alpha = 0.18f
                                     )
                             ) {
@@ -2661,7 +2644,7 @@ private fun TarjetaPerfilHero(
                         text = "${progreso.toInt().coerceIn(0, 100)}%",
                         fontSize = 21.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = colorAcento,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
                     )
                     Text(
@@ -2706,7 +2689,7 @@ private fun TarjetaPerfilHero(
                             .heightIn(min = 32.dp)
                             .clickable(onClick = onLineaClick),
                         shape = RoundedCornerShape(16.dp),
-                        color = temaLinea.chipFondoClaro,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         border = BorderStroke(1.dp, colorAcento.copy(alpha = 0.38f))
                     ) {
                         Row(
@@ -2717,20 +2700,20 @@ private fun TarjetaPerfilHero(
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
-                                tint = temaLinea.colorTextoChip,
+                                tint = colorAcento,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
                                 text = temaLinea.nombreVisible,
                                 style = MaterialTheme.typography.labelMedium,
-                                color = temaLinea.colorTextoChip,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1
                             )
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = "Cambiar línea",
-                                tint = temaLinea.colorTextoChip,
+                                tint = colorAcento,
                                 modifier = Modifier.size(13.dp)
                             )
                         }
@@ -2747,7 +2730,7 @@ private fun TarjetaPerfilHero(
                         Text(
                             text = "Selecciona una nueva línea",
                             style = MaterialTheme.typography.labelSmall,
-                            color = colorAcento,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -2760,7 +2743,7 @@ private fun TarjetaPerfilHero(
                         .clickable(onClick = onSettingsClick),
                     shape = CircleShape,
                     color = scheme.surfaceVariant,
-                    border = BorderStroke(1.dp, Color(0xFFE9E7EB))
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -2854,10 +2837,10 @@ private fun SeccionTitulo(
         Surface(
             modifier = Modifier.size(36.dp),
             shape = RoundedCornerShape(12.dp),
-            color = Red.copy(alpha = 0.10f)
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icono, contentDescription = null, tint = Red, modifier = Modifier.size(19.dp))
+                Icon(icono, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
             }
         }
         Spacer(Modifier.width(8.dp))
@@ -2891,12 +2874,8 @@ private fun AccesoCuadrado(
     Surface(
         modifier = modifier.height(52.dp).clickable(onClick = onClick),
         shape = RoundedCornerShape(13.dp),
-        color = if (isSystemInDarkTheme()) {
-            MaterialTheme.colorScheme.surfaceVariant
-        } else {
-            Color(0xFFFFF0EC)
-        },
-        border = BorderStroke(1.dp, Red.copy(alpha = 0.30f))
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f))
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(5.dp),
@@ -2906,10 +2885,10 @@ private fun AccesoCuadrado(
             Surface(
                 modifier = Modifier.size(25.dp),
                 shape = CircleShape,
-                color = Red.copy(alpha = 0.08f)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icono, contentDescription = titulo, tint = Red, modifier = Modifier.size(14.dp))
+                    Icon(icono, contentDescription = titulo, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                 }
             }
             Spacer(Modifier.height(2.dp))

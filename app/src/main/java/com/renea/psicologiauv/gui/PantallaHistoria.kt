@@ -1,5 +1,7 @@
 package com.renea.psicologiauv.gui
 
+import com.renea.psicologiauv.ui.theme.LocalTemaLinea
+import androidx.compose.ui.graphics.lerp
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -86,32 +88,21 @@ private data class EsquemaColorHistoria(
 
 @Composable
 private fun obtenerEsquemaHistoria(): EsquemaColorHistoria {
-    val isDark = isSystemInDarkTheme()
-    return if (isDark) {
-        EsquemaColorHistoria(
-            wine = Color(0xFFF28DA8),          // Rosa vívido / magenta suave
-            heroBackground = Color(0xFF38141F), // Borgoña oscuro para el Hero
-            pink = Color(0xFF3D202B),          // Fondo de contenedores / pastillas
-            pinkSoft = Color(0xFF281C23),      // Fondo de tarjetas secundarias
-            background = Color(0xFF161215),    // Fondo principal oscuro
-            text = Color(0xFFF8EFF3),          // Texto primario claro
-            secondaryText = Color(0xFFCFBFC8), // Texto secundario
-            border = Color(0xFF48353E),        // Borde
-            cardBackground = Color(0xFF221A20) // Fondo de tarjetas principales
-        )
-    } else {
-        EsquemaColorHistoria(
-            wine = Color(0xFF8F163B),
-            heroBackground = Color(0xFF8F163B), // Vino tinto clásico
-            pink = Color(0xFFF8E5EA),
-            pinkSoft = Color(0xFFFCF3F5),
-            background = Color(0xFFFAF9FA),
-            text = Color(0xFF281820),
-            secondaryText = Color(0xFF705D66),
-            border = Color(0xFFE8E2E5),
-            cardBackground = Color.White
-        )
-    }
+    // Se deriva del tema activo (línea profesional + claro/oscuro), así esta
+    // pantalla cambia junto con el resto de la app.
+    val scheme = MaterialTheme.colorScheme
+
+    return EsquemaColorHistoria(
+        wine = scheme.primary,
+        heroBackground = scheme.surfaceVariant,
+        pink = scheme.primaryContainer,
+        pinkSoft = scheme.surfaceVariant,
+        background = scheme.background,
+        text = scheme.onSurface,
+        secondaryText = scheme.onSurfaceVariant,
+        border = scheme.outlineVariant,
+        cardBackground = scheme.surface
+    )
 }
 
 
@@ -395,7 +386,7 @@ private fun HistoriaHero(
             Surface(
                 modifier = Modifier.size(48.dp),
                 shape = RoundedCornerShape(17.dp),
-                color = Color.White.copy(alpha = 0.14f)
+                color = esquema.text.copy(alpha = 0.14f)
             ) {
 
                 Box(
@@ -405,7 +396,7 @@ private fun HistoriaHero(
                     Icon(
                         imageVector = Icons.Filled.History,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = esquema.text,
                         modifier = Modifier.size(25.dp)
                     )
                 }
@@ -417,7 +408,7 @@ private fun HistoriaHero(
                 text = "Una historia más viva que nunca",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                color = esquema.text
             )
 
             Spacer(modifier = Modifier.height(11.dp))
@@ -429,7 +420,7 @@ private fun HistoriaHero(
                             "memoria, el corazón y el espíritu de quienes aun están.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
-                color = Color.White.copy(alpha = 0.94f)
+                color = esquema.text.copy(alpha = 0.94f)
             )
 
             Spacer(modifier = Modifier.height(9.dp))
@@ -442,7 +433,7 @@ private fun HistoriaHero(
                             "Es hora de transformar nuestro entorno.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
-                color = Color.White.copy(alpha = 0.94f)
+                color = esquema.text.copy(alpha = 0.94f)
             )
         }
     }
@@ -518,7 +509,7 @@ private fun IntroduccionCard(
                 text = if (mostrarCompleto) "Mostrar menos ↑" else "Leer introducción completa →",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = esquema.wine,
+                color = esquema.text,
                 modifier = Modifier.clickable {
                     mostrarCompleto = !mostrarCompleto
                 }
@@ -553,7 +544,7 @@ private fun SeccionHistoria(
                     text = numero,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = esquema.wine
+                    color = esquema.text
                 )
             }
         }
@@ -627,7 +618,7 @@ private fun TarjetaExploracionPremium(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = esquema.wine
+                        color = esquema.text
                     )
                 }
 
@@ -660,7 +651,7 @@ private fun TarjetaExploracionPremium(
                         text = "Toca para explorar",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = esquema.wine
+                        color = esquema.text
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
@@ -876,7 +867,7 @@ private fun ConceptoCompletoCard(
                         text = "0$numero",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = esquema.wine
+                        color = esquema.text
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))

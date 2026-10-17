@@ -247,6 +247,36 @@ data class ProgramaM(
             ?: 1
     }
 
+    /**
+     * Requisitos para iniciar el proceso de Trabajo de Grado (Resolución
+     * 60-2019, Art. 5): haber aprobado cinco asignaturas previas. Se
+     * identifican por palabras clave del nombre, sin importar mayúsculas ni
+     * tildes, para tolerar pequeñas diferencias en cómo vienen nombradas.
+     * Devuelve pares (nombre a mostrar, aprobada).
+     */
+    fun requisitosInicioTrabajoGrado(): List<Pair<String, Boolean>> {
+        val asignaturas = estudiante?.asignaturas.orEmpty()
+
+        fun normalizar(texto: String): String =
+            java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD)
+                .replace(Regex("\\p{Mn}+"), "")
+                .lowercase()
+
+        fun aprobada(vararg claves: String): Boolean =
+            asignaturas.any { asignatura ->
+                val nombre = normalizar(asignatura.nombre)
+                claves.all { nombre.contains(it) } && asignatura.aprobo()
+            }
+
+        return listOf(
+            "Metodología de la Investigación I" to aprobada("metodolog", "cualitativ"),
+            "Metodología de la Investigación II" to aprobada("metodolog", "cuantitativ"),
+            "Estrategias de Análisis de Datos Cualitativos" to aprobada("estrategias", "datos"),
+            "Estadística" to aprobada("estadistic"),
+            "Diseño de Instrumentos de Medición en Psicología" to aprobada("instrumentos", "medicion")
+        )
+    }
+
     /** Consejo contextual para mostrar debajo del héroe del semestre. */
     fun consejoPensum(semestre: Int): ConsejoPensum = when (semestre) {
         1 -> ConsejoPensum(

@@ -261,7 +261,7 @@ fun PantallaCali(
                     Text(
                         text = "COLOMBIA / CALI",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
 

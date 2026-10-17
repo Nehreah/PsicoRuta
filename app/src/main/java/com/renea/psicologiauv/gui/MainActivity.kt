@@ -1,5 +1,6 @@
 package com.renea.psicologiauv.gui
 
+import androidx.compose.ui.graphics.luminance
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
         val preferenciasAviso = getSharedPreferences("psicoruta_ajustes", MODE_PRIVATE)
 
         setContent {
-            PsicologiaUVTheme {
+            PsicologiaUVTheme(linea = viewModel.programa.estudiante?.linea) {
                 var avisoAceptado by remember {
                     mutableStateOf(preferenciasAviso.getBoolean("aviso_uso_aceptado", false))
                 }
@@ -178,7 +179,7 @@ private fun AvisoInicialPsicoRuta(
             Text(
                 text = "Antes de comenzar",
                 style = MaterialTheme.typography.titleMedium,
-                color = colores.primary,
+                color = colores.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
@@ -690,8 +691,7 @@ private fun BarraNavegacionModerna(
 ) {
 
     val esTemaOscuro =
-        MaterialTheme.colorScheme.background ==
-                Color(0xFF0A0A0F)
+        MaterialTheme.colorScheme.background.luminance() < 0.5f
 
 
     val fondoBarra =
@@ -850,7 +850,7 @@ private fun ItemBarraNavegacion(
         targetValue =
             if (seleccionado) {
 
-                Red.copy(
+                MaterialTheme.colorScheme.primary.copy(
                     alpha =
                         if (esTemaOscuro) {
                             0.18f
@@ -879,7 +879,7 @@ private fun ItemBarraNavegacion(
         targetValue =
             if (seleccionado) {
 
-                Red
+                MaterialTheme.colorScheme.primary
 
             } else {
 
