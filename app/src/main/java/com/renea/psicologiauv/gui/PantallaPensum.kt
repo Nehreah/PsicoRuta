@@ -206,12 +206,27 @@ fun PantallaPensum(
 
             BarrasElectivasPensum(
                 estadosComplementarias = programa.estadosElectivasComplementarias(),
-                estadosProfesionales = programa.estadosElectivasProfesionalesIIIII(),
+                estadosProfesionales = listOf(
+                    programa.estudiante?.asignaturas
+                        ?.find { it.codigo.trim() == "402197M" }
+                        ?.aprobo() == true
+                ) + programa.estadosElectivasProfesionalesIIIII(),
                 onMateriaClick = { codigo ->
                     programa.estudiante?.asignaturas
                         ?.find { it.codigo.trim() == codigo }
                         ?.let { materiaSeleccionada = it }
                 }
+            )
+
+            /* ========================================================== */
+            /* IDIOMAS — PROGRESO POR ASIGNATURA                         */
+            /* ========================================================== */
+
+            val datosIdiomas = programa.datosIdiomas()
+            BarrasIdiomasPensum(
+                materiaIdiomaI = programa.materiaIdiomaActiva(datosIdiomas.idiomasICandidatas),
+                materiaIdiomaII = programa.materiaIdiomaActiva(datosIdiomas.idiomasIICandidatas),
+                onMateriaClick = { materia -> materiaSeleccionada = materia }
             )
 
             /* ========================================================== */
@@ -678,8 +693,10 @@ private fun BarrasElectivasPensum(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(7.dp)
             ) {
-                val etiquetas = listOf("Comp. I", "Comp. II") +
-                        listOf("Prof. II", "Prof. III", "Prof. IV")
+                val etiquetas = listOf(
+                    "Comp. I", "Comp. II", "Prof. I", "Prof. II", "Prof. III", "Prof. IV"
+                )
+                val codigos = listOf("1", "2", "402197M", "3", "4", "5")
                 val estados = estadosComplementarias + estadosProfesionales
 
                 estados.forEachIndexed { index, cursada ->
@@ -692,7 +709,7 @@ private fun BarrasElectivasPensum(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(10.dp)
-                                .clickable { onMateriaClick((index + 1).toString()) },
+                                .clickable { onMateriaClick(codigos[index]) },
                             shape = RoundedCornerShape(50),
                             color = if (cursada) AprobadoColor else scheme.surfaceVariant
                         ) {}
@@ -702,6 +719,81 @@ private fun BarrasElectivasPensum(
                             style = MaterialTheme.typography.labelSmall,
                             color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
                             fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarrasIdiomasPensum(
+    materiaIdiomaI: Asignatura?,
+    materiaIdiomaII: Asignatura?,
+    onMateriaClick: (Asignatura) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val idiomas = listOf(
+        "Idiomas I" to materiaIdiomaI,
+        "Idiomas II" to materiaIdiomaII
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Idiomas",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onSurface
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                idiomas.forEach { (nombre, materia) ->
+                    val aprobado = materia?.aprobo() == true
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .then(
+                                    if (materia != null) {
+                                        Modifier.clickable { onMateriaClick(materia) }
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
+                            shape = RoundedCornerShape(50),
+                            color = if (aprobado) AprobadoColor else scheme.surfaceVariant
+                        ) {}
+
+                        Text(
+                            text = nombre,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (aprobado) AprobadoColor else scheme.onSurfaceVariant,
+                            fontWeight = if (aprobado) FontWeight.Bold else FontWeight.Medium,
                             textAlign = TextAlign.Center,
                             maxLines = 1
                         )
@@ -963,7 +1055,7 @@ private fun MateriaCompacta(
             Text(
                 text = materia.nombre,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
@@ -974,7 +1066,7 @@ private fun MateriaCompacta(
 
             Text(
                 text = materia.textoNota(),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1

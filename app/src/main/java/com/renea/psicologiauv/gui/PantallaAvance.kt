@@ -89,46 +89,6 @@ fun PantallaAvance(
 
             TarjetaAvancePorArea(avances = datos.avances)
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    CajonIdioma(
-                        nombre = "Idiomas I",
-                        cumple = datos.idiomas.idiomasIAprobado,
-                        habilitado = datos.idiomas.existeIdiomasI,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            programa.materiaIdiomaActiva(datos.idiomas.idiomasICandidatas)?.let {
-                                materiaIdiomaSeleccionada = it
-                            }
-                        }
-                    )
-
-                    CajonIdioma(
-                        nombre = "Idiomas II",
-                        cumple = datos.idiomas.idiomasIIAprobado,
-                        habilitado = datos.idiomas.existeIdiomasII,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            programa.materiaIdiomaActiva(datos.idiomas.idiomasIICandidatas)?.let {
-                                materiaIdiomaSeleccionada = it
-                            }
-                        }
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(72.dp))
         }
     }
@@ -141,6 +101,73 @@ fun PantallaAvance(
         )
     }
 }
+
+@Composable
+private fun BarrasIdiomasAvance(
+    datos: DatosIdiomas,
+    programa: ProgramaM,
+    onIdiomaClick: (Asignatura) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val idiomas = listOf(
+        Triple("Idiomas I", datos.idiomasIAprobado, datos.existeIdiomasI) to datos.idiomasICandidatas,
+        Triple("Idiomas II", datos.idiomasIIAprobado, datos.existeIdiomasII) to datos.idiomasIICandidatas
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.40f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Text(
+                text = "Idiomas",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onSurface
+            )
+
+            idiomas.forEach { (info, candidatas) ->
+                val (nombre, aprobado, habilitado) = info
+                val materia = programa.materiaIdiomaActiva(candidatas)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .then(
+                                if (habilitado && materia != null) {
+                                    Modifier.clickable { onIdiomaClick(materia) }
+                                } else Modifier
+                            ),
+                        shape = RoundedCornerShape(50),
+                        color = if (aprobado) AprobadoColor else scheme.surfaceVariant
+                    ) {}
+
+                    Text(
+                        text = nombre,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (aprobado) AprobadoColor else scheme.onSurfaceVariant,
+                        fontWeight = if (aprobado) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 // ========================================================================
 // DATOS DERIVADOS DE AVANCE

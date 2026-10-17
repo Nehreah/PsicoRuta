@@ -43,7 +43,8 @@ data class TemaLineaConfig(
     val fondoOscuro: Color,
     val chipFondoClaro: Color,
     val chipFondoOscuro: Color,
-    val colorTextoChip: Color
+    val colorTextoChip: Color,
+    val colorTextoChipOscuro: Color
 )
 
 // ========================================================================
@@ -66,7 +67,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF221217),         // Tono rubí oscuro
                 chipFondoClaro = Color(0xFFF6D6DD),
                 chipFondoOscuro = Color(0xFF421E27),
-                colorTextoChip = Color(0xFF7A1426)
+                colorTextoChip = Color(0xFF7A1426),
+                colorTextoChipOscuro = Color(0xFFFFB8C4)
             )
         }
         normalizado.contains("organizacional") -> {
@@ -80,7 +82,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF1B1226),         // Violeta pizarra oscuro
                 chipFondoClaro = Color(0xFFEADBFA),
                 chipFondoOscuro = Color(0xFF38234D),
-                colorTextoChip = Color(0xFF47216D)
+                colorTextoChip = Color(0xFF47216D),
+                colorTextoChipOscuro = Color(0xFFDCC2FF)
             )
         }
         normalizado.contains("social") -> {
@@ -94,7 +97,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF111E15),         // Bosque oscuro
                 chipFondoClaro = Color(0xFFD3EBD8),
                 chipFondoOscuro = Color(0xFF1F3827),
-                colorTextoChip = Color(0xFF1B532F)
+                colorTextoChip = Color(0xFF1B532F),
+                colorTextoChipOscuro = Color(0xFFB7E8C3)
             )
         }
         normalizado.contains("neuro") -> {
@@ -108,7 +112,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF0F1B2C),         // Medianoche profundo
                 chipFondoClaro = Color(0xFFD4E6F8),
                 chipFondoOscuro = Color(0xFF1B324D),
-                colorTextoChip = Color(0xFF134575)
+                colorTextoChip = Color(0xFF134575),
+                colorTextoChipOscuro = Color(0xFFB8D8FF)
             )
         }
         normalizado.contains("educativa") -> {
@@ -122,7 +127,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF261C0F),         // Bronce tostado oscuro
                 chipFondoClaro = Color(0xFFF7E6C8),
                 chipFondoOscuro = Color(0xFF483318),
-                colorTextoChip = Color(0xFF7E4603)
+                colorTextoChip = Color(0xFF7E4603),
+                colorTextoChipOscuro = Color(0xFFFFD9A6)
             )
         }
         else -> {
@@ -136,7 +142,8 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 fondoOscuro = Color(0xFF18171C),
                 chipFondoClaro = Color(0xFFF5D6DC),
                 chipFondoOscuro = Color(0xFF38151D),
-                colorTextoChip = Color(0xFF6E0D22)
+                colorTextoChip = Color(0xFF6E0D22),
+                colorTextoChipOscuro = Color(0xFFFFB8C4)
             )
         }
     }

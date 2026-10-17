@@ -107,6 +107,17 @@ fun PantallaPracticas(
         calcularDatosPracticas(programa, otraLineaSeleccionada)
     }
 
+    val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
+    val materiasProfesionalizacion = asignaturasEstudiante.filter {
+        it.componente.contains("Profesionalización", ignoreCase = true)
+    }
+    val materiasComplementarias = asignaturasEstudiante.filter {
+        it.componente.contains("Electiva complementaria", ignoreCase = true)
+    }
+    val materiasProfesionales = asignaturasEstudiante.filter {
+        it.componente.contains("Electiva profesional", ignoreCase = true)
+    }
+
     val scheme = MaterialTheme.colorScheme
     val primary = scheme.primary
     val text = scheme.onSurface
@@ -125,221 +136,116 @@ fun PantallaPracticas(
         ) {
 
             // ================================================================
-            // RESUMEN — cuatro semicírculos clickeables
-            // ================================================================
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                IndicadorCreditos(
-                    titulo = "Línea profesional ${otraLineaSeleccionada ?: "Ninguna"}",
-                    creditos = datos.creditosLineaSeleccionada,
-                    total = programa.creditosLinea,
-                    seleccionado = indicadorExpandido == "LINEA",
-                    onClick = {
-                        indicadorExpandido = if (indicadorExpandido == "LINEA") null else "LINEA"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                IndicadorCreditos(
-                    titulo = "Asignaturas profesionales",
-                    creditos = datos.creditosProfesionales,
-                    total = programa.creditosProfesionales,
-                    seleccionado = indicadorExpandido == "PROFESIONALES",
-                    onClick = {
-                        indicadorExpandido = if (indicadorExpandido == "PROFESIONALES") null else "PROFESIONALES"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                IndicadorCreditos(
-                    titulo = "Electivas complementarias",
-                    creditos = programa.creditoselectivasComplementarias(),
-                    total = 6,
-                    seleccionado = indicadorExpandido == "COMPLEMENTARIAS",
-                    onClick = {
-                        indicadorExpandido = if (indicadorExpandido == "COMPLEMENTARIAS") null else "COMPLEMENTARIAS"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-
-                IndicadorCreditos(
-                    titulo = "Electivas profesionales",
-                    creditos = programa.creditoselectivasProfesionales(),
-                    total = 12,
-                    seleccionado = indicadorExpandido == "ELECTIVAS_PROF",
-                    onClick = {
-                        indicadorExpandido = if (indicadorExpandido == "ELECTIVAS_PROF") null else "ELECTIVAS_PROF"
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            BannerEstado(
-                texto = if (programa.requisitoElectivas()) {
-                    "Cumple con los requisitos en electivas comp/prof"
-                } else {
-                    "No cumple con los requisitos en electivas comp/prof"
-                },
-                cumple = programa.requisitoElectivas()
-            )
-
-            // ================================================================
-            // ASIGNATURAS NECESARIAS (DESPLEGABLE)
+            // ASIGNATURAS NECESARIAS — lista compacta y editable
             // ================================================================
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = surface),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 border = BorderStroke(1.dp, outline.copy(alpha = 0.40f))
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    val requisitosAprobados = programa.contarRequisitosAprobadosPracticas()
+                    Text(
+                        text = "Asignaturas necesarias",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = text
+                )
 
-                    Row(
+                val requisitos = listOf(
+                    Triple("Ética del ejercicio profesional", programa.requisitosPracticasEtica(), asignaturasEstudiante.find { it.codigo == "402203M" }),
+                    Triple("Eval. y Diagnóstico Psicológico", programa.requisitosPracticasDiagnostico(), asignaturasEstudiante.find { it.codigo == "402204M" }),
+                    Triple("Práctica de fund. profesional I", programa.requisitosPracticasFundamentacionI(), asignaturasEstudiante.find { it.codigo == "402212M" }),
+                    Triple("Práctica de fund. profesional II", programa.requisitosPracticasFundamentacionII(), asignaturasEstudiante.find { it.codigo == "402221M" })
+                )
+
+                requisitos.forEach { (nombre, cumple, materia) ->
+                    Surface(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { expandidoRequisitos = !expandidoRequisitos },
-                        verticalAlignment = Alignment.CenterVertically
+                            .then(if (materia != null) Modifier.clickable { materiaSeleccionada = materia } else Modifier),
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Description,
-                            contentDescription = null,
-                            tint = primary,
-                            modifier = Modifier.size(19.dp)
-                        )
-
-                        Spacer(modifier = Modifier.width(7.dp))
-
-                        Text(
-                            text = "Asignaturas necesarias",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = text,
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Surface(
-                            shape = RoundedCornerShape(50),
-                            color = primary.copy(alpha = 0.09f)
+                        Row(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Icon(
+                                imageVector = if (cumple) Icons.Filled.CheckCircle else Icons.Filled.Close,
+                                contentDescription = null,
+                                tint = if (cumple) AprobadoColor else scheme.error,
+                                modifier = Modifier.size(19.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "$requisitosAprobados / 8",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = primary,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                text = nombre,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = text,
+                                modifier = Modifier.weight(1f)
                             )
-                        }
-
-                        Spacer(modifier = Modifier.width(4.dp))
-
-                        Icon(
-                            imageVector = if (expandidoRequisitos) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                            contentDescription = if (expandidoRequisitos) "Colapsar" else "Expandir",
-                            tint = secondaryText,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    if (expandidoRequisitos) {
-                        val lineas = listOf(
-                            "Social" to Icons.Filled.Groups,
-                            "Organizacional" to Icons.Filled.CorporateFare,
-                            "Educativa" to Icons.Filled.School,
-                            "Clínica/NeuroClínica" to Icons.Filled.Favorite
-                        )
-
-                        val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
-                        val matEtica = asignaturasEstudiante.find { it.codigo == "402203M" }
-                        val matDiagnostico = asignaturasEstudiante.find { it.codigo == "402204M" }
-                        val matFundI = asignaturasEstudiante.find { it.codigo == "402212M" }
-                        val matFundII = asignaturasEstudiante.find { it.codigo == "402221M" }
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                TarjetaRequisito(
-                                    nombre = "Ética del ejercicio profesional",
-                                    cumple = programa.requisitosPracticasEtica(),
-                                    icono = Icons.Filled.Gavel,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { matEtica?.let { materiaSeleccionada = it } }
-                                )
-                                TarjetaRequisito(
-                                    nombre = "Eval. y Diagnóstico Psicológico",
-                                    cumple = programa.requisitosPracticasDiagnostico(),
-                                    icono = Icons.Filled.Description,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { matDiagnostico?.let { materiaSeleccionada = it } }
+                            if (materia != null) {
+                                Icon(
+                                    imageVector = Icons.Filled.Edit,
+                                    contentDescription = "Editar asignatura",
+                                    tint = secondaryText,
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                TarjetaRequisito(
-                                    nombre = "Práctica de fund. profesional I",
-                                    cumple = programa.requisitosPracticasFundamentacionI(),
-                                    icono = Icons.Filled.Filter1,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { matFundI?.let { materiaSeleccionada = it } }
-                                )
-                                TarjetaRequisito(
-                                    nombre = "Práctica de fund. profesional II",
-                                    cumple = programa.requisitosPracticasFundamentacionII(),
-                                    icono = Icons.Filled.Filter2,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { matFundII?.let { materiaSeleccionada = it } }
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                lineas.forEach { (nombreLinea, icono) ->
-                                    CajonNivelLinea(
-                                        linea = nombreLinea,
-                                        icono = icono,
-                                        avance = datos.avanceLineas[nombreLinea],
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .aspectRatio(1f)
-                                    )
-                                }
-                            }
-
-                            BannerEstado(
-                                texto = if (datos.todasLasLineasCursadas) {
-                                    "Cursó al menos un nivel de cada línea"
-                                } else {
-                                    "No cursó al menos un nivel de cada línea"
-                                },
-                                cumple = datos.todasLasLineasCursadas
-                            )
                         }
                     }
                 }
             }
+            }
+
+            // ================================================================
+            // RESUMEN DE PROFESIONALIZACIÓN
+            // ================================================================
+            BarrasProgresoPracticas(
+                titulo = "Profesionalización",
+                subtitulo = "9 asignaturas · 27 créditos",
+                creditos = datos.creditosProfesionales,
+                creditosTotales = programa.creditosProfesionales,
+                unidades = 9,
+                onBarClick = { indice ->
+                    materiasProfesionalizacion.getOrNull(indice)?.let { materiaSeleccionada = it }
+                }
+            )
+
+            BarrasLineasProfesionalesPracticas(
+                avanceLineas = datos.avanceLineas,
+                materiasPorLinea = mapOf(
+                    "Social" to programa.asignaturasDeLinea("Social").firstOrNull(),
+                    "Organizacional" to programa.asignaturasDeLinea("Organizacional").firstOrNull(),
+                    "Educativa" to programa.asignaturasDeLinea("Educativa").firstOrNull(),
+                    "Clínica" to programa.asignaturasDeLinea("Clínica").firstOrNull()
+                ),
+                onMateriaClick = { materia -> materiaSeleccionada = materia }
+            )
+
+            BarrasElectivasPracticas(
+                estadosComplementarias = programa.estadosElectivasComplementarias(),
+                estadosProfesionales = programa.estadosElectivasProfesionalesIIIII(),
+                materiasComplementarias = materiasComplementarias,
+                materiasProfesionales = materiasProfesionales,
+                onMateriaClick = { materia -> materiaSeleccionada = materia }
+            )
+
+            Text(
+                text = "Es posible iniciar practicas debiendo hasta 2 asignaturas electivas",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
 
             // ================================================================
             // LÍNEAS PROFESIONALES
@@ -436,56 +342,34 @@ fun PantallaPracticas(
                                 )
                             }
 
-                            // CÁPSULA AGRUPADORA PARA CLÍNICA Y NEUROCLÍNICA
-                            val esClinicaONeuro = otraLineaSeleccionada == "Clínica" || otraLineaSeleccionada == "NeuroClínica"
-                            val colorBordeAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.40f) else outline.copy(alpha = 0.35f)
-                            val colorFondoAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.06f) else softSurface.copy(alpha = 0.35f)
-
-                            Surface(
-                                modifier = Modifier.weight(2f),
-                                shape = RoundedCornerShape(50),
-                                color = colorFondoAgrupador,
-                                border = BorderStroke(1.dp, colorBordeAgrupador)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 2.dp, vertical = 2.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    listOf("Clínica", "NeuroClínica").forEach { subLinea ->
-                                        val seleccionada = otraLineaSeleccionada == subLinea
-                                        FilterChip(
-                                            selected = seleccionada,
-                                            onClick = { otraLineaSeleccionada = subLinea },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = obtenerIconoLinea(subLinea),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                            },
-                                            label = {
-                                                Text(
-                                                    text = if (subLinea == "NeuroClínica") "Neuro" else "Clínica",
-                                                    maxLines = 1,
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            shape = RoundedCornerShape(50),
-                                            border = null,
-                                            colors = FilterChipDefaults.filterChipColors(
-                                                containerColor = if (seleccionada) primary.copy(alpha = 0.18f) else Color.Transparent,
-                                                labelColor = if (seleccionada) primary else secondaryText,
-                                                selectedContainerColor = primary.copy(alpha = 0.18f),
-                                                selectedLabelColor = primary
-                                            )
+                            listOf("Clínica", "NeuroClínica").forEach { lineaSeleccionable ->
+                                FilterChip(
+                                    selected = otraLineaSeleccionada == lineaSeleccionable,
+                                    onClick = { otraLineaSeleccionada = lineaSeleccionable },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = obtenerIconoLinea(lineaSeleccionable),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(13.dp)
                                         )
-                                    }
-                                }
+                                    },
+                                    label = {
+                                        Text(
+                                            text = if (lineaSeleccionable == "NeuroClínica") "NeuroClínica" else "Clínica",
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(50),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = softSurface.copy(alpha = 0.50f),
+                                        labelColor = secondaryText,
+                                        selectedContainerColor = primary.copy(alpha = 0.11f),
+                                        selectedLabelColor = primary
+                                    )
+                                )
                             }
                         }
 
@@ -593,6 +477,242 @@ fun PantallaPracticas(
             viewModel = viewModel,
             onDismiss = { materiaSeleccionada = null }
         )
+    }
+}
+
+@Composable
+private fun BarrasLineasProfesionalesPracticas(
+    avanceLineas: Map<String, AvanceLineaProfesional>,
+    materiasPorLinea: Map<String, Asignatura?>,
+    onMateriaClick: (Asignatura) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val lineas = listOf(
+        "Social",
+        "Organizacional",
+        "Educativa",
+        "Clínica"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.40f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Líneas profesionales",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onSurface
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                lineas.forEach { linea ->
+                    val claveAvance = if (linea == "Clínica") "Clínica/NeuroClínica" else linea
+                    val cursada = avanceLineas.containsKey(claveAvance)
+                    val materia = materiasPorLinea[linea]
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .then(if (materia != null) Modifier.clickable { onMateriaClick(materia) } else Modifier),
+                            shape = RoundedCornerShape(50),
+                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                        ) {}
+
+                        Text(
+                            text = linea,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarrasElectivasPracticas(
+    estadosComplementarias: List<Boolean>,
+    estadosProfesionales: List<Boolean>,
+    materiasComplementarias: List<Asignatura>,
+    materiasProfesionales: List<Asignatura>,
+    onMateriaClick: (Asignatura) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val estados = (estadosComplementarias + estadosProfesionales).take(6).let { lista ->
+        if (lista.size >= 6) lista else lista + List(6 - lista.size) { false }
+    }
+    val etiquetas = listOf("Comp. I", "Comp. II", "Prof. I", "Prof. II", "Prof. III", "Prof. IV")
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.40f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Electivas",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onSurface
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                etiquetas.forEachIndexed { index, etiqueta ->
+                    val cursada = estados.getOrNull(index) == true
+                    val materia = if (index < 2) materiasComplementarias.getOrNull(index) else materiasProfesionales.getOrNull(index - 2)
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .then(if (materia != null) Modifier.clickable { onMateriaClick(materia) } else Modifier),
+                            shape = RoundedCornerShape(50),
+                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                        ) {}
+
+                        Text(
+                            text = etiqueta,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = "Es posible iniciar practicas debiendo hasta 2 asignaturas electivas",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun BarrasProgresoPracticas(
+    titulo: String,
+    subtitulo: String,
+    creditos: Int,
+    creditosTotales: Int,
+    unidades: Int,
+    modifier: Modifier = Modifier,
+    onBarClick: ((Int) -> Unit)? = null
+) {
+    val scheme = MaterialTheme.colorScheme
+    val progreso = creditos.coerceIn(0, creditosTotales)
+    val completo = creditos >= creditosTotales && creditosTotales > 0
+    val colorProgreso = AprobadoColor
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.40f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = titulo,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = scheme.onSurface
+                    )
+                    Text(
+                        text = subtitulo,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = scheme.onSurfaceVariant
+                    )
+                }
+
+                Text(
+                    text = "$progreso / $creditosTotales",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colorProgreso
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                repeat(unidades) { indice ->
+                    // Profesionalización: cada barra representa 3 créditos.
+                    // Electivas: cada barra representa 1 crédito.
+                    val creditosPorUnidad = if (creditosTotales == 27 && unidades == 9) 3 else 1
+                    val completada = (indice + 1) * creditosPorUnidad <= progreso
+
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(10.dp)
+                            .then(if (onBarClick != null) Modifier.clickable { onBarClick(indice) } else Modifier),
+                        shape = RoundedCornerShape(50),
+                        color = if (completada) colorProgreso else scheme.surfaceVariant
+                    ) {}
+                }
+            }
+        }
     }
 }
 

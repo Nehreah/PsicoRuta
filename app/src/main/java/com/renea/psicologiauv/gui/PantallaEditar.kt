@@ -1058,7 +1058,7 @@ fun PantallaPerfil(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { onNavigate(PantallasApp.PRACTICAS) },
+                        .clickable { onNavigate(PantallasApp.PRACTICAS_INTRO) },
                     shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 1.dp,

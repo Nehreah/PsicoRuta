@@ -1,13 +1,11 @@
 package com.renea.psicologiauv.gui
 
 import android.os.Bundle
-
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -15,7 +13,6 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
@@ -35,21 +32,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
-
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -58,8 +48,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,7 +56,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,20 +63,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 import com.renea.psicologiauv.data.Serializador
-import com.renea.psicologiauv.ui.theme.Burgundy
-import com.renea.psicologiauv.ui.theme.Charcoal
-import com.renea.psicologiauv.ui.theme.LightGray
-import com.renea.psicologiauv.ui.theme.OffWhite
 import com.renea.psicologiauv.ui.theme.Red
-import com.renea.psicologiauv.ui.theme.Wine
-import com.renea.psicologiauv.ui.theme.White
 import com.renea.psicologiauv.ui.theme.PsicologiaUVTheme
 
 
@@ -202,17 +181,12 @@ private fun AvisoInicialPsicoRuta(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Una herramienta educativa independiente para consultar y organizar información académica.",
+                text = "Una herramienta educativa para consultar y organizar información académica.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colores.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            AvisoItem(
-                icono = Icons.Filled.Info,
-                titulo = "Proyecto independiente",
-                descripcion = "PsicoRuta UV no es una aplicación oficial de la Universidad del Valle ni está patrocinada, administrada o respaldada por dicha institución."
-            )
             AvisoItem(
                 icono = Icons.Filled.School,
                 titulo = "Uso informativo",
@@ -319,79 +293,6 @@ private fun AvisoItem(
 
 
 // ========================================================================
-// AVISO PERMANENTE DE INDEPENDENCIA (política de Play contra suplantación)
-// Siempre visible sobre la barra de navegación; al tocarlo abre el detalle.
-// ========================================================================
-
-@Composable
-private fun BannerIndependencia(onClick: () -> Unit) {
-    val colores = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .navigationBarsPadding()
-            .background(colores.surfaceVariant.copy(alpha = 0.55f))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Info,
-            contentDescription = null,
-            tint = colores.onSurfaceVariant,
-            modifier = Modifier.size(14.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-            text = "App independiente · No oficial de la Universidad del Valle",
-            style = MaterialTheme.typography.labelSmall,
-            color = colores.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun DialogoAcercaDe(onCerrar: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onCerrar,
-        icon = { Icon(Icons.Filled.Info, contentDescription = null) },
-        title = { Text("Acerca de PsicoRuta UV") },
-        text = {
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    "PsicoRuta UV es una aplicación independiente, creada por un estudiante, " +
-                            "con fines educativos e informativos.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    "NO es una aplicación oficial de la Universidad del Valle, ni está afiliada, " +
-                            "patrocinada, aprobada o avalada por dicha institución. No utiliza sus " +
-                            "logotipos ni símbolos oficiales. El nombre de la Universidad y las " +
-                            "referencias a su programa de Psicología se usan únicamente para " +
-                            "identificar el plan de estudios al que se refiere la información.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    "La aplicación no reemplaza los canales, documentos ni sistemas oficiales " +
-                            "(como SIRA). Verifica allí cualquier información académica o normativa " +
-                            "antes de tomar decisiones.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onCerrar) { Text("Entendido") }
-        }
-    )
-}
-
-
-// ========================================================================
 // PANTALLAS DE LA APP
 // ========================================================================
 
@@ -422,6 +323,11 @@ enum class PantallasApp(
 
     PRACTICAS(
         leyenda = "Prácticas",
+        icono = Icons.Filled.Work
+    ),
+
+    PRACTICAS_INTRO(
+        leyenda = "Prácticas profesionales",
         icono = Icons.Filled.Work
     )
 }
@@ -479,7 +385,8 @@ fun PsicologiaUVApp(
     val pantallasVisibles =
         remember(cumpleRequisitosGrado) {
             PantallasApp.entries.filter { pantalla ->
-                pantalla != PantallasApp.GRADO || cumpleRequisitosGrado
+                pantalla != PantallasApp.PRACTICAS_INTRO &&
+                (pantalla != PantallasApp.GRADO || cumpleRequisitosGrado)
             }
         }
 
@@ -538,21 +445,10 @@ fun PsicologiaUVApp(
     // SCAFFOLD
     // ====================================================================
 
-    var mostrarAcercaDe by rememberSaveable { mutableStateOf(false) }
-
-    if (mostrarAcercaDe) {
-        DialogoAcercaDe(onCerrar = { mostrarAcercaDe = false })
-    }
-
     Scaffold(
 
         containerColor =
             MaterialTheme.colorScheme.background,
-
-        bottomBar = {
-            // Se conserva el aviso de independencia; la barra de navegación inferior se elimina.
-            BannerIndependencia(onClick = { mostrarAcercaDe = true })
-        }
 
     ) { paddingInterno ->
 
@@ -675,7 +571,13 @@ fun PsicologiaUVApp(
 
                             PantallaPerfil(
                                 viewModel = viewModel,
-                                onNavigate = { destino -> destinoActual = destino }
+                                onNavigate = { destino ->
+                                    destinoActual = if (destino == PantallasApp.PRACTICAS) {
+                                        PantallasApp.PRACTICAS_INTRO
+                                    } else {
+                                        destino
+                                    }
+                                }
                             )
                         }
 
@@ -725,6 +627,16 @@ fun PsicologiaUVApp(
                         // ====================================================
                         // PRÁCTICAS
                         // ====================================================
+
+                        PantallasApp.PRACTICAS_INTRO -> {
+
+                            PantallaPracticasIntro(
+                                programa = viewModel.programa,
+                                onEvaluar = {
+                                    destinoActual = PantallasApp.PRACTICAS
+                                }
+                            )
+                        }
 
                         PantallasApp.PRACTICAS -> {
 
