@@ -116,368 +116,83 @@ fun PantallaPracticas(
     val outline = scheme.outlineVariant
 
     Box(modifier = modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
-        // ================================================================
-        // CABECERA — temática según línea profesional
-        // ================================================================
-        val isDark = isSystemInDarkTheme()
-        val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(otraLineaSeleccionada)
-        val colorAcento = temaLinea.colorPrimario
-        val fondoCabecera = if (isDark) temaLinea.fondoOscuro else temaLinea.fondoClaro
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            border = null
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
-                    tipo = temaLinea.tipo,
-                    colorAcento = colorAcento,
-                    isDark = isDark,
-                    modifier = Modifier.matchParentSize()
+
+            // ================================================================
+            // RESUMEN — cuatro semicírculos clickeables
+            // ================================================================
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                IndicadorCreditos(
+                    titulo = "Línea profesional ${otraLineaSeleccionada ?: "Ninguna"}",
+                    creditos = datos.creditosLineaSeleccionada,
+                    total = programa.creditosLinea,
+                    seleccionado = indicadorExpandido == "LINEA",
+                    onClick = {
+                        indicadorExpandido = if (indicadorExpandido == "LINEA") null else "LINEA"
+                    },
+                    modifier = Modifier.weight(1f)
                 )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        modifier = Modifier.size(42.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        color = colorAcento.copy(alpha = if (isDark) 0.18f else 0.12f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = obtenerIconoLinea(otraLineaSeleccionada),
-                                contentDescription = null,
-                                tint = colorAcento,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = if (temaLinea.tipo != com.renea.psicologiauv.ui.theme.TipoLinea.NINGUNA)
-                                "LÍNEA ${temaLinea.nombreVisible.uppercase()}"
-                            else
-                                "REQUISITOS",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = colorAcento
-                        )
-
-                        Text(
-                            text = "Prácticas profesionales",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color.White else text,
-                            maxLines = 1
-                        )
-                    }
-
-                    Box {
-                        Surface(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clickable { menuDesplegableLinea = true },
-                            shape = RoundedCornerShape(16.dp),
-                            color = colorAcento.copy(alpha = if (isDark) 0.20f else 0.12f)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Filled.MoreVert,
-                                    contentDescription = "Cambiar línea",
-                                    tint = colorAcento,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-
-                        DropdownMenu(
-                            expanded = menuDesplegableLinea,
-                            onDismissRequest = { menuDesplegableLinea = false }
-                        ) {
-                            Text(
-                                text = " Cambiar línea:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = text,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                            HorizontalDivider()
-                            listOf("Educativa", "Social", "Organizacional", "Clínica", "NeuroClínica").forEach { lineaOpcion ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = obtenerIconoLinea(lineaOpcion),
-                                                contentDescription = null,
-                                                tint = if (otraLineaSeleccionada == lineaOpcion) colorAcento else secondaryText,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Text(
-                                                text = lineaOpcion,
-                                                fontWeight = if (otraLineaSeleccionada == lineaOpcion) FontWeight.Bold else FontWeight.Normal,
-                                                color = if (otraLineaSeleccionada == lineaOpcion) colorAcento else text
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        otraLineaSeleccionada = lineaOpcion
-                                        menuDesplegableLinea = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+                IndicadorCreditos(
+                    titulo = "Asignaturas profesionales",
+                    creditos = datos.creditosProfesionales,
+                    total = programa.creditosProfesionales,
+                    seleccionado = indicadorExpandido == "PROFESIONALES",
+                    onClick = {
+                        indicadorExpandido = if (indicadorExpandido == "PROFESIONALES") null else "PROFESIONALES"
+                    },
+                    modifier = Modifier.weight(1f)
+                )
             }
-        }
 
-        // ================================================================
-        // RESUMEN — cuatro semicírculos clickeables
-        // ================================================================
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            IndicadorCreditos(
-                titulo = "Línea profesional ${otraLineaSeleccionada ?: "Ninguna"}",
-                creditos = datos.creditosLineaSeleccionada,
-                total = programa.creditosLinea,
-                seleccionado = indicadorExpandido == "LINEA",
-                onClick = {
-                    indicadorExpandido = if (indicadorExpandido == "LINEA") null else "LINEA"
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            IndicadorCreditos(
-                titulo = "Asignaturas profesionales",
-                creditos = datos.creditosProfesionales,
-                total = programa.creditosProfesionales,
-                seleccionado = indicadorExpandido == "PROFESIONALES",
-                onClick = {
-                    indicadorExpandido = if (indicadorExpandido == "PROFESIONALES") null else "PROFESIONALES"
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            IndicadorCreditos(
-                titulo = "Electivas complementarias",
-                creditos = programa.creditoselectivasComplementarias(),
-                total = 6,
-                seleccionado = indicadorExpandido == "COMPLEMENTARIAS",
-                onClick = {
-                    indicadorExpandido = if (indicadorExpandido == "COMPLEMENTARIAS") null else "COMPLEMENTARIAS"
-                },
-                modifier = Modifier.weight(1f)
-            )
-
-            IndicadorCreditos(
-                titulo = "Electivas profesionales",
-                creditos = programa.creditoselectivasProfesionales(),
-                total = 12,
-                seleccionado = indicadorExpandido == "ELECTIVAS_PROF",
-                onClick = {
-                    indicadorExpandido = if (indicadorExpandido == "ELECTIVAS_PROF") null else "ELECTIVAS_PROF"
-                },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        BannerEstado(
-            texto = if (programa.requisitoElectivas()) {
-                "Cumple con los requisitos en electivas comp/prof"
-            } else {
-                "No cumple con los requisitos en electivas comp/prof"
-            },
-            cumple = programa.requisitoElectivas()
-        )
-
-        // ================================================================
-        // ASIGNATURAS NECESARIAS (DESPLEGABLE)
-        // ================================================================
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, outline.copy(alpha = 0.40f))
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                val requisitosAprobados = programa.contarRequisitosAprobadosPracticas()
+                IndicadorCreditos(
+                    titulo = "Electivas complementarias",
+                    creditos = programa.creditoselectivasComplementarias(),
+                    total = 6,
+                    seleccionado = indicadorExpandido == "COMPLEMENTARIAS",
+                    onClick = {
+                        indicadorExpandido = if (indicadorExpandido == "COMPLEMENTARIAS") null else "COMPLEMENTARIAS"
+                    },
+                    modifier = Modifier.weight(1f)
+                )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expandidoRequisitos = !expandidoRequisitos },
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Description,
-                        contentDescription = null,
-                        tint = primary,
-                        modifier = Modifier.size(19.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(7.dp))
-
-                    Text(
-                        text = "Asignaturas necesarias",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = text,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = primary.copy(alpha = 0.09f)
-                    ) {
-                        Text(
-                            text = "$requisitosAprobados / 8",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = primary,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    Icon(
-                        imageVector = if (expandidoRequisitos) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (expandidoRequisitos) "Colapsar" else "Expandir",
-                        tint = secondaryText,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                if (expandidoRequisitos) {
-                    val lineas = listOf(
-                        "Social" to Icons.Filled.Groups,
-                        "Organizacional" to Icons.Filled.CorporateFare,
-                        "Educativa" to Icons.Filled.School,
-                        "Clínica/NeuroClínica" to Icons.Filled.Favorite
-                    )
-
-                    val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
-                    val matEtica = asignaturasEstudiante.find { it.codigo == "402203M" }
-                    val matDiagnostico = asignaturasEstudiante.find { it.codigo == "402204M" }
-                    val matFundI = asignaturasEstudiante.find { it.codigo == "402212M" }
-                    val matFundII = asignaturasEstudiante.find { it.codigo == "402221M" }
-
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            TarjetaRequisito(
-                                nombre = "Ética del ejercicio profesional",
-                                cumple = programa.requisitosPracticasEtica(),
-                                icono = Icons.Filled.Gavel,
-                                modifier = Modifier.weight(1f),
-                                onClick = { matEtica?.let { materiaSeleccionada = it } }
-                            )
-                            TarjetaRequisito(
-                                nombre = "Eval. y Diagnóstico Psicológico",
-                                cumple = programa.requisitosPracticasDiagnostico(),
-                                icono = Icons.Filled.Description,
-                                modifier = Modifier.weight(1f),
-                                onClick = { matDiagnostico?.let { materiaSeleccionada = it } }
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            TarjetaRequisito(
-                                nombre = "Práctica de fund. profesional I",
-                                cumple = programa.requisitosPracticasFundamentacionI(),
-                                icono = Icons.Filled.Filter1,
-                                modifier = Modifier.weight(1f),
-                                onClick = { matFundI?.let { materiaSeleccionada = it } }
-                            )
-                            TarjetaRequisito(
-                                nombre = "Práctica de fund. profesional II",
-                                cumple = programa.requisitosPracticasFundamentacionII(),
-                                icono = Icons.Filled.Filter2,
-                                modifier = Modifier.weight(1f),
-                                onClick = { matFundII?.let { materiaSeleccionada = it } }
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            lineas.forEach { (nombreLinea, icono) ->
-                                CajonNivelLinea(
-                                    linea = nombreLinea,
-                                    icono = icono,
-                                    avance = datos.avanceLineas[nombreLinea],
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
-                                )
-                            }
-                        }
-
-                        BannerEstado(
-                            texto = if (datos.todasLasLineasCursadas) {
-                                "Cursó al menos un nivel de cada línea"
-                            } else {
-                                "No cursó al menos un nivel de cada línea"
-                            },
-                            cumple = datos.todasLasLineasCursadas
-                        )
-                    }
-                }
+                IndicadorCreditos(
+                    titulo = "Electivas profesionales",
+                    creditos = programa.creditoselectivasProfesionales(),
+                    total = 12,
+                    seleccionado = indicadorExpandido == "ELECTIVAS_PROF",
+                    onClick = {
+                        indicadorExpandido = if (indicadorExpandido == "ELECTIVAS_PROF") null else "ELECTIVAS_PROF"
+                    },
+                    modifier = Modifier.weight(1f)
+                )
             }
-        }
 
-        // ================================================================
-        // LÍNEAS PROFESIONALES
-        // ================================================================
-        run {
+            BannerEstado(
+                texto = if (programa.requisitoElectivas()) {
+                    "Cumple con los requisitos en electivas comp/prof"
+                } else {
+                    "No cumple con los requisitos en electivas comp/prof"
+                },
+                cumple = programa.requisitoElectivas()
+            )
 
-            val lineaActual = otraLineaSeleccionada ?: "Ninguna"
-
+            // ================================================================
+            // ASIGNATURAS NECESARIAS (DESPLEGABLE)
+            // ================================================================
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -488,183 +203,338 @@ fun PantallaPracticas(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 10.dp)
+                        .padding(horizontal = 10.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+                    val requisitosAprobados = programa.contarRequisitosAprobadosPracticas()
+
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expandidoRequisitos = !expandidoRequisitos },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            imageVector = obtenerIconoLinea(lineaActual),
+                            imageVector = Icons.Filled.Description,
                             contentDescription = null,
                             tint = primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(19.dp)
                         )
 
-                        Spacer(modifier = Modifier.width(11.dp))
+                        Spacer(modifier = Modifier.width(7.dp))
 
-                        Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Asignaturas necesarias",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = text,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = primary.copy(alpha = 0.09f)
+                        ) {
                             Text(
-                                text = "Líneas profesionales",
-                                style = MaterialTheme.typography.titleSmall,
+                                text = "$requisitosAprobados / 8",
+                                style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = text
+                                color = primary,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Icon(
+                            imageVector = if (expandidoRequisitos) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                            contentDescription = if (expandidoRequisitos) "Colapsar" else "Expandir",
+                            tint = secondaryText,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    if (expandidoRequisitos) {
+                        val lineas = listOf(
+                            "Social" to Icons.Filled.Groups,
+                            "Organizacional" to Icons.Filled.CorporateFare,
+                            "Educativa" to Icons.Filled.School,
+                            "Clínica/NeuroClínica" to Icons.Filled.Favorite
+                        )
+
+                        val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()
+                        val matEtica = asignaturasEstudiante.find { it.codigo == "402203M" }
+                        val matDiagnostico = asignaturasEstudiante.find { it.codigo == "402204M" }
+                        val matFundI = asignaturasEstudiante.find { it.codigo == "402212M" }
+                        val matFundII = asignaturasEstudiante.find { it.codigo == "402221M" }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                TarjetaRequisito(
+                                    nombre = "Ética del ejercicio profesional",
+                                    cumple = programa.requisitosPracticasEtica(),
+                                    icono = Icons.Filled.Gavel,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { matEtica?.let { materiaSeleccionada = it } }
+                                )
+                                TarjetaRequisito(
+                                    nombre = "Eval. y Diagnóstico Psicológico",
+                                    cumple = programa.requisitosPracticasDiagnostico(),
+                                    icono = Icons.Filled.Description,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { matDiagnostico?.let { materiaSeleccionada = it } }
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                TarjetaRequisito(
+                                    nombre = "Práctica de fund. profesional I",
+                                    cumple = programa.requisitosPracticasFundamentacionI(),
+                                    icono = Icons.Filled.Filter1,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { matFundI?.let { materiaSeleccionada = it } }
+                                )
+                                TarjetaRequisito(
+                                    nombre = "Práctica de fund. profesional II",
+                                    cumple = programa.requisitosPracticasFundamentacionII(),
+                                    icono = Icons.Filled.Filter2,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { matFundII?.let { materiaSeleccionada = it } }
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                lineas.forEach { (nombreLinea, icono) ->
+                                    CajonNivelLinea(
+                                        linea = nombreLinea,
+                                        icono = icono,
+                                        avance = datos.avanceLineas[nombreLinea],
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(1f)
+                                    )
+                                }
+                            }
+
+                            BannerEstado(
+                                texto = if (datos.todasLasLineasCursadas) {
+                                    "Cursó al menos un nivel de cada línea"
+                                } else {
+                                    "No cursó al menos un nivel de cada línea"
+                                },
+                                cumple = datos.todasLasLineasCursadas
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ================================================================
+            // LÍNEAS PROFESIONALES
+            // ================================================================
+            run {
+
+                val lineaActual = otraLineaSeleccionada ?: "Ninguna"
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = BorderStroke(1.dp, outline.copy(alpha = 0.40f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = obtenerIconoLinea(lineaActual),
+                                contentDescription = null,
+                                tint = primary,
+                                modifier = Modifier.size(20.dp)
                             )
 
+                            Spacer(modifier = Modifier.width(11.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Líneas profesionales",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = text
+                                )
+
+                                Text(
+                                    text = lineaActual,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = secondaryText
+                                )
+                            }
+
                             Text(
-                                text = lineaActual,
-                                style = MaterialTheme.typography.labelMedium,
+                                text = "›",
+                                style = MaterialTheme.typography.titleLarge,
                                 color = secondaryText
                             )
                         }
 
-                        Text(
-                            text = "›",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = secondaryText
-                        )
-                    }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // ====================================================
-                    // BOTONES DE LÍNEAS EN UNA SOLA FILA HORIZONTAL
-                    // (Clínica y NeuroClínica agrupadas en un óvalo)
-                    // ====================================================
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        listOf("Educativa", "Social", "Organizacional").forEach { lineaSeleccionable ->
-                            FilterChip(
-                                selected = otraLineaSeleccionada == lineaSeleccionable,
-                                onClick = { otraLineaSeleccionada = lineaSeleccionable },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = obtenerIconoLinea(lineaSeleccionable),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                },
-                                label = {
-                                    Text(
-                                        text = lineaSeleccionable,
-                                        maxLines = 1,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        textAlign = TextAlign.Center
-                                    )
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(50),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    containerColor = softSurface.copy(alpha = 0.50f),
-                                    labelColor = secondaryText,
-                                    selectedContainerColor = primary.copy(alpha = 0.11f),
-                                    selectedLabelColor = primary
-                                )
-                            )
-                        }
-
-                        // CÁPSULA AGRUPADORA PARA CLÍNICA Y NEUROCLÍNICA
-                        val esClinicaONeuro = otraLineaSeleccionada == "Clínica" || otraLineaSeleccionada == "NeuroClínica"
-                        val colorBordeAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.40f) else outline.copy(alpha = 0.35f)
-                        val colorFondoAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.06f) else softSurface.copy(alpha = 0.35f)
-
-                        Surface(
-                            modifier = Modifier.weight(2f),
-                            shape = RoundedCornerShape(50),
-                            color = colorFondoAgrupador,
-                            border = BorderStroke(1.dp, colorBordeAgrupador)
+                        // ====================================================
+                        // BOTONES DE LÍNEAS EN UNA SOLA FILA HORIZONTAL
+                        // (Clínica y NeuroClínica agrupadas en un óvalo)
+                        // ====================================================
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 2.dp, vertical = 2.dp),
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                listOf("Clínica", "NeuroClínica").forEach { subLinea ->
-                                    val seleccionada = otraLineaSeleccionada == subLinea
-                                    FilterChip(
-                                        selected = seleccionada,
-                                        onClick = { otraLineaSeleccionada = subLinea },
-                                        leadingIcon = {
-                                            Icon(
-                                                imageVector = obtenerIconoLinea(subLinea),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = if (subLinea == "NeuroClínica") "Neuro" else "Clínica",
-                                                maxLines = 1,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                textAlign = TextAlign.Center
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(50),
-                                        border = null,
-                                        colors = FilterChipDefaults.filterChipColors(
-                                            containerColor = if (seleccionada) primary.copy(alpha = 0.18f) else Color.Transparent,
-                                            labelColor = if (seleccionada) primary else secondaryText,
-                                            selectedContainerColor = primary.copy(alpha = 0.18f),
-                                            selectedLabelColor = primary
+                            listOf("Educativa", "Social", "Organizacional").forEach { lineaSeleccionable ->
+                                FilterChip(
+                                    selected = otraLineaSeleccionada == lineaSeleccionable,
+                                    onClick = { otraLineaSeleccionada = lineaSeleccionable },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = obtenerIconoLinea(lineaSeleccionable),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(13.dp)
                                         )
+                                    },
+                                    label = {
+                                        Text(
+                                            text = lineaSeleccionable,
+                                            maxLines = 1,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(50),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        containerColor = softSurface.copy(alpha = 0.50f),
+                                        labelColor = secondaryText,
+                                        selectedContainerColor = primary.copy(alpha = 0.11f),
+                                        selectedLabelColor = primary
                                     )
+                                )
+                            }
+
+                            // CÁPSULA AGRUPADORA PARA CLÍNICA Y NEUROCLÍNICA
+                            val esClinicaONeuro = otraLineaSeleccionada == "Clínica" || otraLineaSeleccionada == "NeuroClínica"
+                            val colorBordeAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.40f) else outline.copy(alpha = 0.35f)
+                            val colorFondoAgrupador = if (esClinicaONeuro) primary.copy(alpha = 0.06f) else softSurface.copy(alpha = 0.35f)
+
+                            Surface(
+                                modifier = Modifier.weight(2f),
+                                shape = RoundedCornerShape(50),
+                                color = colorFondoAgrupador,
+                                border = BorderStroke(1.dp, colorBordeAgrupador)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    listOf("Clínica", "NeuroClínica").forEach { subLinea ->
+                                        val seleccionada = otraLineaSeleccionada == subLinea
+                                        FilterChip(
+                                            selected = seleccionada,
+                                            onClick = { otraLineaSeleccionada = subLinea },
+                                            leadingIcon = {
+                                                Icon(
+                                                    imageVector = obtenerIconoLinea(subLinea),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                            },
+                                            label = {
+                                                Text(
+                                                    text = if (subLinea == "NeuroClínica") "Neuro" else "Clínica",
+                                                    maxLines = 1,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = RoundedCornerShape(50),
+                                            border = null,
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                containerColor = if (seleccionada) primary.copy(alpha = 0.18f) else Color.Transparent,
+                                                labelColor = if (seleccionada) primary else secondaryText,
+                                                selectedContainerColor = primary.copy(alpha = 0.18f),
+                                                selectedLabelColor = primary
+                                            )
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(13.dp))
-                    HorizontalDivider(color = outline.copy(alpha = 0.65f))
-                    Spacer(modifier = Modifier.height(13.dp))
+                        Spacer(modifier = Modifier.height(13.dp))
+                        HorizontalDivider(color = outline.copy(alpha = 0.65f))
+                        Spacer(modifier = Modifier.height(13.dp))
 
-                    // ====================================================
-                    // MÓDULOS — TODOS EN UNA SOLA FILA HORIZONTAL
-                    // ====================================================
-                    if (datos.materiasLinea.isEmpty()) {
-                        Text(
-                            text = "No hay módulos registrados para esta línea todavía.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = secondaryText,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            datos.materiasLinea.take(3).forEachIndexed { indice, materia ->
-                                if (indice > 0) {
-                                    Spacer(modifier = Modifier.width(8.dp))
+                        // ====================================================
+                        // MÓDULOS — TODOS EN UNA SOLA FILA HORIZONTAL
+                        // ====================================================
+                        if (datos.materiasLinea.isEmpty()) {
+                            Text(
+                                text = "No hay módulos registrados para esta línea todavía.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = secondaryText,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                datos.materiasLinea.take(3).forEachIndexed { indice, materia ->
+                                    if (indice > 0) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                    }
+
+                                    val nivel = when (indice) {
+                                        0 -> "Nivel I"
+                                        1 -> "Nivel II"
+                                        else -> "Nivel III"
+                                    }
+
+                                    TarjetaNivelMateria(
+                                        nivel = nivel,
+                                        aprobada = materia.aprobo(),
+                                        modifier = Modifier.width(108.dp),
+                                        onClick = { materiaSeleccionada = materia }
+                                    )
                                 }
-
-                                val nivel = when (indice) {
-                                    0 -> "Nivel I"
-                                    1 -> "Nivel II"
-                                    else -> "Nivel III"
-                                }
-
-                                TarjetaNivelMateria(
-                                    nivel = nivel,
-                                    aprobada = materia.aprobo(),
-                                    modifier = Modifier.width(108.dp),
-                                    onClick = { materiaSeleccionada = materia }
-                                )
                             }
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-    } // end Column
+            Spacer(modifier = Modifier.height(16.dp))
+        } // end Column
     } // end Box
 
     // ================================================================

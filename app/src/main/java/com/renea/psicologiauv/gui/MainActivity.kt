@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,8 +36,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
@@ -84,7 +83,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 import com.renea.psicologiauv.data.Serializador
-import com.renea.psicologiauv.ui.common.ZoomableAnyScreen
 import com.renea.psicologiauv.ui.theme.Burgundy
 import com.renea.psicologiauv.ui.theme.Charcoal
 import com.renea.psicologiauv.ui.theme.LightGray
@@ -331,6 +329,7 @@ private fun BannerIndependencia(onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .navigationBarsPadding()
             .background(colores.surfaceVariant.copy(alpha = 0.55f))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 4.dp),
@@ -469,60 +468,26 @@ fun PsicologiaUVApp(
 
 
     // ====================================================================
-    // PANTALLAS VISIBLES
+    // NAVEGACIÓN DIRECTA
     // ====================================================================
+    // No usamos HorizontalPager para cambiar de pantalla. El Pager obliga a
+    // medir/componer una infraestructura de páginas aunque el usuario solo
+    // quiera saltar de Perfil a Pensum o Prácticas. Aquí cada destino se
+    // muestra directamente, evitando ese trabajo y haciendo el cambio
+    // prácticamente inmediato.
 
     val pantallasVisibles =
         remember(cumpleRequisitosGrado) {
-
             PantallasApp.entries.filter { pantalla ->
-
-                pantalla != PantallasApp.GRADO ||
-                        cumpleRequisitosGrado
+                pantalla != PantallasApp.GRADO || cumpleRequisitosGrado
             }
         }
 
-
-    // ====================================================================
-    // PAGER
-    // ====================================================================
-
-    val paginaInicial =
-        pantallasVisibles
-            .indexOf(destinoActual)
-            .coerceAtLeast(0)
-
-
-    val pagerState =
-        rememberPagerState(
-            initialPage = paginaInicial
-        ) {
-            pantallasVisibles.size
-        }
-
-
-    // ====================================================================
-    // CAMBIO DESDE LA BARRA
-    // ====================================================================
-
-    LaunchedEffect(
-        destinoActual,
-        pantallasVisibles
-    ) {
-
-        val indice =
-            pantallasVisibles.indexOf(destinoActual)
-
-        if (
-            indice >= 0 &&
-            indice != pagerState.currentPage
-        ) {
-
-            // Navegación directa: evita mostrar las pantallas intermedias del Pager.
-            pagerState.scrollToPage(indice)
+    LaunchedEffect(pantallasVisibles) {
+        if (destinoActual !in pantallasVisibles) {
+            destinoActual = PantallasApp.USUARIO
         }
     }
-
 
     // ====================================================================
     // HISTORIAL
@@ -641,6 +606,10 @@ fun PsicologiaUVApp(
             modifier = Modifier
                 .padding(paddingInterno)
                 .fillMaxSize()
+                // Con navegación por botones, reserva exactamente el espacio
+                // de la barra del sistema. En navegación por gestos este inset
+                // normalmente es 0, por lo que la app conserva toda la pantalla.
+                .navigationBarsPadding()
                 .background(fondoTematico)
         ) {
             com.renea.psicologiauv.ui.theme.IlustracionFondoLinea(
@@ -650,30 +619,53 @@ fun PsicologiaUVApp(
                 modifier = Modifier.fillMaxSize()
             )
 
-            ZoomableAnyScreen(
+            // Navegación directa: cada pantalla ocupa el espacio disponible
+            // sin pasar por un Pager intermedio. Las pantallas secundarias
+            // tienen un pequeño encabezado propio para que el botón de regreso
+            // quede cerca del contenido y no flotando a distancia.
+            Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-
-                HorizontalPager(
-
-                    state = pagerState,
-
-                    // Las pantallas cambian únicamente mediante accesos/botones, no deslizando.
-                    userScrollEnabled = false,
-
-                    modifier = Modifier
-                        .fillMaxSize()
-                        // Reserva una franja superior para el botón de inicio en pantallas secundarias.
-                        // Así el botón no queda encima de títulos, tarjetas ni controles de cada pantalla.
-                        .padding(top = if (destinoActual == PantallasApp.USUARIO) 0.dp else 46.dp)
-
-                ) { pagina ->
-
-                    when (
-                        pantallasVisibles.getOrNull(
-                            pagina
-                        )
+                if (destinoActual != PantallasApp.USUARIO) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(38.dp)
+                            .padding(start = 10.dp, top = 4.dp, end = 10.dp)
                     ) {
+                        Surface(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .clickable {
+                                    destinoActual = PantallasApp.USUARIO
+                                },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.82f),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 0.7.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                            ),
+                            shadowElevation = 1.dp
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Filled.Home,
+                                    contentDescription = "Volver al perfil principal",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    when (destinoActual) {
 
                         // ====================================================
                         // PERFIL
@@ -745,37 +737,6 @@ fun PsicologiaUVApp(
                         }
 
 
-                        null -> Unit
-                    }
-                }
-            }
-
-            // Acceso discreto para volver al perfil desde cualquier pantalla secundaria.
-            if (destinoActual != PantallasApp.USUARIO) {
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(start = 12.dp, top = 5.dp)
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            destinoActual = PantallasApp.USUARIO
-                        },
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f),
-                    border = androidx.compose.foundation.BorderStroke(
-                        width = 0.7.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-                    ),
-                    shadowElevation = 1.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Filled.Home,
-                            contentDescription = "Volver al perfil principal",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
-                            modifier = Modifier.size(17.dp)
-                        )
                     }
                 }
             }

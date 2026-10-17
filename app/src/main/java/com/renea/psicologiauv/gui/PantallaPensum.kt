@@ -166,7 +166,7 @@ fun PantallaPensum(
             }
 
             /* ========================================================== */
-            /* SEMESTRES                                                    */
+            /* SEMESTRES                                                   */
             /* ========================================================== */
 
             CuboSemestres(
@@ -464,7 +464,7 @@ private fun CuboSemestres(
         var selectorAbierto by remember { mutableStateOf(false) }
         Box(
             modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.CenterStart
+            contentAlignment = Alignment.Center
         ) {
             OutlinedButton(
                 onClick = { selectorAbierto = true },
@@ -609,95 +609,135 @@ private fun CaraCuboSemestre(
 ) {
     val aprobadas = materias.count { it.aprobo() }
     val todasAprobadas = materias.isNotEmpty() && (aprobadas.toFloat() / materias.size) >= 0.70f
+    val estadoColor = if (todasAprobadas) AprobadoColor else MaterialTheme.colorScheme.primary
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 2.dp),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(7.dp)
     ) {
-        Column(
+        // HERO DEL SEMESTRE: estado arriba a la derecha, título, asignaturas,
+        // créditos y recomendación.
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp)
+                .padding(horizontal = 2.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = BorderStroke(1.dp, Color(0xFFE8E8E8))
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = "Semestre $semestre",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Text(
-                        text = "${materias.size} Asig. · ${materias.sumOf { it.creditos }} cr.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = if (todasAprobadas)
-                        AprobadoColor.copy(alpha = 0.08f)
-                    else
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
-                ) {
-                    Text(
-                        text = if (todasAprobadas) "Completado" else "En curso",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (todasAprobadas)
-                            AprobadoColor.copy(alpha = 0.90f)
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(7.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
-            Spacer(Modifier.height(5.dp))
-
-            if (materias.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 22.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.School,
-                            contentDescription = null,
-                            modifier = Modifier.size(30.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = "Sin asignaturas registradas",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                Column(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    materias.forEach { materia ->
-                        MateriaCompacta(
-                            materia = materia,
-                            onClick = { onMateriaClick(materia) }
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = estadoColor.copy(alpha = 0.08f)
+                    ) {
+                        Text(
+                            text = if (todasAprobadas) "Completado" else "En curso",
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = estadoColor.copy(alpha = 0.90f),
+                            maxLines = 1
                         )
                     }
+                }
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = "Semestre $semestre",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(Modifier.height(4.dp))
+
+                Text(
+                    text = "${materias.size} Asignaturas · ${materias.sumOf { it.creditos }} Créditos",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(Modifier.height(11.dp))
+
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFF7F7F7),
+                    border = BorderStroke(1.dp, Color(0xFFEAEAEA))
+                ) {
+                    Text(
+                        text = recomendacionSemestre(semestre),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF444444),
+                        fontWeight = FontWeight.Medium,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
             }
         }
+
+        // Las asignaturas quedan separadas visualmente del hero.
+        if (materias.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 22.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        modifier = Modifier.size(30.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Sin asignaturas registradas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                materias.forEach { materia ->
+                    MateriaCompacta(
+                        materia = materia,
+                        onClick = { onMateriaClick(materia) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/* ====================================================================== */
+/* RECOMENDACIONES POR SEMESTRE                                            */
+/* ====================================================================== */
+
+private fun recomendacionSemestre(semestre: Int): String {
+    return when (semestre) {
+        1 -> "Recuerda empezar a pensar cuales son las 2 electivas complementarias que deseas curar"
+        2 -> "Elige el deporte con que deseas inscribir deporte formativo"
+        else -> "FALTA TEXTO"
     }
 }
 
@@ -780,8 +820,10 @@ private fun CintaOpcionesPensum(
         shadowElevation = 4.dp
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 5.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             OpcionCintaPensum(Icons.Default.Tune, "Filtros", filtrosActivos, onClick = onFiltros)
