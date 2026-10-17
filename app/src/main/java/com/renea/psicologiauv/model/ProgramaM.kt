@@ -139,13 +139,13 @@ data class ProgramaM(
         )
         7 -> setOf(
             "Psicopatología",
-            "Práctica de Fundamentación Profesional",
-            "Seminario de Trabajo de Grado"
+            "Práctica de Fundamentación Profesional I",
+            "Seminario de Trabajo de Grado I"
         )
         8 -> setOf(
             "Evaluación y Diagnóstico",
             "Seminario de Trabajo de Grado II",
-            "Prácticas de Fundamentación II"
+            "Práctica de Fundamentación Profesional II"
         )
         else -> emptySet()
     }
