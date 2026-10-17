@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.Estudiante
+import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AprobadoColor
 
 /* ====================================================================== */
@@ -105,21 +106,11 @@ fun PantallaPensum(
         .groupBy { it.semestre }
         .toSortedMap()
 
-    val materiasElectivas = porSemestre[0].orEmpty()
+    val materiasElectivas = programa.materiasElectivasPensum()
 
-    // El semestre en curso se calcula con todas las asignaturas del estudiante,
-    // sin tener en cuenta los filtros visuales del Pensum. Se conserva el mismo
-    // criterio de finalización que muestran las tarjetas: al menos el 70 % de
-    // las asignaturas del semestre aprobadas.
-    val asignaturasPorSemestreCompleto = estudiante.asignaturas
-        .filter { it.semestre in 1..11 }
-        .groupBy { it.semestre }
-    val semestresDelPlan = (1..10).toList() +
-        if (asignaturasPorSemestreCompleto[11].orEmpty().isNotEmpty()) listOf(11) else emptyList()
-    val semestreEnCurso = semestresDelPlan.firstOrNull { semestre ->
-        val materias = asignaturasPorSemestreCompleto[semestre].orEmpty()
-        materias.isEmpty() || materias.count { it.aprobo() }.toFloat() / materias.size < 0.70f
-    } ?: semestresDelPlan.lastOrNull() ?: 1
+    // El estado académico derivado vive en ProgramaM; aquí solo se consume
+    // para decidir qué semestre abrir al entrar al Pensum.
+    val semestreEnCurso = programa.semestreEnCurso()
 
 
     /* ================================================================== */
@@ -187,6 +178,7 @@ fun PantallaPensum(
             CuboSemestres(
                 porSemestre = porSemestre,
                 semestreInicial = semestreEnCurso,
+                programa = programa,
 
                 materiaSeleccionada = { materia ->
                     materiaSeleccionada = materia
@@ -220,11 +212,7 @@ fun PantallaPensum(
 
             BarrasElectivasPensum(
                 estadosComplementarias = programa.estadosElectivasComplementarias(),
-                estadosProfesionales = listOf(
-                    programa.estudiante?.asignaturas
-                        ?.find { it.codigo.trim() == "402197M" }
-                        ?.aprobo() == true
-                ) + programa.estadosElectivasProfesionalesIIIII(),
+                estadosProfesionales = programa.estadosElectivasPensum().drop(2),
                 onMateriaClick = { codigo ->
                     programa.estudiante?.asignaturas
                         ?.find { it.codigo.trim() == codigo }
@@ -455,6 +443,7 @@ private fun AnilloPensum(
 private fun CuboSemestres(
     porSemestre: Map<Int, List<Asignatura>>,
     semestreInicial: Int,
+    programa: ProgramaM,
     materiaSeleccionada: (Asignatura) -> Unit,
     onFiltros: () -> Unit
 ) {
@@ -519,6 +508,7 @@ private fun CuboSemestres(
         CaraCuboSemestre(
             semestre = semestreActual,
             materias = materiasActuales,
+            programa = programa,
             onMateriaClick = materiaSeleccionada,
             onFiltros = onFiltros,
             semestresDisponibles = semestresDisponibles,
@@ -536,75 +526,6 @@ private fun CuboSemestres(
 /* ====================================================================== */
 
 @Composable
-private fun ModuloSemestreDeslizante(
-    semestre: Int,
-    materias: List<Asignatura>,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val aprobadas = materias.count { it.aprobo() }
-    val completo = materias.isNotEmpty() && (aprobadas.toFloat() / materias.size) >= 0.70f
-    val estado = if (completo) "Completado" else "Pendiente"
-    val estadoColor = if (completo) AprobadoColor else MaterialTheme.colorScheme.primary
-
-    Surface(
-        modifier = modifier.clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f),
-        tonalElevation = 0.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(29.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = semestre.toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(Modifier.height(4.dp))
-
-            Text(
-                text = "Semestre $semestre",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(Modifier.height(6.dp))
-
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = estadoColor.copy(alpha = 0.07f)
-            ) {
-                Text(
-                    text = estado,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = estadoColor.copy(alpha = 0.88f),
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun BarraProgresoComplementariosPensum(
     creditosAprobados: Int,
     creditosTotales: Int,
@@ -618,9 +539,9 @@ private fun BarraProgresoComplementariosPensum(
             .fillMaxWidth()
             .padding(horizontal = 2.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
     ) {
         Column(
             modifier = Modifier
@@ -691,9 +612,9 @@ private fun BarrasElectivasPensum(
             .fillMaxWidth()
             .padding(horizontal = 2.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
     ) {
         Column(
             modifier = Modifier
@@ -765,9 +686,9 @@ private fun BarrasIdiomasPensum(
             .fillMaxWidth()
             .padding(horizontal = 2.dp),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
     ) {
         Column(
             modifier = Modifier
@@ -827,6 +748,7 @@ private fun BarrasIdiomasPensum(
 private fun CaraCuboSemestre(
     semestre: Int,
     materias: List<Asignatura>,
+    programa: ProgramaM,
     onMateriaClick: (Asignatura) -> Unit,
     onFiltros: () -> Unit,
     semestresDisponibles: List<Int>,
@@ -837,8 +759,7 @@ private fun CaraCuboSemestre(
     onSeleccionarSemestre: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val aprobadas = materias.count { it.aprobo() }
-    val todasAprobadas = materias.isNotEmpty() && (aprobadas.toFloat() / materias.size) >= 0.70f
+    val todasAprobadas = programa.semestreCompletado(semestre)
     val estadoColor = if (todasAprobadas) AprobadoColor else MaterialTheme.colorScheme.primary
 
     Column(
@@ -852,9 +773,9 @@ private fun CaraCuboSemestre(
                 .fillMaxWidth()
                 .padding(horizontal = 2.dp),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f))
         ) {
             Column(
                 modifier = Modifier
@@ -980,18 +901,23 @@ private fun CaraCuboSemestre(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFF7F7F7),
-                    border = BorderStroke(1.dp, Color(0xFFEAEAEA))
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
                 ) {
-                    Text(
-                        text = recomendacionSemestre(semestre),
+                    Column(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF444444),
-                        fontWeight = FontWeight.Medium,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = programa.consejoPensum(semestre).texto,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
                 }
+
             }
         }
 
@@ -1031,18 +957,6 @@ private fun CaraCuboSemestre(
                 }
             }
         }
-    }
-}
-
-/* ====================================================================== */
-/* RECOMENDACIONES POR SEMESTRE                                            */
-/* ====================================================================== */
-
-private fun recomendacionSemestre(semestre: Int): String {
-    return when (semestre) {
-        1 -> "Recuerda empezar a pensar cuales son las 2 electivas complementarias que deseas curar"
-        2 -> "Elige el deporte con que deseas inscribir deporte formativo"
-        else -> "FALTA TEXTO"
     }
 }
 

@@ -61,6 +61,13 @@ val NOMBRES_IDIOMAS: Set<String> = setOf(
     "Idiomas II"
 )
 
+
+/** Consejo contextual que puede mostrar la interfaz del pensum. */
+data class ConsejoPensum(
+    val titulo: String,
+    val texto: String
+)
+
 data class ProgramaM(
     val nombre: String = "Psicología",
     val codigo: Int = 3461,
@@ -78,6 +85,156 @@ data class ProgramaM(
 
     fun cambiarEstudiante(nuevoEstudiante: Estudiante): ProgramaM =
         copy(estudiante = nuevoEstudiante)
+
+    // ========================================================================
+    // PENSUM — ESTADO ACADÉMICO DERIVADO
+    // ========================================================================
+
+    /**
+     * Créditos que pueden quedar pendientes para considerar completado cada
+     * semestre. En los semestres 1-5, 9 y 10 no hay tolerancia; en 6 y 7
+     * se permiten hasta 6 créditos pendientes y en 8 hasta 9.
+     */
+    private fun toleranciaCreditosSemestre(semestre: Int): Int = when (semestre) {
+        6, 7 -> 6
+        8 -> 9
+        else -> 0
+    }
+
+    /**
+     * Asignaturas que deben estar aprobadas obligatoriamente en los
+     * semestres que tienen requisitos críticos, independientemente de la
+     * tolerancia de créditos permitida en esos semestres.
+     */
+    private fun nombresAsignaturasObligatoriasSemestre(semestre: Int): Set<String> = when (semestre) {
+        6 -> setOf(
+            "Ética del Ejercicio Profesional"
+        )
+        7 -> setOf(
+            "Psicopatología",
+            "Práctica de Fundamentación Profesional",
+            "Seminario de Trabajo de Grado"
+        )
+        8 -> setOf(
+            "Evaluación y Diagnóstico",
+            "Seminario de Trabajo de Grado II",
+            "Prácticas de Fundamentación II"
+        )
+        else -> emptySet()
+    }
+
+    /**
+     * Normaliza nombres para que pequeñas diferencias de mayúsculas, tildes
+     * o espacios no impidan reconocer una asignatura obligatoria.
+     */
+    private fun normalizarNombreAsignatura(nombre: String): String =
+        java.text.Normalizer.normalize(nombre.trim(), java.text.Normalizer.Form.NFD)
+            .replace("\\p{Mn}+".toRegex(), "")
+            .replace(Regex("\\s+"), " ")
+            .lowercase()
+
+    /**
+     * Comprueba que todas las asignaturas críticas del semestre estén
+     * aprobadas. La tolerancia de créditos NO aplica a estas asignaturas.
+     */
+    private fun asignaturasObligatoriasAprobadas(semestre: Int): Boolean {
+        val obligatorias = nombresAsignaturasObligatoriasSemestre(semestre)
+            .map(::normalizarNombreAsignatura)
+            .toSet()
+
+        if (obligatorias.isEmpty()) return true
+
+        val materiasDelSemestre = asignaturasPorSemestre()[semestre].orEmpty()
+        return obligatorias.all { nombreObligatorio ->
+            materiasDelSemestre.any { materia ->
+                normalizarNombreAsignatura(materia.nombre) == nombreObligatorio && materia.aprobo()
+            }
+        }
+    }
+
+    /** Asignaturas del plan agrupadas por semestre. */
+    fun asignaturasPorSemestre(): Map<Int, List<Asignatura>> =
+        estudiante?.asignaturas
+            .orEmpty()
+            .filter { it.semestre in 1..11 }
+            .groupBy { it.semestre }
+
+    /** Semestres que realmente existen en los datos del estudiante. */
+    fun semestresDelPlan(): List<Int> {
+        val porSemestre = asignaturasPorSemestre()
+        return (1..10).toList() +
+            if (porSemestre[11].orEmpty().isNotEmpty()) listOf(11) else emptyList()
+    }
+
+    /**
+     * Asignaturas que realmente deben contar para determinar si un semestre
+     * está completado. Las electivas complementarias se excluyen; las
+     * electivas profesionales sí cuentan.
+     */
+    private fun asignaturasContablesDelSemestre(semestre: Int): List<Asignatura> =
+        asignaturasPorSemestre()[semestre]
+            .orEmpty()
+            .filterNot {
+                it.componente.contains("Electiva complementaria", ignoreCase = true)
+            }
+
+    /**
+     * Créditos pendientes de las asignaturas que sí cuentan para el estado
+     * del semestre. Una asignatura pendiente aporta todos sus créditos.
+     */
+    fun creditosPendientesSemestre(semestre: Int): Int =
+        asignaturasContablesDelSemestre(semestre)
+            .filterNot { it.aprobo() }
+            .sumOf { it.creditos }
+
+    /**
+     * Verdadero cuando el semestre cumple la regla académica definida para
+     * el pensum:
+     *
+     * - Semestres 1-5, 9 y 10: deben estar aprobadas todas las asignaturas
+     *   asignadas que cuentan (las electivas complementarias no cuentan).
+     * - Semestres 6 y 7: se permiten hasta 6 créditos pendientes.
+     * - Semestre 8: se permiten hasta 9 créditos pendientes.
+     */
+    fun semestreCompletado(semestre: Int): Boolean {
+        val materias = asignaturasContablesDelSemestre(semestre)
+        if (materias.isEmpty()) return false
+
+        // Primero se deben cumplir siempre las asignaturas críticas de los
+        // semestres 6, 7 y 8. La tolerancia de créditos no puede usarse para
+        // omitir ninguna de ellas.
+        if (!asignaturasObligatoriasAprobadas(semestre)) return false
+
+        val creditosPendientes = materias
+            .filterNot { it.aprobo() }
+            .sumOf { it.creditos }
+
+        return creditosPendientes <= toleranciaCreditosSemestre(semestre)
+    }
+
+    /** Semestre que debe abrirse inicialmente en la pantalla de Pensum. */
+    fun semestreEnCurso(): Int {
+        val semestres = semestresDelPlan()
+        return semestres.firstOrNull { !semestreCompletado(it) }
+            ?: semestres.lastOrNull()
+            ?: 1
+    }
+
+    /** Consejo contextual para mostrar debajo del héroe del semestre. */
+    fun consejoPensum(semestre: Int): ConsejoPensum = when (semestre) {
+        1 -> ConsejoPensum(
+            titulo = "Semestre 1:",
+            texto = "Recuerda empezar a pensar cuáles son las 2 electivas complementarias que deseas cursar."
+        )
+        2 -> ConsejoPensum(
+            titulo = "Semestre 2:",
+            texto = "Elige con tiempo el deporte con el que deseas inscribir Deporte Formativo."
+        )
+        else -> ConsejoPensum(
+            titulo = "Semestre $semestre:",
+            texto = "Revisa con anticipación las asignaturas de este semestre y sus requisitos para planear tu siguiente paso."
+        )
+    }
 
     // ========================================================================
     // PROMEDIOS
@@ -494,6 +651,23 @@ data class ProgramaM(
                 .find { it.codigo.trim() == codigo }
                 ?.aprobo() == true
         }
+
+    /**
+     * Estado completo de las seis posiciones de electivas que muestra el
+     * Pensum: complementarias I-II y profesionales I-IV.
+     */
+    fun estadosElectivasPensum(): List<Boolean> =
+        listOf(
+            *estadosElectivasComplementarias().toTypedArray(),
+            estudiante?.asignaturas.orEmpty()
+                .find { it.codigo.trim() == "402197M" }
+                ?.aprobo() == true,
+            *estadosElectivasProfesionalesIIIII().toTypedArray()
+        )
+
+    /** Electivas que aparecen como materias del semestre 0 en el Pensum. */
+    fun materiasElectivasPensum(): List<Asignatura> =
+        estudiante?.asignaturas.orEmpty().filter { it.semestre == 0 }
 
     // ========================================================================
     // REQUISITOS PARA GRADO

@@ -236,7 +236,7 @@ fun PantallaPracticas(
                 materiasProfesionales = materiasProfesionales,
                 onMateriaClick = { materia -> materiaSeleccionada = materia }
             )
-            
+
 
             // ================================================================
             // LÍNEAS PROFESIONALES
@@ -272,7 +272,7 @@ fun PantallaPracticas(
 
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Líneas profesionales",
+                                    text = "Líneas de prácticas",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = text
