@@ -730,16 +730,27 @@ data class ProgramaM(
         }
 
     /**
-     * Estado de Electiva Profesional II, III y IV (códigos 3, 4 y 5).
-     * La Electiva Profesional I es una asignatura fija y no hace parte
-     * de estas tres barras.
+     * Estado de Electiva Profesional II, III y IV.
+     *
+     * Estos tres espacios empiezan con los códigos provisionales "3", "4" y
+     * "5", pero al importar el PDF cada uno pasa a tener el código real de la
+     * electiva cursada. Por eso se identifican por posición: son las
+     * asignaturas de componente "Electiva profesional" (sin contar la
+     * Electiva Profesional I, 402197M), en el orden de la lista.
      */
-    fun estadosElectivasProfesionalesIIIII(): List<Boolean> =
-        listOf("3", "4", "5").map { codigo ->
-            estudiante?.asignaturas.orEmpty()
-                .find { it.codigo.trim() == codigo }
-                ?.aprobo() == true
-        }
+    fun estadosElectivasProfesionalesIIIII(): List<Boolean> {
+        val slots = electivasProfesionalesIIaIV()
+        return (0 until 3).map { i -> slots.getOrNull(i)?.aprobo() == true }
+    }
+
+    /** Asignaturas que ocupan Electiva Profesional II, III y IV, en orden. */
+    fun electivasProfesionalesIIaIV(): List<Asignatura> =
+        estudiante?.asignaturas.orEmpty()
+            .filter {
+                it.componente.equals("Electiva profesional", ignoreCase = true) &&
+                        it.codigo.trim() != "402197M"
+            }
+            .take(3)
 
     /**
      * Estado completo de las seis posiciones de electivas que muestra el

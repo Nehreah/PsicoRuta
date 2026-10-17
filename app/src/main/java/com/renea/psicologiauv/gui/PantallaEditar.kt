@@ -605,12 +605,23 @@ fun PantallaPerfil(
                                     importadorNotas
                                         .extraerTexto(uri)
 
+                                // Códigos del pensum + códigos del catálogo de
+                                // electivas profesionales (JSON). Sin estos
+                                // últimos, el PDF nunca se busca por las
+                                // electivas reales y no se pueden asignar a los
+                                // espacios de Electiva Profesional II, III y IV.
                                 val codigosConocidos =
-                                    estudiante
+                                    (estudiante
                                         .asignaturas
                                         .map {
                                             it.codigo
-                                        }
+                                        } +
+                                            serializador
+                                                .leerElectivasProfesionales()
+                                                .map {
+                                                    it.codigo
+                                                })
+                                        .distinct()
 
                                 importadorNotas
                                     .extraerNotasPorCodigo(

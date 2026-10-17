@@ -222,9 +222,18 @@ fun PantallaPensum(
                 estadosComplementarias = programa.estadosElectivasComplementarias(),
                 estadosProfesionales = programa.estadosElectivasPensum().drop(2),
                 onMateriaClick = { codigo ->
-                    programa.estudiante?.asignaturas
-                        ?.find { it.codigo.trim() == codigo }
-                        ?.let { materiaSeleccionada = it }
+                    // "3", "4" y "5" son los códigos provisionales de Electiva
+                    // Profesional II, III y IV; tras importar el PDF esos espacios
+                    // pasan a tener el código real de la electiva, así que se
+                    // buscan por posición y no por código.
+                    val posicionSlot = listOf("3", "4", "5").indexOf(codigo)
+                    val materia = if (posicionSlot >= 0) {
+                        programa.electivasProfesionalesIIaIV().getOrNull(posicionSlot)
+                    } else {
+                        programa.estudiante?.asignaturas
+                            ?.find { it.codigo.trim() == codigo }
+                    }
+                    materia?.let { materiaSeleccionada = it }
                 }
             )
 
