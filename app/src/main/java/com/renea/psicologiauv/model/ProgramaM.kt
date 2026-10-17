@@ -224,15 +224,47 @@ data class ProgramaM(
     fun consejoPensum(semestre: Int): ConsejoPensum = when (semestre) {
         1 -> ConsejoPensum(
             titulo = "Semestre 1:",
-            texto = "Recuerda empezar a pensar cuáles son las 2 electivas complementarias que deseas cursar."
+            texto = "Si no obtuviste buen puntaje en inglés durante el icfes debes cursar 2 niveles de idioma extranjero: Inglés, alemán, etc."
         )
         2 -> ConsejoPensum(
             titulo = "Semestre 2:",
-            texto = "Elige con tiempo el deporte con el que deseas inscribir Deporte Formativo."
+            texto = "Lo mejor es ver Deporte Formativo y constitución política en tus primeros semestres."
+        )
+        3 -> ConsejoPensum(
+            titulo = "Semestre 3:",
+            texto = "Durante tus primeros semestres, matricula 2 electivas complementarias como baile, teatro, investigación, etc."
+        )
+        4 -> ConsejoPensum(
+            titulo = "Semestre 4:",
+            texto = "Los semilleros y grupos de investigación son una buena opción para ampliar tu formación profesional"
+        )
+        5 -> ConsejoPensum(
+            titulo = "Semestre 5:",
+            texto = "Matricula 2 electivas profesionales, una de ellas debe ser Problemas del Individuo en la Sociedad."
+        )
+        6 -> ConsejoPensum(
+            titulo = "Semestre 6:",
+            texto = "Lo mejor es que aproveches este semestre para ver el primer nivel de las 4 líneas profesionales."
+        )
+        7 -> ConsejoPensum(
+            titulo = "Semestre 7:",
+            texto = "Continua tu progreso en la línea que deseas hacer practicas profesionales y matricula al menos otras dos líneas."
+        )
+        8 -> ConsejoPensum(
+            titulo = "Semestre 8:",
+            texto = "Termina tu línea de practicas y revisa tus requisitos faltantes para aplicar a las practicas profesionales<Acá puedo agregar un link que lleve a la pagina de practcias, te pregunto a ti chatpgt>."
+        )
+        9 -> ConsejoPensum(
+            titulo = "Semestre 9:",
+            texto = "Elige un director de trabajo de grado: Inicia tu ciclo de trabajo de grado el cual dura mínimo un año y máximo 2-3, en caso de interrumpir un semestre el ciclo se reinicia. <Link a la nueva pagina trabajo de grado.>."
+        )
+        10 -> ConsejoPensum(
+            titulo = "Semestre 10:",
+            texto = "No lo olvides, cancelar trabajo de grado un semestre obliga a repetir el ciclo desde el principio."
         )
         else -> ConsejoPensum(
             titulo = "Semestre $semestre:",
-            texto = "Revisa con anticipación las asignaturas de este semestre y sus requisitos para planear tu siguiente paso."
+            texto = "Si pierdes continuación de trabajo de grado I puedes matricular continuación de trabajo de grado II. Si interrumpes el ciclo, se reinicia tu proceso"
         )
     }
 

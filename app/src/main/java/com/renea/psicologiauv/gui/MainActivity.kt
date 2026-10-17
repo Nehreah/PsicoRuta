@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Save
@@ -314,6 +315,11 @@ enum class PantallasApp(
     GRADO(
         leyenda = "Grado",
         icono = Icons.Filled.School
+    ),
+
+    TRABAJO_GRADO(
+        leyenda = "Trabajo de grado",
+        icono = Icons.Filled.Description
     ),
 
     AVANCE(
@@ -604,6 +610,18 @@ fun PsicologiaUVApp(
                             PantallaGrado(
                                 programa =
                                     viewModel.programa
+                            )
+                        }
+
+
+                        // ====================================================
+                        // TRABAJO DE GRADO
+                        // ====================================================
+
+                        PantallasApp.TRABAJO_GRADO -> {
+
+                            PantallaTrabajoGrado(
+                                programa = viewModel.programa
                             )
                         }
 

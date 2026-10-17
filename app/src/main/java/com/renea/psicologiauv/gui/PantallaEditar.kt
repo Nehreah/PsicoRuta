@@ -1026,11 +1026,11 @@ fun PantallaPerfil(
             Spacer(Modifier.height(6.dp))
 
             // ============================================================
-            // ATAJOS A PENSUM Y PRÁCTICAS
+            // ATAJOS A PENSUM, PRÁCTICAS Y TRABAJO DE GRADO
             // ============================================================
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Surface(
                     modifier = Modifier
@@ -1041,10 +1041,10 @@ fun PantallaPerfil(
                     shadowElevation = 1.dp,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 13.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 11.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.School,
@@ -1052,12 +1052,13 @@ fun PantallaPerfil(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(19.dp)
                         )
-                        Spacer(Modifier.width(7.dp))
+                        Spacer(Modifier.height(5.dp))
                         Text(
                             text = "Pensum",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
                         )
                     }
                 }
@@ -1071,10 +1072,10 @@ fun PantallaPerfil(
                     shadowElevation = 1.dp,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 13.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 11.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Work,
@@ -1082,12 +1083,45 @@ fun PantallaPerfil(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(19.dp)
                         )
-                        Spacer(Modifier.width(7.dp))
+                        Spacer(Modifier.height(5.dp))
                         Text(
                             text = "Prácticas",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigate(PantallasApp.TRABAJO_GRADO) },
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 1.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 11.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(19.dp)
+                        )
+                        Spacer(Modifier.height(5.dp))
+                        Text(
+                            text = "Trabajo de grado",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2
                         )
                     }
                 }
