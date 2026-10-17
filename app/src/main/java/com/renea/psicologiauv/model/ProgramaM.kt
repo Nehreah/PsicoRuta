@@ -115,6 +115,37 @@ data class ProgramaM(
     // CRÉDITOS POR ÁREA
     // ========================================================================
 
+    /**
+     * Devuelve la asignatura complementaria asociada al crédito visual
+     * seleccionado en Pensum. Si una asignatura aporta varios créditos,
+     * ocupa varios segmentos y todos abren la misma asignatura.
+     * El código 402226M es un caso especial: si está aprobada completa
+     * los cinco créditos, por lo que cualquiera de los cinco segmentos
+     * apunta a ella.
+     */
+    fun asignaturaComplementariaParaCredito(indiceCredito: Int): Asignatura? {
+        if (indiceCredito !in 0 until creditosComplementarios) return null
+
+        val asigs = estudiante?.asignaturas.orEmpty()
+        val especial = asigs.find { it.codigo.trim() == "402226M" }
+        if (especial?.aprobo() == true) return especial
+
+        var acumulado = 0
+        asigs
+            .filter {
+                (it.area == "Complementario" || it.complementaria) &&
+                        it.codigo.trim() != "402226M" &&
+                        it.aprobo()
+            }
+            .forEach { materia ->
+                val siguiente = acumulado + materia.creditos
+                if (indiceCredito in acumulado until siguiente) return materia
+                acumulado = siguiente
+            }
+
+        return null
+    }
+
     fun creditosComplementariosAprobados(): Int {
         val asigs = estudiante?.asignaturas.orEmpty()
         val materia402226M = asigs.find { it.codigo.trim() == "402226M" }
@@ -440,6 +471,29 @@ data class ProgramaM(
 
     fun requisitoElectivas(): Boolean =
         creditoselectivasProfesionales() + creditoselectivasComplementarias() >= 12
+
+    /**
+     * Estado de las dos electivas complementarias que aparecen como
+     * espacios independientes en el pensum (códigos 1 y 2).
+     */
+    fun estadosElectivasComplementarias(): List<Boolean> =
+        listOf("1", "2").map { codigo ->
+            estudiante?.asignaturas.orEmpty()
+                .find { it.codigo.trim() == codigo }
+                ?.aprobo() == true
+        }
+
+    /**
+     * Estado de Electiva Profesional II, III y IV (códigos 3, 4 y 5).
+     * La Electiva Profesional I es una asignatura fija y no hace parte
+     * de estas tres barras.
+     */
+    fun estadosElectivasProfesionalesIIIII(): List<Boolean> =
+        listOf("3", "4", "5").map { codigo ->
+            estudiante?.asignaturas.orEmpty()
+                .find { it.codigo.trim() == codigo }
+                ?.aprobo() == true
+        }
 
     // ========================================================================
     // REQUISITOS PARA GRADO

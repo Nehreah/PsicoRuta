@@ -97,26 +97,6 @@ fun PantallaAvance(
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                ) {
-                    BarraProgresoComplementarios(
-                        creditosAprobados = datos.creditosComplementariosAprobados,
-                        creditosTotales = programa.creditosComplementarios
-                    )
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -175,7 +155,6 @@ private data class DatosAvance(
     val avances: Map<String, Float>,
     val creditosCursados: Int,
     val creditosCarreraTotal: Int,
-    val creditosComplementariosAprobados: Int,
     val idiomas: DatosIdiomas
 )
 
@@ -184,7 +163,6 @@ private fun calcularDatosAvance(programa: ProgramaM): DatosAvance = DatosAvance(
     avances = programa.avanceAreas(),
     creditosCursados = programa.creditosQueSirvenParaCarrera(),
     creditosCarreraTotal = programa.creditosCarrera,
-    creditosComplementariosAprobados = programa.creditosComplementariosAprobados(),
     idiomas = programa.datosIdiomas()
 )
 
@@ -615,87 +593,6 @@ private fun AnilloArea(
             maxLines = 4,
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-// ========================================================================
-// BARRA DE CRÉDITOS COMPLEMENTARIOS
-// ========================================================================
-
-@Composable
-private fun BarraProgresoComplementarios(
-    creditosAprobados: Int,
-    creditosTotales: Int
-) {
-    val progreso = creditosAprobados.coerceIn(0, creditosTotales)
-    val completo = progreso == creditosTotales && creditosTotales > 0
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (completo) Icons.Filled.CheckCircle
-                    else Icons.Filled.HourglassEmpty,
-                    contentDescription = null,
-                    tint = if (completo) AprobadoColor else AmberAccent,
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Créditos complementarios",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Text(
-                text = "$progreso / $creditosTotales",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (completo)
-                    AprobadoColor
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            repeat(creditosTotales) { indice ->
-                val completado = indice < progreso
-
-                val colorSegmento =
-                    when {
-                        !completado -> MaterialTheme.colorScheme.surfaceVariant
-                        completo -> AprobadoColor
-                        else -> MaterialTheme.colorScheme.primary
-                    }
-
-                val alturaAnimada by animateFloatAsState(
-                    targetValue = if (completado) 1f else 0.4f,
-                    animationSpec = tween(durationMillis = 500),
-                    label = "segmentoComplementario"
-                )
-
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height((10 + 14 * alturaAnimada).dp),
-                    shape = RoundedCornerShape(50),
-                    color = colorSegmento
-                ) {}
-            }
-        }
     }
 }
 

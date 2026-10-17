@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.Estudiante
@@ -174,19 +176,42 @@ fun PantallaPensum(
 
                 materiaSeleccionada = { materia ->
                     materiaSeleccionada = materia
+                },
+
+                onFiltros = {
+                    mostrarFiltros = !mostrarFiltros
                 }
             )
 
-            // La cinta permanece flotante visualmente, pero ahora fluye debajo
-            // de "Cambiar semestre" y baja de forma natural si crece la lista.
-            CintaOpcionesPensum(
-                modifier = Modifier
-                    .wrapContentWidth(Alignment.CenterHorizontally),
-                filtrosActivos = filtroArea != null || filtroAprobado != null,
-                tieneElectivas = materiasElectivas.isNotEmpty(),
-                onFiltros = { mostrarFiltros = !mostrarFiltros },
-                onElectivas = { mostrarElectivas = true },
-                onAgregar = { mostrarMenuAgregarComplementaria = true }
+            /* ========================================================== */
+            /* CRÉDITOS COMPLEMENTARIOS — 5 CRÉDITOS                     */
+            /* ========================================================== */
+
+            BarraProgresoComplementariosPensum(
+                creditosAprobados = programa.creditosComplementariosAprobados(),
+                creditosTotales = programa.creditosComplementarios,
+                onCreditoClick = { indice ->
+                    val materia = programa.asignaturaComplementariaParaCredito(indice)
+                    if (materia != null) {
+                        materiaSeleccionada = materia
+                    } else {
+                        mostrarMenuAgregarComplementaria = true
+                    }
+                }
+            )
+
+            /* ========================================================== */
+            /* ELECTIVAS — PROGRESO POR ASIGNATURA                        */
+            /* ========================================================== */
+
+            BarrasElectivasPensum(
+                estadosComplementarias = programa.estadosElectivasComplementarias(),
+                estadosProfesionales = programa.estadosElectivasProfesionalesIIIII(),
+                onMateriaClick = { codigo ->
+                    programa.estudiante?.asignaturas
+                        ?.find { it.codigo.trim() == codigo }
+                        ?.let { materiaSeleccionada = it }
+                }
             )
 
             /* ========================================================== */
@@ -400,7 +425,8 @@ private fun AnilloPensum(
 @Composable
 private fun CuboSemestres(
     porSemestre: Map<Int, List<Asignatura>>,
-    materiaSeleccionada: (Asignatura) -> Unit
+    materiaSeleccionada: (Asignatura) -> Unit,
+    onFiltros: () -> Unit
 ) {
     var semestreActual by remember { mutableIntStateOf(1) }
 
@@ -454,76 +480,20 @@ private fun CuboSemestres(
         /* ================================================================ */
         /* SEMESTRE ACTIVO: es el único que despliega sus asignaturas.      */
         /* ================================================================ */
+        var selectorAbierto by remember { mutableStateOf(false) }
+
         CaraCuboSemestre(
             semestre = semestreActual,
             materias = materiasActuales,
-            onMateriaClick = materiaSeleccionada
+            onMateriaClick = materiaSeleccionada,
+            onFiltros = onFiltros,
+            semestresDisponibles = semestresDisponibles,
+            porSemestre = porSemestre,
+            selectorAbierto = selectorAbierto,
+            onAbrirSelector = { selectorAbierto = true },
+            onCerrarSelector = { selectorAbierto = false },
+            onSeleccionarSemestre = { seleccionarSemestre(it) }
         )
-
-        // Selector compacto: permite cambiar de semestre sin una fila de tarjetas repetidas.
-        var selectorAbierto by remember { mutableStateOf(false) }
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            OutlinedButton(
-                onClick = { selectorAbierto = true },
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 9.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.School,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("Cambiar semestre")
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "S$semestreActual",
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Filled.Tune,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
-
-            DropdownMenu(
-                expanded = selectorAbierto,
-                onDismissRequest = { selectorAbierto = false }
-            ) {
-                semestresDisponibles.forEach { semestre ->
-                    DropdownMenuItem(
-                        text = {
-                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                Text("Semestre $semestre", fontWeight = FontWeight.SemiBold)
-                                Text(
-                                    "${porSemestre[semestre].orEmpty().size} asignaturas",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        },
-                        leadingIcon = {
-                            if (semestre == semestreActual) {
-                                Icon(
-                                    imageVector = Icons.Filled.CheckCircle,
-                                    contentDescription = "Seleccionado",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        },
-                        onClick = {
-                            seleccionarSemestre(semestre)
-                            selectorAbierto = false
-                        }
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -575,7 +545,7 @@ private fun ModuloSemestreDeslizante(
 
             Text(
                 text = "Semestre $semestre",
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -601,10 +571,159 @@ private fun ModuloSemestreDeslizante(
 }
 
 @Composable
+private fun BarraProgresoComplementariosPensum(
+    creditosAprobados: Int,
+    creditosTotales: Int,
+    onCreditoClick: (Int) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val progreso = creditosAprobados.coerceIn(0, creditosTotales)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Créditos complementarios",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface
+                )
+
+                Text(
+                    text = "$progreso / $creditosTotales",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (progreso == creditosTotales && creditosTotales > 0)
+                        AprobadoColor
+                    else
+                        scheme.onSurfaceVariant
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                repeat(creditosTotales) { indice ->
+                    val completado = indice < progreso
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .clickable { onCreditoClick(indice) },
+                            shape = RoundedCornerShape(50),
+                            color = if (completado) AprobadoColor else scheme.surfaceVariant
+                        ) {}
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BarrasElectivasPensum(
+    estadosComplementarias: List<Boolean>,
+    estadosProfesionales: List<Boolean>,
+    onMateriaClick: (String) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 2.dp),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, Color(0xFFE8E8E8))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Electivas",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = scheme.onSurface
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                val etiquetas = listOf("Comp. I", "Comp. II") +
+                        listOf("Prof. II", "Prof. III", "Prof. IV")
+                val estados = estadosComplementarias + estadosProfesionales
+
+                estados.forEachIndexed { index, cursada ->
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .clickable { onMateriaClick((index + 1).toString()) },
+                            shape = RoundedCornerShape(50),
+                            color = if (cursada) AprobadoColor else scheme.surfaceVariant
+                        ) {}
+
+                        Text(
+                            text = etiquetas[index],
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (cursada) AprobadoColor else scheme.onSurfaceVariant,
+                            fontWeight = if (cursada) FontWeight.Bold else FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CaraCuboSemestre(
     semestre: Int,
     materias: List<Asignatura>,
     onMateriaClick: (Asignatura) -> Unit,
+    onFiltros: () -> Unit,
+    semestresDisponibles: List<Int>,
+    porSemestre: Map<Int, List<Asignatura>>,
+    selectorAbierto: Boolean,
+    onAbrirSelector: () -> Unit,
+    onCerrarSelector: () -> Unit,
+    onSeleccionarSemestre: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val aprobadas = materias.count { it.aprobo() }
@@ -634,8 +753,26 @@ private fun CaraCuboSemestre(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Surface(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(onClick = onFiltros),
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.FilterList,
+                                contentDescription = "Filtrar pensum",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
                     Surface(
                         shape = RoundedCornerShape(20.dp),
                         color = estadoColor.copy(alpha = 0.08f)
@@ -653,12 +790,69 @@ private fun CaraCuboSemestre(
 
                 Spacer(Modifier.height(4.dp))
 
-                Text(
-                    text = "Semestre $semestre",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Semestre $semestre",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        IconButton(
+                            onClick = onAbrirSelector,
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ExpandMore,
+                                contentDescription = "Elegir semestre",
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = selectorAbierto,
+                        onDismissRequest = onCerrarSelector
+                    ) {
+                        semestresDisponibles.forEach { semestreDisponible ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            "Semestre $semestreDisponible",
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            "${porSemestre[semestreDisponible].orEmpty().size} asignaturas",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                },
+                                leadingIcon = {
+                                    if (semestreDisponible == semestre) {
+                                        Icon(
+                                            imageVector = Icons.Filled.CheckCircle,
+                                            contentDescription = "Seleccionado",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    onSeleccionarSemestre(semestreDisponible)
+                                    onCerrarSelector()
+                                }
+                            )
+                        }
+                    }
+                }
 
                 Spacer(Modifier.height(4.dp))
 
