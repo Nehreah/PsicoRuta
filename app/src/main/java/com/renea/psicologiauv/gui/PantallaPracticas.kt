@@ -103,7 +103,7 @@ fun PantallaPracticas(
     var materiaSeleccionada by remember { mutableStateOf<Asignatura?>(null) }
     var indicadorExpandido by remember { mutableStateOf<String?>(null) }
     var menuDesplegableLinea by remember { mutableStateOf(false) }
-    var mostrandoInformacionPracticas by remember { mutableStateOf(false) }
+    var moduloInformacion by remember { mutableStateOf<String?>(null) }
 
     val datos = remember(programa, otraLineaSeleccionada) {
         calcularDatosPracticas(programa, otraLineaSeleccionada)
@@ -169,7 +169,7 @@ fun PantallaPracticas(
                             color = text,
                             modifier = Modifier.weight(1f)
                         )
-                        IconButton(onClick = { mostrandoInformacionPracticas = true }) {
+                        IconButton(onClick = { moduloInformacion = "Asignaturas necesarias" }) {
                             Icon(Icons.Filled.Info, contentDescription = "Información sobre asignaturas necesarias", tint = scheme.primary)
                         }
                     }
@@ -232,7 +232,7 @@ fun PantallaPracticas(
                 onBarClick = { indice ->
                     materiasProfesionalizacion.getOrNull(indice)?.let { materiaSeleccionada = it }
                 },
-                onInfoClick = { mostrandoInformacionPracticas = true }
+                onInfoClick = { moduloInformacion = "Profesionalización" }
             )
 
             BarrasLineasProfesionalesPracticas(
@@ -244,7 +244,7 @@ fun PantallaPracticas(
                     "Clínica" to programa.asignaturasDeLinea("Clínica").firstOrNull()
                 ),
                 onMateriaClick = { materia -> materiaSeleccionada = materia },
-                onInfoClick = { mostrandoInformacionPracticas = true }
+                onInfoClick = { moduloInformacion = "Líneas profesionales" }
             )
 
             BarrasElectivasPracticas(
@@ -253,7 +253,7 @@ fun PantallaPracticas(
                 materiasComplementarias = materiasComplementarias,
                 materiasProfesionales = materiasProfesionales,
                 onMateriaClick = { materia -> materiaSeleccionada = materia },
-                onInfoClick = { mostrandoInformacionPracticas = true }
+                onInfoClick = { moduloInformacion = "Electivas" }
             )
 
 
@@ -274,7 +274,7 @@ fun PantallaPracticas(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 10.dp)
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -298,16 +298,11 @@ fun PantallaPracticas(
                                         color = text,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    IconButton(onClick = { mostrandoInformacionPracticas = true }) {
+                                    IconButton(onClick = { moduloInformacion = "Líneas de prácticas" }) {
                                         Icon(Icons.Filled.Info, contentDescription = "Información sobre líneas de prácticas", tint = primary)
                                     }
                                 }
 
-                                Text(
-                                    text = lineaActual,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = secondaryText
-                                )
                             }
 
                             Text(
@@ -317,7 +312,7 @@ fun PantallaPracticas(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         // ====================================================
                         // BOTONES DE LÍNEAS EN UNA SOLA FILA HORIZONTAL
@@ -389,9 +384,9 @@ fun PantallaPracticas(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(13.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         HorizontalDivider(color = outline.copy(alpha = 0.65f))
-                        Spacer(modifier = Modifier.height(13.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // ====================================================
                         // MÓDULOS — TODOS EN UNA SOLA FILA HORIZONTAL
@@ -437,9 +432,17 @@ fun PantallaPracticas(
         } // end Column
     } // end Box
 
-    if (mostrandoInformacionPracticas) {
+    moduloInformacion?.let { modulo ->
+        val descripcion = when (modulo) {
+            "Asignaturas necesarias" -> "Debes aprobar Ética del ejercicio profesional, Evaluación y Diagnóstico Psicológico y las dos asignaturas de Práctica de Fundamentación Profesional (I y II)."
+            "Profesionalización" -> "Este módulo muestra tu avance en las asignaturas de profesionalización. Para la candidatura se requieren al menos 27 créditos de este componente."
+            "Líneas profesionales" -> "Debes aprobar al menos un nivel de cada línea profesional. Clínica y NeuroClínica cuentan como una sola línea para este requisito general."
+            "Electivas" -> "Aquí se muestra el avance de electivas complementarias y profesionales. Para la candidatura se consideran las electivas aprobadas según los requisitos del programa; entre las profesionales es obligatoria Problemas actuales del individuo en la sociedad."
+            "Líneas de prácticas" -> "Para ser candidato debes aprobar los niveles I, II y III de la línea exacta que elegiste para prácticas. Clínica y NeuroClínica son independientes: completar una no reemplaza los niveles de la otra."
+            else -> "Información del módulo $modulo."
+        }
         Dialog(
-            onDismissRequest = { mostrandoInformacionPracticas = false },
+            onDismissRequest = { moduloInformacion = null },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Surface(
@@ -456,17 +459,13 @@ fun PantallaPracticas(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text("Información de requisitos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        IconButton(onClick = { mostrandoInformacionPracticas = false }) {
+                        Text(modulo, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { moduloInformacion = null }) {
                             Icon(Icons.Filled.Close, contentDescription = "Cerrar información")
                         }
                     }
-                    TextoInfoPracticas("Asignaturas necesarias", "Asignaturas del ciclo básico de obligatorio cumplimiento para el inicio de prácticas.")
-                    TextoInfoPracticas("Profesionalización", "Asignaturas de las diferentes líneas profesionales. Debes cursar al menos 27 de estas.")
-                    TextoInfoPracticas("Líneas profesionales", "Debes ver al menos un nivel de cada una de las 4 líneas profesionales.")
-                    TextoInfoPracticas("Electivas", "Asignaturas electivas tanto complementarias como profesionales. Debes ver al menos 2 electivas complementarias, tales como teatro, cine, etc., y 4 electivas profesionales ofertadas por la facultad o por otra universidad con la que exista un convenio académico. Entre las electivas profesionales, es obligatorio cursar Problemas actuales del individuo en la sociedad.")
-                    TextoInfoPracticas("Líneas de prácticas", "Debes cursar los 3 niveles completos de la línea profesional en la que deseas hacer prácticas.")
-                    Button(onClick = { mostrandoInformacionPracticas = false }, modifier = Modifier.fillMaxWidth()) {
+                    Text(descripcion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(onClick = { moduloInformacion = null }, modifier = Modifier.fillMaxWidth()) {
                         Text("Entendido")
                     }
                 }
@@ -476,6 +475,7 @@ fun PantallaPracticas(
 
     // ================================================================
     // DIÁLOGO CENTRADO: detalle de asignaturas al clickear semicírculo
+
     // ================================================================
     if (indicadorExpandido != null) {
         val asignaturasEstudiante = programa.estudiante?.asignaturas.orEmpty()

@@ -87,7 +87,7 @@ fun PantallaAvance(
                 linea = programa.estudiante?.linea
             )
 
-            TarjetaAvancePorArea(avances = datos.avances)
+            TarjetaEstadisticasAcademicas(programa = programa, avances = datos.avances)
 
             Spacer(modifier = Modifier.height(72.dp))
         }
@@ -504,6 +504,178 @@ private fun iconoParaArea(indice: Int): ImageVector =
         1 -> Icons.Filled.WorkspacePremium
         else -> Icons.Filled.Science
     }
+
+@Composable
+private fun TarjetaEstadisticasAcademicas(
+    programa: ProgramaM,
+    avances: Map<String, Float>
+) {
+    val scheme = MaterialTheme.colorScheme
+    val asignaturas = programa.estudiante?.asignaturas.orEmpty()
+    val notasNumericas = asignaturas.filter { it.nota > 0f && it.notaEspecial == null }
+    val notaMasAlta = notasNumericas.maxOfOrNull { it.nota }
+    val notaMasBaja = notasNumericas.minOfOrNull { it.nota }
+    val aprobadas = asignaturas.count { it.aprobo() }
+    val cursadas = asignaturas.count { it.nota > 0f || it.notaEspecial != null }
+    val creditosAprobados = asignaturas.filter { it.aprobo() }.sumOf { it.creditos }
+    val semestresCompletados = (1..10).count { programa.semestreCompletado(it) }
+    val rojo = Color(0xFFC62828)
+    val verde = Color(0xFF2E7D32)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = scheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.45f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.TrackChanges,
+                    contentDescription = null,
+                    tint = scheme.primary,
+                    modifier = Modifier.size(23.dp)
+                )
+                Spacer(Modifier.width(9.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Estadísticas académicas", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Tu recorrido, resumido", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+                }
+            }
+
+            Text("Semestres", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                (1..10).forEach { semestre ->
+                    val completo = programa.semestreCompletado(semestre)
+                    Surface(
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(7.dp),
+                        color = if (completo) verde else rojo,
+                        contentColor = Color.White
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = semestre.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(Modifier.size(8.dp), shape = RoundedCornerShape(50), color = verde) {}
+                    Text("Completado", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Surface(Modifier.size(8.dp), shape = RoundedCornerShape(50), color = rojo) {}
+                    Text("Pendiente", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                }
+                Spacer(Modifier.weight(1f))
+                Text("$semestresCompletados/10", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            }
+
+            HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.65f))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstadisticaMini(
+                    titulo = "Promedio general",
+                    valor = if (programa.promedioGeneral() > 0f) "%.2f".format(programa.promedioGeneral()) else "—",
+                    detalle = "Escala de 0 a 5",
+                    modifier = Modifier.weight(1f),
+                    destacado = true
+                )
+                EstadisticaMini(
+                    titulo = "Nota más alta",
+                    valor = notaMasAlta?.let { "%.1f".format(it) } ?: "—",
+                    detalle = "Nota numérica",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstadisticaMini(
+                    titulo = "Nota más baja",
+                    valor = notaMasBaja?.let { "%.1f".format(it) } ?: "—",
+                    detalle = "Nota registrada",
+                    modifier = Modifier.weight(1f)
+                )
+                EstadisticaMini(
+                    titulo = "Asignaturas aprobadas",
+                    valor = aprobadas.toString(),
+                    detalle = "$cursadas con nota o marca",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstadisticaMini(
+                    titulo = "Créditos aprobados",
+                    valor = creditosAprobados.toString(),
+                    detalle = "Según asignaturas aprobadas",
+                    modifier = Modifier.weight(1f)
+                )
+                EstadisticaMini(
+                    titulo = "Avance de carrera",
+                    valor = "${programa.avanceCarrera().toInt().coerceIn(0, 100)}%",
+                    detalle = "Del plan académico",
+                    modifier = Modifier.weight(1f),
+                    destacado = true
+                )
+            }
+
+            HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.65f))
+            Text("Avance por área", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            avances.forEach { (area, porcentaje) ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(area, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("${porcentaje.toInt().coerceIn(0, 100)}%", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    }
+                    LinearProgressIndicator(
+                        progress = { (porcentaje / 100f).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().height(7.dp),
+                        color = if (porcentaje >= 100f) verde else scheme.primary,
+                        trackColor = scheme.surfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EstadisticaMini(
+    titulo: String,
+    valor: String,
+    detalle: String,
+    modifier: Modifier = Modifier,
+    destacado: Boolean = false
+) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(13.dp),
+        color = if (destacado) scheme.primaryContainer.copy(alpha = 0.65f) else scheme.surfaceVariant.copy(alpha = 0.55f),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(titulo, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant, maxLines = 2, minLines = 2)
+            Text(valor, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = if (destacado) scheme.primary else scheme.onSurface)
+            Text(detalle, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
 
 @Composable
 private fun TarjetaAvancePorArea(avances: Map<String, Float>) {

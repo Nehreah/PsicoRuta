@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Tune
@@ -62,6 +63,8 @@ fun PantallaPensum(
 ) {
 
     val programa = viewModel.programa
+
+    var moduloInformacion by remember { mutableStateOf<String?>(null) }
 
     var mostrarFiltros by remember {
         mutableStateOf(false)
@@ -204,6 +207,7 @@ fun PantallaPensum(
             BarraProgresoComplementariosPensum(
                 creditosAprobados = programa.creditosComplementariosAprobados(),
                 creditosTotales = programa.creditosComplementarios,
+                onInfoClick = { moduloInformacion = "Créditos complementarios" },
                 onCreditoClick = { indice ->
                     val materia = programa.asignaturaComplementariaParaCredito(indice)
                     if (materia != null) {
@@ -221,6 +225,7 @@ fun PantallaPensum(
             BarrasElectivasPensum(
                 estadosComplementarias = programa.estadosElectivasComplementarias(),
                 estadosProfesionales = programa.estadosElectivasPensum().drop(2),
+                onInfoClick = { moduloInformacion = "Electivas" },
                 onMateriaClick = { codigo ->
                     // "3", "4" y "5" son los códigos provisionales de Electiva
                     // Profesional II, III y IV; tras importar el PDF esos espacios
@@ -245,6 +250,7 @@ fun PantallaPensum(
             BarrasIdiomasPensum(
                 materiaIdiomaI = programa.materiaIdiomaActiva(datosIdiomas.idiomasICandidatas),
                 materiaIdiomaII = programa.materiaIdiomaActiva(datosIdiomas.idiomasIICandidatas),
+                onInfoClick = { moduloInformacion = "Idiomas" },
                 onMateriaClick = { materia -> materiaSeleccionada = materia }
             )
 
@@ -262,6 +268,24 @@ fun PantallaPensum(
             }
         }
 
+    }
+
+    moduloInformacion?.let { modulo ->
+        val descripcion = when (modulo) {
+            "Créditos complementarios" -> "Estos créditos popularmente llamados créditos fantasma, son 5 créditos que debes cumplir como parte de tus actividades extraordinarias. Asistencia a eventos, congresos, simposios, presentación de ponencias, o en dado caso, cursar asignaturas equivalentes."
+            "Electivas" -> "Aquí se muestra el avance de electivas complementarias y profesionales. Para la candidatura se consideran las electivas aprobadas según los requisitos del programa; entre las profesionales es obligatoria Problemas actuales del individuo en la sociedad."
+            "Idiomas" -> "Uno de los requisitos obligatorios para ser candidato a grado de psicología es haber cursado dos niveles de idioma extranjeros. Lo común es cursar 2 niveles de inglés, no obstante cualquier otro idioma extranjero es válido para aprobar el requisito."
+            else -> "Información del módulo $modulo."
+        }
+        AlertDialog(
+            onDismissRequest = { moduloInformacion = null },
+            title = { Text(modulo, fontWeight = FontWeight.Bold) },
+            text = { Text(descripcion) },
+            confirmButton = {
+                TextButton(onClick = { moduloInformacion = null }) { Text("Entendido") }
+            },
+            icon = { Icon(Icons.Filled.Info, contentDescription = null) }
+        )
     }
 
     /* ====================================================================== */
@@ -548,6 +572,7 @@ private fun CuboSemestres(
 private fun BarraProgresoComplementariosPensum(
     creditosAprobados: Int,
     creditosTotales: Int,
+    onInfoClick: () -> Unit,
     onCreditoClick: (Int) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -577,8 +602,12 @@ private fun BarraProgresoComplementariosPensum(
                     text = "Créditos complementarios",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
-                    color = scheme.onSurface
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = onInfoClick, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre créditos complementarios", tint = scheme.primary)
+                }
 
                 Text(
                     text = "$progreso / $creditosTotales",
@@ -622,6 +651,7 @@ private fun BarraProgresoComplementariosPensum(
 private fun BarrasElectivasPensum(
     estadosComplementarias: List<Boolean>,
     estadosProfesionales: List<Boolean>,
+    onInfoClick: () -> Unit,
     onMateriaClick: (String) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -641,12 +671,18 @@ private fun BarrasElectivasPensum(
                 .padding(horizontal = 11.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Electivas",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Electivas",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onInfoClick, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre electivas", tint = scheme.primary)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -692,6 +728,7 @@ private fun BarrasElectivasPensum(
 private fun BarrasIdiomasPensum(
     materiaIdiomaI: Asignatura?,
     materiaIdiomaII: Asignatura?,
+    onInfoClick: () -> Unit,
     onMateriaClick: (Asignatura) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -715,12 +752,18 @@ private fun BarrasIdiomasPensum(
                 .padding(horizontal = 11.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Idiomas",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Idiomas",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onInfoClick, modifier = Modifier.size(32.dp)) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre idiomas", tint = scheme.primary)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

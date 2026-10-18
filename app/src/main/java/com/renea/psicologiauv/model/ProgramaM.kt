@@ -705,10 +705,10 @@ data class ProgramaM(
     fun nivelesCompletosLineaSeleccionada(lineaSeleccionada: String? = estudiante?.linea): Boolean {
         val lineaElegida = lineaSeleccionada?.takeIf { it.isNotBlank() && it != "No" && it != "Ninguna" }
             ?: return false
-        val opcionesLinea = when (lineaElegida) {
-            "Clínica/NeuroClínica", "Clínica", "NeuroClínica" -> setOf("Clínica", "NeuroClínica")
-            else -> setOf(lineaElegida)
-        }
+        // En prácticas, Clínica y NeuroClínica son líneas independientes.
+        // La equivalencia Clínica/NeuroClínica solo aplica al cómputo de
+        // líneas profesionales, no a la candidatura de prácticas.
+        val opcionesLinea = setOf(lineaElegida)
         val nivelesAprobados = estudiante?.asignaturas.orEmpty()
             .filter { it.lineaProfesional in opcionesLinea && it.aprobo() }
             .mapNotNull { nivelDeAsignatura(it.nombre) }
