@@ -164,8 +164,11 @@ private class AbrirDocumentoEnCarpeta(
 
 
 // ========================================================================
-// ENLACES
+// ENLACES Y CONFIGURACIÓN
 // ========================================================================
+
+// Cambia a false para ocultar la opción «Acerca de» del menú flotante.
+private const val MOSTRAR_OPCION_ACERCA_DE = false
 
 private const val ENLACE_RESOLUCION_091 =
     "https://drive.google.com/file/d/1ke6EwQoExMTVH0PAq-CVV8dtOjzwkx_K/view?usp=drive_link"
@@ -429,6 +432,10 @@ fun PantallaPerfil(
         mutableStateOf(false)
     }
 
+    var mostrandoAcercaDe by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     // Módulos emergentes: importación, accesos rápidos y bienvenida inicial.
     var mostrandoImportacion by rememberSaveable {
         mutableStateOf(false)
@@ -469,7 +476,8 @@ fun PantallaPerfil(
                     mostrandoHistoriaCali ||
                     mostrandoHistoriaLatino ||
                     mostrandoHistoria ||
-                    mostrandoReporteBugs
+                    mostrandoReporteBugs ||
+                    mostrandoAcercaDe
     ) {
 
         when {
@@ -491,6 +499,9 @@ fun PantallaPerfil(
 
             mostrandoReporteBugs ->
                 mostrandoReporteBugs = false
+
+            mostrandoAcercaDe ->
+                mostrandoAcercaDe = false
         }
     }
 
@@ -753,29 +764,6 @@ fun PantallaPerfil(
                     )
                 },
 
-                onGenerarInforme = {
-
-                    mostrandoImportacion = false
-
-                    val necesitaPermiso =
-                        Build.VERSION.SDK_INT <=
-                                Build.VERSION_CODES.P &&
-                                ContextCompat.checkSelfPermission(
-                                    contexto,
-                                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                                ) != PackageManager.PERMISSION_GRANTED
-
-                    if (necesitaPermiso) {
-
-                        permisoAlmacenamiento.launch(
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE
-                        )
-
-                    } else {
-
-                        generarYAbrirInformePdf()
-                    }
-                }
             )
         }
     }
@@ -1131,6 +1119,16 @@ fun PantallaPerfil(
                 ) {
 
                     AccionFlotante(
+                        icono = Icons.Default.Delete,
+                        etiqueta = "Borrar datos",
+                        descripcion = "Borrar datos",
+                        onClick = {
+                            menuAccionesAbierto = false
+                            mostrarConfirmacionEliminar = true
+                        }
+                    )
+
+                    AccionFlotante(
                         icono = Icons.Default.FileDownload,
                         etiqueta = "Importar datos",
                         descripcion = "Importar datos",
@@ -1141,14 +1139,37 @@ fun PantallaPerfil(
                     )
 
                     AccionFlotante(
-                        icono = Icons.Default.Delete,
-                        etiqueta = "Borrar estudiante",
-                        descripcion = "Eliminar estudiante",
+                        icono = Icons.Default.PictureAsPdf,
+                        etiqueta = "Generar reporte",
+                        descripcion = "Generar reporte PDF",
                         onClick = {
                             menuAccionesAbierto = false
-                            mostrarConfirmacionEliminar = true
+                            val necesitaPermiso =
+                                Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+                                    ContextCompat.checkSelfPermission(
+                                        contexto,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                    ) != PackageManager.PERMISSION_GRANTED
+
+                            if (necesitaPermiso) {
+                                permisoAlmacenamiento.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            } else {
+                                generarYAbrirInformePdf()
+                            }
                         }
                     )
+
+                    if (MOSTRAR_OPCION_ACERCA_DE) {
+                        AccionFlotante(
+                            icono = Icons.Default.CorporateFare,
+                            etiqueta = "Acerca de",
+                            descripcion = "Información del proyecto y su creador",
+                            onClick = {
+                                menuAccionesAbierto = false
+                                mostrandoAcercaDe = true
+                            }
+                        )
+                    }
                 }
             }
 
@@ -1569,6 +1590,114 @@ fun PantallaPerfil(
     }
 
 
+    if (MOSTRAR_OPCION_ACERCA_DE && mostrandoAcercaDe) {
+        ModuloEmergente(onCerrar = { mostrandoAcercaDe = false }) {
+            val colores = MaterialTheme.colorScheme
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = colores.surface),
+                border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(22.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CorporateFare,
+                            contentDescription = null,
+                            tint = colores.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "Acerca de",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = colores.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { mostrandoAcercaDe = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                        }
+                    }
+                    Text(
+                        text = "Renea Dev",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
+                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = colores.primaryContainer.copy(alpha = 0.42f),
+                        border = BorderStroke(1.dp, colores.primary.copy(alpha = 0.14f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Tecnología con propósito",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = colores.onSurface
+                            )
+                            Text(
+                                text = "PsicoRuta nace como una iniciativa académica y profesional orientada a resolver problemas reales mediante el diseño y la construcción de código traducido a herramientas útiles. Integra la psicología, la tecnología y la movilización social para facilitar el aprendizaje, fortalecer la autonomía y contribuir a la construcción de comunidad.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colores.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Text(
+                        text = "Contacto y más información",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                try {
+                                    contexto.startActivity(Intent(Intent.ACTION_SENDTO, "mailto:nehreah@gmail.com".toUri()))
+                                } catch (_: Exception) {
+                                    Toast.makeText(contexto, "No se pudo abrir una aplicación de correo.", Toast.LENGTH_SHORT).show()
+                                }
+                            }.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(Icons.Default.Email, contentDescription = null, tint = colores.primary)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Correo electrónico", style = MaterialTheme.typography.labelMedium, color = colores.onSurfaceVariant)
+                            Text("nehreah@gmail.com", color = colores.primary)
+                        }
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                            .clickable { abrirEnlace(contexto, "https://nehreah.github.io/WebPage-CV/") }
+                            .padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, tint = colores.primary)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Página web", style = MaterialTheme.typography.labelMedium, color = colores.onSurfaceVariant)
+                            Text("https://nehreah.github.io/WebPage-CV/", color = colores.primary)
+                        }
+                    }
+                    TextButton(
+                        onClick = { mostrandoAcercaDe = false },
+                        modifier = Modifier.align(Alignment.End)
+                    ) { Text("Cerrar") }
+                }
+            }
+        }
+    }
+
     // ====================================================================
     // DIÁLOGO ELIMINACIÓN
     // ====================================================================
@@ -1598,7 +1727,7 @@ fun PantallaPerfil(
             title = {
 
                 Text(
-                    "Eliminar estudiante",
+                    "Borrar datos",
                     fontWeight =
                         FontWeight.Bold
                 )
@@ -1624,7 +1753,7 @@ fun PantallaPerfil(
 
                         Toast.makeText(
                             contexto,
-                            "El estudiante fue eliminado permanentemente.",
+                            "Los datos del estudiante fueron eliminados permanentemente.",
                             Toast.LENGTH_LONG
                         ).show()
                     },
@@ -2290,8 +2419,7 @@ private fun MemoriaEstudiantilFlotante(
 private fun TarjetaSira(
     onCerrar: () -> Unit,
     onAbrirSira: () -> Unit,
-    onImportar: () -> Unit,
-    onGenerarInforme: () -> Unit
+    onImportar: () -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
 
@@ -2331,13 +2459,13 @@ private fun TarjetaSira(
                 Spacer(Modifier.width(9.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Importar y exportar datos",
+                        text = "Importar datos desde SIRA",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = colores.onSurface
                     )
                     Text(
-                        text = "Notas del SIRA e informe académico",
+                        text = "Importa tus notas académicas",
                         style = MaterialTheme.typography.labelSmall,
                         color = colores.onSurfaceVariant
                     )
@@ -2394,12 +2522,6 @@ private fun TarjetaSira(
                             texto = "Importar datos",
                             icono = Icons.Default.FileDownload,
                             onClick = onImportar
-                        )
-                        AccionSiraCompacta(
-                            modifier = Modifier.weight(1f),
-                            texto = "Generar informe",
-                            icono = Icons.Default.PictureAsPdf,
-                            onClick = onGenerarInforme
                         )
                     }
                 }
