@@ -80,6 +80,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material3.Button
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -711,6 +712,8 @@ fun PantallaPerfil(
     if (mostrandoBienvenida) {
 
         DialogoBienvenida(
+            lineaActual = estudiante.linea,
+            onLineaSeleccionada = { viewModel.cambiarLineaEstudiante(it) },
             onComenzar = {
                 mostrandoBienvenida = false
                 mostrandoImportacion = true
@@ -2437,10 +2440,15 @@ private fun ModuloEmergente(
 
 @Composable
 private fun DialogoBienvenida(
+    lineaActual: String,
+    onLineaSeleccionada: (String) -> Unit,
     onComenzar: () -> Unit,
     onOmitir: () -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
+    var lineaElegida by rememberSaveable(lineaActual) {
+        mutableStateOf(lineaActual.takeIf { it in listOf("Clínica", "NeuroClínica", "Social", "Organizacional", "Educativa") } ?: "Social")
+    }
 
     Dialog(
         onDismissRequest = onOmitir,
@@ -2509,6 +2517,48 @@ private fun DialogoBienvenida(
                 PasoSira("1", "Descarga tus notas en PDF desde el SIRA.")
                 PasoSira("2", "Impórtalas en la app con un solo toque.")
                 PasoSira("3", "¡Disfruta la app!")
+            }
+
+            Text(
+                text = "Elige tu línea profesional",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = "Puedes cambiarla más adelante en la configuración.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colores.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth()
+            )
+            val opcionesLinea = listOf("Educativa", "Social", "Organizacional", "Clínica", "NeuroClínica")
+            opcionesLinea.forEach { opcion ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (lineaElegida == opcion) colores.primaryContainer else colores.surfaceVariant.copy(alpha = 0.35f))
+                        .clickable {
+                            lineaElegida = opcion
+                            onLineaSeleccionada(opcion)
+                        }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = lineaElegida == opcion,
+                        onClick = {
+                            lineaElegida = opcion
+                            onLineaSeleccionada(opcion)
+                        }
+                    )
+                    Text(
+                        text = opcion,
+                        color = if (lineaElegida == opcion) colores.onPrimaryContainer else colores.onSurface,
+                        fontWeight = if (lineaElegida == opcion) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
             }
 
             Button(

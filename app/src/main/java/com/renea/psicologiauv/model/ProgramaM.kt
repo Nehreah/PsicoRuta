@@ -702,8 +702,8 @@ data class ProgramaM(
     }
 
     /** La línea elegida en configuración debe tener aprobados sus niveles I, II y III. */
-    fun nivelesCompletosLineaSeleccionada(): Boolean {
-        val lineaElegida = estudiante?.linea?.takeIf { it.isNotBlank() && it != "No" && it != "Ninguna" }
+    fun nivelesCompletosLineaSeleccionada(lineaSeleccionada: String? = estudiante?.linea): Boolean {
+        val lineaElegida = lineaSeleccionada?.takeIf { it.isNotBlank() && it != "No" && it != "Ninguna" }
             ?: return false
         val opcionesLinea = when (lineaElegida) {
             "Clínica/NeuroClínica", "Clínica", "NeuroClínica" -> setOf("Clínica", "NeuroClínica")
@@ -717,11 +717,11 @@ data class ProgramaM(
     }
 
     /** Criterios completos que habilitan el botón de inicio de prácticas. */
-    fun requisitosInicioPracticasCompletos(): Boolean =
+    fun requisitosInicioPracticasCompletos(lineaSeleccionada: String? = estudiante?.linea): Boolean =
         contarRequisitosAprobadosPracticas() == 8 &&
             creditosDeProfesionalizacion() >= 27 &&
             estadosElectivasPensum().count { it } >= 4 &&
-            nivelesCompletosLineaSeleccionada()
+            nivelesCompletosLineaSeleccionada(lineaSeleccionada)
 
     // ========================================================================
     // ELECTIVAS

@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.CorporateFare
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.AvanceLineaProfesional
@@ -102,6 +103,7 @@ fun PantallaPracticas(
     var materiaSeleccionada by remember { mutableStateOf<Asignatura?>(null) }
     var indicadorExpandido by remember { mutableStateOf<String?>(null) }
     var menuDesplegableLinea by remember { mutableStateOf(false) }
+    var mostrandoInformacionPracticas by remember { mutableStateOf(false) }
 
     val datos = remember(programa, otraLineaSeleccionada) {
         calcularDatosPracticas(programa, otraLineaSeleccionada)
@@ -134,6 +136,11 @@ fun PantallaPracticas(
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Estado de candidatura: usa exactamente el mismo criterio del botón verde de Prácticas Intro.
+            BannerEstado(
+                texto = "Candidato a prácticas: " + if (programa.requisitosInicioPracticasCompletos(otraLineaSeleccionada)) "Cumple requisitos" else "No cumple requisitos",
+                cumple = programa.requisitosInicioPracticasCompletos(otraLineaSeleccionada)
+            )
 
             // ================================================================
             // ASIGNATURAS NECESARIAS — lista compacta y editable
@@ -151,12 +158,21 @@ fun PantallaPracticas(
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    Text(
-                        text = "Asignaturas necesarias",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = text
-                )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Asignaturas necesarias",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = text,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { mostrandoInformacionPracticas = true }) {
+                            Icon(Icons.Filled.Info, contentDescription = "Información sobre asignaturas necesarias", tint = scheme.primary)
+                        }
+                    }
 
                 val requisitos = listOf(
                     Triple("Ética del ejercicio profesional", programa.requisitosPracticasEtica(), asignaturasEstudiante.find { it.codigo == "402203M" }),
@@ -215,7 +231,8 @@ fun PantallaPracticas(
                 unidades = 9,
                 onBarClick = { indice ->
                     materiasProfesionalizacion.getOrNull(indice)?.let { materiaSeleccionada = it }
-                }
+                },
+                onInfoClick = { mostrandoInformacionPracticas = true }
             )
 
             BarrasLineasProfesionalesPracticas(
@@ -226,7 +243,8 @@ fun PantallaPracticas(
                     "Educativa" to programa.asignaturasDeLinea("Educativa").firstOrNull(),
                     "Clínica" to programa.asignaturasDeLinea("Clínica").firstOrNull()
                 ),
-                onMateriaClick = { materia -> materiaSeleccionada = materia }
+                onMateriaClick = { materia -> materiaSeleccionada = materia },
+                onInfoClick = { mostrandoInformacionPracticas = true }
             )
 
             BarrasElectivasPracticas(
@@ -234,7 +252,8 @@ fun PantallaPracticas(
                 estadosProfesionales = programa.estadosElectivasPensum().drop(2).take(4),
                 materiasComplementarias = materiasComplementarias,
                 materiasProfesionales = materiasProfesionales,
-                onMateriaClick = { materia -> materiaSeleccionada = materia }
+                onMateriaClick = { materia -> materiaSeleccionada = materia },
+                onInfoClick = { mostrandoInformacionPracticas = true }
             )
 
 
@@ -271,12 +290,18 @@ fun PantallaPracticas(
                             Spacer(modifier = Modifier.width(11.dp))
 
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Líneas de prácticas",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = text
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Líneas de prácticas",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = text,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    IconButton(onClick = { mostrandoInformacionPracticas = true }) {
+                                        Icon(Icons.Filled.Info, contentDescription = "Información sobre líneas de prácticas", tint = primary)
+                                    }
+                                }
 
                                 Text(
                                     text = lineaActual,
@@ -412,6 +437,43 @@ fun PantallaPracticas(
         } // end Column
     } // end Box
 
+    if (mostrandoInformacionPracticas) {
+        Dialog(
+            onDismissRequest = { mostrandoInformacionPracticas = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp,
+                shadowElevation = 20.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Información de requisitos", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { mostrandoInformacionPracticas = false }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Cerrar información")
+                        }
+                    }
+                    TextoInfoPracticas("Asignaturas necesarias", "Asignaturas del ciclo básico de obligatorio cumplimiento para el inicio de prácticas.")
+                    TextoInfoPracticas("Profesionalización", "Asignaturas de las diferentes líneas profesionales. Debes cursar al menos 27 de estas.")
+                    TextoInfoPracticas("Líneas profesionales", "Debes ver al menos un nivel de cada una de las 4 líneas profesionales.")
+                    TextoInfoPracticas("Electivas", "Asignaturas electivas tanto complementarias como profesionales. Debes ver al menos 2 electivas complementarias, tales como teatro, cine, etc., y 4 electivas profesionales ofertadas por la facultad o por otra universidad con la que exista un convenio académico. Entre las electivas profesionales, es obligatorio cursar Problemas actuales del individuo en la sociedad.")
+                    TextoInfoPracticas("Líneas de prácticas", "Debes cursar los 3 niveles completos de la línea profesional en la que deseas hacer prácticas.")
+                    Button(onClick = { mostrandoInformacionPracticas = false }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Entendido")
+                    }
+                }
+            }
+        }
+    }
+
     // ================================================================
     // DIÁLOGO CENTRADO: detalle de asignaturas al clickear semicírculo
     // ================================================================
@@ -472,10 +534,19 @@ fun PantallaPracticas(
 }
 
 @Composable
+private fun TextoInfoPracticas(titulo: String, descripcion: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        Text(descripcion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
 private fun BarrasLineasProfesionalesPracticas(
     avanceLineas: Map<String, AvanceLineaProfesional>,
     materiasPorLinea: Map<String, Asignatura?>,
-    onMateriaClick: (Asignatura) -> Unit
+    onMateriaClick: (Asignatura) -> Unit,
+    onInfoClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val lineas = listOf(
@@ -500,12 +571,18 @@ private fun BarrasLineasProfesionalesPracticas(
                 .padding(horizontal = 11.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Líneas profesionales",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Líneas profesionales",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onInfoClick) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre líneas profesionales", tint = scheme.primary)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -551,7 +628,8 @@ private fun BarrasElectivasPracticas(
     estadosProfesionales: List<Boolean>,
     materiasComplementarias: List<Asignatura>,
     materiasProfesionales: List<Asignatura>,
-    onMateriaClick: (Asignatura) -> Unit
+    onMateriaClick: (Asignatura) -> Unit,
+    onInfoClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val estados = (estadosComplementarias + estadosProfesionales).take(6).let { lista ->
@@ -574,12 +652,18 @@ private fun BarrasElectivasPracticas(
                 .padding(horizontal = 11.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Electivas",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Electivas",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = scheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onInfoClick) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre electivas", tint = scheme.primary)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -636,7 +720,8 @@ private fun BarrasProgresoPracticas(
     creditosTotales: Int,
     unidades: Int,
     modifier: Modifier = Modifier,
-    onBarClick: ((Int) -> Unit)? = null
+    onBarClick: ((Int) -> Unit)? = null,
+    onInfoClick: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val progreso = creditos.coerceIn(0, creditosTotales)
@@ -673,6 +758,10 @@ private fun BarrasProgresoPracticas(
                         style = MaterialTheme.typography.labelSmall,
                         color = scheme.onSurfaceVariant
                     )
+                }
+
+                IconButton(onClick = onInfoClick) {
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre $titulo", tint = scheme.primary)
                 }
 
                 Text(
