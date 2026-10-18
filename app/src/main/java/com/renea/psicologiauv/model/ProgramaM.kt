@@ -667,28 +667,20 @@ data class ProgramaM(
     }
 
     fun requisitosPracticasEtica(): Boolean =
-        estudiante?.asignaturas
-            ?.filter { it.codigo == "402203M" }
-            .orEmpty()
-            .all { it.aprobo() }
+        estudiante?.asignaturas.orEmpty()
+            .any { it.codigo == "402203M" && it.aprobo() }
 
     fun requisitosPracticasDiagnostico(): Boolean =
-        estudiante?.asignaturas
-            ?.filter { it.codigo == "402204M" }
-            .orEmpty()
-            .all { it.aprobo() }
+        estudiante?.asignaturas.orEmpty()
+            .any { it.codigo == "402204M" && it.aprobo() }
 
     fun requisitosPracticasFundamentacionI(): Boolean =
-        estudiante?.asignaturas
-            ?.filter { it.codigo == "402212M" }
-            .orEmpty()
-            .all { it.aprobo() }
+        estudiante?.asignaturas.orEmpty()
+            .any { it.codigo == "402212M" && it.aprobo() }
 
     fun requisitosPracticasFundamentacionII(): Boolean =
-        estudiante?.asignaturas
-            ?.filter { it.codigo == "402221M" }
-            .orEmpty()
-            .all { it.aprobo() }
+        estudiante?.asignaturas.orEmpty()
+            .any { it.codigo == "402221M" && it.aprobo() }
 
     /**
      * Cuenta cuántos de los 8 requisitos de prácticas profesionales están
@@ -708,6 +700,28 @@ data class ProgramaM(
             avanceLineas.containsKey("Clínica/NeuroClínica")
         ).count { it }
     }
+
+    /** La línea elegida en configuración debe tener aprobados sus niveles I, II y III. */
+    fun nivelesCompletosLineaSeleccionada(): Boolean {
+        val lineaElegida = estudiante?.linea?.takeIf { it.isNotBlank() && it != "No" && it != "Ninguna" }
+            ?: return false
+        val opcionesLinea = when (lineaElegida) {
+            "Clínica/NeuroClínica", "Clínica", "NeuroClínica" -> setOf("Clínica", "NeuroClínica")
+            else -> setOf(lineaElegida)
+        }
+        val nivelesAprobados = estudiante?.asignaturas.orEmpty()
+            .filter { it.lineaProfesional in opcionesLinea && it.aprobo() }
+            .mapNotNull { nivelDeAsignatura(it.nombre) }
+            .toSet()
+        return (1..3).all { it in nivelesAprobados }
+    }
+
+    /** Criterios completos que habilitan el botón de inicio de prácticas. */
+    fun requisitosInicioPracticasCompletos(): Boolean =
+        contarRequisitosAprobadosPracticas() == 8 &&
+            creditosDeProfesionalizacion() >= 27 &&
+            estadosElectivasPensum().count { it } >= 4 &&
+            nivelesCompletosLineaSeleccionada()
 
     // ========================================================================
     // ELECTIVAS

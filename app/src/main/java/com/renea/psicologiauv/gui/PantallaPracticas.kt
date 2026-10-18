@@ -231,7 +231,7 @@ fun PantallaPracticas(
 
             BarrasElectivasPracticas(
                 estadosComplementarias = programa.estadosElectivasComplementarias(),
-                estadosProfesionales = programa.estadosElectivasProfesionalesIIIII(),
+                estadosProfesionales = programa.estadosElectivasPensum().drop(2).take(4),
                 materiasComplementarias = materiasComplementarias,
                 materiasProfesionales = materiasProfesionales,
                 onMateriaClick = { materia -> materiaSeleccionada = materia }

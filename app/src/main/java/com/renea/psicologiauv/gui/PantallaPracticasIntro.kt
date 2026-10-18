@@ -51,7 +51,7 @@ fun PantallaPracticasIntro(
     onEvaluar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val requisitosCompletos = programa.contarRequisitosAprobadosPracticas() == 8
+    val requisitosCompletos = programa.requisitosInicioPracticasCompletos()
     val scheme = MaterialTheme.colorScheme
     // Mientras falten requisitos el botón usa el color de la línea;
     // cuando se cumplen todos pasa a verde.
