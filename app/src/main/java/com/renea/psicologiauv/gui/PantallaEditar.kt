@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -118,6 +119,8 @@ import com.renea.psicologiauv.R
 import com.renea.psicologiauv.data.ImportadorNotas
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
+import com.renea.psicologiauv.data.RepositorioHorarios
+import com.renea.psicologiauv.model.AsignaturaHorario
 import com.renea.psicologiauv.model.ModuloConsejoPrincipal
 import com.renea.psicologiauv.ui.theme.AmberAccent
 import com.renea.psicologiauv.ui.theme.Burgundy
@@ -1021,6 +1024,12 @@ fun PantallaPerfil(
             // ============================================================
 
             ModuloAccesosRapidos(contexto = contexto)
+
+            ModuloHorarioEstudiante(
+                estudiante = estudiante,
+                semestreActual = viewModel.programa.semestreEnCurso(),
+                contexto = contexto
+            )
 
             Spacer(Modifier.height(10.dp))
 
@@ -3315,4 +3324,185 @@ private fun AccesoCuadrado(
             )
         }
     }
+}
+
+
+// ========================================================================
+// HORARIO DEL ESTUDIANTE — MATRIZ SEMANAL
+// ========================================================================
+
+@Composable
+private fun ModuloHorarioEstudiante(
+    estudiante: com.renea.psicologiauv.model.Estudiante,
+    semestreActual: Int,
+    contexto: Context
+) {
+    var expandido by remember { mutableStateOf(false) }
+    var claseSeleccionada by remember { mutableStateOf<AsignaturaHorario?>(null) }
+    val catalogo = remember(contexto) { RepositorioHorarios.cargarCatalogo(contexto) }
+    val horario = remember(estudiante.asignaturas, semestreActual, catalogo) {
+        RepositorioHorarios.horarioDelSemestre(estudiante, semestreActual, catalogo)
+    }
+    // El horario forma parte del modelo del estudiante y se mantiene sincronizado
+    // con las asignaturas pendientes del semestre que el programa identifica como actual.
+    estudiante.horario = horario.toMutableList()
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .clickable { expandido = !expandido }
+                    .padding(horizontal = 4.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(38.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.GridView, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    }
+                }
+                Spacer(Modifier.width(9.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Horario de clases", style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Semestre $semestreActual · ${horario.size} sesiones encontradas",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Icon(
+                    imageVector = if (expandido) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (expandido) "Contraer horario" else "Expandir horario",
+                    tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(25.dp)
+                )
+            }
+            AnimatedVisibility(visible = expandido, enter = fadeIn(), exit = fadeOut()) {
+                if (horario.isEmpty()) {
+                    Text(
+                        "No se encontraron horarios en Horarios SIRA.json para los códigos pendientes del semestre actual.",
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    MatrizHorarioSemanal(horario = horario, onClaseClick = { claseSeleccionada = it })
+                }
+            }
+        }
+    }
+
+    claseSeleccionada?.let { clase ->
+        AlertDialog(
+            onDismissRequest = { claseSeleccionada = null },
+            title = { Text(clase.nombreAsignatura) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DatoHorario("Código", clase.codigo)
+                    DatoHorario("Grupo", clase.grupo.ifBlank { "No especificado" })
+                    DatoHorario("Día de clase", nombreDiaHorario(clase.diaClase))
+                    DatoHorario("Horas de clase", clase.horasClase)
+                    DatoHorario("Hora de inicio", horaLegible(clase.horaInicio))
+                    DatoHorario("Espacio", clase.espacio)
+                }
+            },
+            confirmButton = { TextButton(onClick = { claseSeleccionada = null }) { Text("Cerrar") } }
+        )
+    }
+}
+
+@Composable
+private fun MatrizHorarioSemanal(
+    horario: List<AsignaturaHorario>,
+    onClaseClick: (AsignaturaHorario) -> Unit
+) {
+    val dias = listOf("LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM")
+    val horas = (horario.minOfOrNull { it.horaInicio }?.coerceAtLeast(6) ?: 7)..
+        (horario.maxOfOrNull { it.horaFin }?.coerceAtMost(23) ?: 18)
+    val scroll = rememberScrollState()
+    Column(Modifier.fillMaxWidth().horizontalScroll(scroll)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.width(54.dp).padding(3.dp), contentAlignment = Alignment.Center) {
+                Text("Hora", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            }
+            dias.forEach { dia ->
+                Box(Modifier.width(112.dp).padding(3.dp), contentAlignment = Alignment.Center) {
+                    Text(nombreDiaCortoHorario(dia), style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+            }
+        }
+        horas.forEach { hora ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.width(54.dp).heightIn(min = 58.dp).padding(3.dp), contentAlignment = Alignment.Center) {
+                    Text(horaLegible(hora), style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                dias.forEach { dia ->
+                    val clases = horario.filter { it.diaClase == dia && it.horaInicio == hora }
+                    Box(
+                        Modifier.width(112.dp).heightIn(min = 58.dp).padding(2.dp)
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                            .padding(2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (clases.isEmpty()) {
+                            Text("—", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outlineVariant)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                clases.forEach { clase ->
+                                    Surface(
+                                        modifier = Modifier.fillMaxWidth().clickable { onClaseClick(clase) },
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer
+                                    ) {
+                                        Column(Modifier.padding(4.dp)) {
+                                            Text(clase.nombreAsignatura, style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                            Text("${clase.horasClase} · G${clase.grupo}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DatoHorario(etiqueta: String, valor: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Text(etiqueta, style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(valor, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+    }
+}
+
+private fun horaLegible(hora: Int): String = "%02d:00".format(hora)
+private fun nombreDiaHorario(dia: String): String = when (dia) {
+    "LUN" -> "Lunes"; "MAR" -> "Martes"; "MIE" -> "Miércoles"; "JUE" -> "Jueves"
+    "VIE" -> "Viernes"; "SAB" -> "Sábado"; "DOM" -> "Domingo"; else -> dia
+}
+private fun nombreDiaCortoHorario(dia: String): String = when (dia) {
+    "LUN" -> "Lunes"; "MAR" -> "Martes"; "MIE" -> "Miérc."; "JUE" -> "Jueves"
+    "VIE" -> "Viernes"; "SAB" -> "Sábado"; "DOM" -> "Domingo"; else -> dia
 }

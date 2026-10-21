@@ -10,7 +10,8 @@ data class Estudiante(
     val codigo: Int = 0,
     var linea: String = "Ninguna",
     val avatarUri: String? = null,
-    var asignaturas: MutableList<Asignatura>
+    var asignaturas: MutableList<Asignatura>,
+    var horario: MutableList<AsignaturaHorario> = mutableListOf()
 ) {
     fun cambiarNombre(nuevoNombre: String): Estudiante =
         copy(nombre = nuevoNombre)

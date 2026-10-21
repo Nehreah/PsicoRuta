@@ -823,6 +823,13 @@ private fun CaraCuboSemestre(
     modifier: Modifier = Modifier
 ) {
     val todasAprobadas = programa.semestreCompletado(semestre)
+    val semestreEnCurso = programa.semestreEnCurso()
+    val estadoSemestre = when {
+        todasAprobadas -> "Completado"
+        semestre == semestreEnCurso -> "En curso"
+        semestre > semestreEnCurso -> "Faltan"
+        else -> "Pendiente"
+    }
     val estadoColor = if (todasAprobadas) AprobadoColor else MaterialTheme.colorScheme.primary
 
     Column(
@@ -873,7 +880,7 @@ private fun CaraCuboSemestre(
                         color = estadoColor.copy(alpha = 0.08f)
                     ) {
                         Text(
-                            text = if (todasAprobadas) "Completado" else "En curso",
+                            text = estadoSemestre,
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
