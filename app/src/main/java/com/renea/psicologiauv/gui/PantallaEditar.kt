@@ -443,6 +443,7 @@ fun PantallaPerfil(
     var mostrandoImportacion by rememberSaveable {
         mutableStateOf(false)
     }
+    var asignaturaTareasSolicitada by remember { mutableStateOf<AsignaturaHorario?>(null) }
 
     var menuAccionesAbierto by rememberSaveable {
         mutableStateOf(false)
@@ -1020,17 +1021,20 @@ fun PantallaPerfil(
                 }
             }
 
-            // ============================================================
-            // ACCESOS RÁPIDOS — MÓDULO DESPLEGABLE (debajo de los atajos)
-            // ============================================================
-
-            ModuloAccesosRapidos(contexto = contexto)
-
             ModuloHorarioEstudiante(
                 estudiante = estudiante,
                 semestreActual = viewModel.programa.semestreEnCurso(),
                 contexto = contexto,
-                onImportarDatos = { mostrandoImportacion = true }
+                onImportarDatos = { mostrandoImportacion = true },
+                onGestionarTareas = { asignaturaTareasSolicitada = it }
+            )
+
+            Spacer(Modifier.height(8.dp))
+            ModuloTareas(
+                contexto = contexto,
+                horario = estudiante.horario,
+                claseInicial = asignaturaTareasSolicitada,
+                onClaseInicialConsumida = { asignaturaTareasSolicitada = null }
             )
 
             Spacer(Modifier.height(10.dp))
@@ -1065,7 +1069,7 @@ fun PantallaPerfil(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Psychology,
-                                contentDescription = "Consejería estudiantil",
+                                contentDescription = "Consejería e información",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(17.dp)
                             )
@@ -1073,7 +1077,7 @@ fun PantallaPerfil(
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Consejería estudiantil",
+                        text = "Consejería e información",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1084,7 +1088,7 @@ fun PantallaPerfil(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = "Un espacio privado para acompañarte.",
+                text = "Un espacio TUYO para acompañarte.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -1533,7 +1537,7 @@ fun PantallaPerfil(
 
             title = {
                 Text(
-                    text = "Consejería estudiantil",
+                    text = "Consejería e información",
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -1546,7 +1550,7 @@ fun PantallaPerfil(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "La Consejería Estudiantil es un espacio privado con el que te puedes comunicar para asuntos psicológicos, académicos y socioeconómicos, de forma privada.",
+                        text = "La Consejería Estudiantil es un espacio de escucha que puedes aprovehar para resolver tus asuntos psicológicos, académicos y socioeconómicos, de forma privada y respetuosa.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -1585,6 +1589,11 @@ fun PantallaPerfil(
                             modifier = Modifier.weight(1f, fill = false)
                         )
                     }
+
+                    Spacer(Modifier.height(8.dp))
+                    // Los accesos rápidos se conservan con su diseño actual,
+                    // integrados al final del contenido de Consejería.
+                    ModuloAccesosRapidos(contexto = contexto)
                 }
             },
 
@@ -3338,7 +3347,8 @@ private fun ModuloHorarioEstudiante(
     estudiante: com.renea.psicologiauv.model.Estudiante,
     semestreActual: Int,
     contexto: Context,
-    onImportarDatos: () -> Unit
+    onImportarDatos: () -> Unit,
+    onGestionarTareas: (AsignaturaHorario) -> Unit
 ) {
     var expandido by remember { mutableStateOf(false) }
     var claseSeleccionada by remember { mutableStateOf<AsignaturaHorario?>(null) }
@@ -3466,11 +3476,18 @@ private fun ModuloHorarioEstudiante(
                     DatoHorario("Horas de clase", clase.horasClase)
                     DatoHorario("Hora de inicio", horaLegible(clase.horaInicio))
                     DatoHorario("Espacio", clase.espacio)
+                    Spacer(Modifier.height(6.dp))
+                    Button(onClick = { onGestionarTareas(clase); claseSeleccionada = null }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Agregar o eliminar tareas")
+                    }
                 }
             },
             confirmButton = { TextButton(onClick = { claseSeleccionada = null }) { Text("Cerrar") } }
         )
     }
+
 }
 
 @Composable

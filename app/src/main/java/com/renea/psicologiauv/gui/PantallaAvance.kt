@@ -174,7 +174,7 @@ private fun BarrasIdiomasAvance(
  * provee el modelo, para usarlos como snapshot inmutable en la UI.
  */
 private fun formatearPorcentajeExacto(valor: Float): String =
-    valor.coerceIn(0f, 100f).toString().removeSuffix(".0")
+    valor.coerceIn(0f, 100f).toInt().toString()
 
 private data class DatosAvance(
     val avanceCarrera: Float,
@@ -765,7 +765,7 @@ private fun AnilloArea(
         Spacer(modifier = Modifier.height(7.dp))
 
         Text(
-            text = "${"%.0f".format(porcentaje)}%",
+            text = "${porcentaje.coerceIn(0f, 100f).toInt()}%",
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = colorProgreso,
