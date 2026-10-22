@@ -75,4 +75,35 @@ class ImportadorNotasTest {
         )
         assertEquals(4.0f, (resultado["402180M"] as NotaImportada.Numerica).valor, 0.001f)
     }
+
+    @Test fun extraeGruposConPrefijoGRExplicito() {
+        val resultado = AnalizadorNotas.extraerGruposPorCodigo(
+            "402180M TEORIAS PSICOLOGICAS GR 01 3 4.2 402181M OTRA MATERIA GRUPO 2 3 3.8"
+        )
+        assertEquals("01", resultado["402180M"])
+        assertEquals("02", resultado["402181M"])
+    }
+
+    @Test fun extraeGruposConPrefijoPegado() {
+        val resultado = AnalizadorNotas.extraerGruposPorCodigo(
+            "402180M TEORIAS PSICOLOGICAS GR01 3 4.2 402181M OTRA MATERIA GR50 3"
+        )
+        assertEquals("01", resultado["402180M"])
+        assertEquals("50", resultado["402181M"])
+    }
+
+    @Test fun extraeGruposConCeroALaIzquierdaSinPrefijo() {
+        val resultado = AnalizadorNotas.extraerGruposPorCodigo(
+            "402180M TEORIAS PSICOLOGICAS 01 3 4.2 402181M OTRA 03 3"
+        )
+        assertEquals("01", resultado["402180M"])
+        assertEquals("03", resultado["402181M"])
+    }
+
+    @Test fun enMateriasRepetidasConservaElUltimoGrupo() {
+        val resultado = AnalizadorNotas.extraerGruposPorCodigo(
+            "402180M TEORIAS PSICOLOGICAS 01 3 2.0 402180M TEORIAS PSICOLOGICAS 02 3"
+        )
+        assertEquals("02", resultado["402180M"])
+    }
 }

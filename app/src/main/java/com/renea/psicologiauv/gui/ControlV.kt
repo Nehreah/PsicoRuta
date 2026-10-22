@@ -162,7 +162,7 @@ class ControlV (private val parse: Serializador): ViewModel() {
      * Devuelve cuántas asignaturas quedaron con una nota distinta a la que
      * tenían, para poder mostrarle ese número al usuario.
      */
-    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>): Int {
+    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>, gruposPorCodigo: Map<String, String> = emptyMap()): Int {
         val estudianteActual = programa.estudiante ?: return 0
 
         // 1. Actualiza las asignaturas que ya tienen su código definitivo en el pensum.
@@ -174,9 +174,16 @@ class ControlV (private val parse: Serializador): ViewModel() {
         val (estudianteConElectivas, electivasResueltas) =
             estudianteConNotas.resolverElectivasProfesionales(notasPorCodigo, catalogo)
 
+        // Guarda también los grupos importados, aunque no haya cambiado ninguna nota.
+        val asignaturasConGrupo = estudianteConElectivas.asignaturas.map { asignatura ->
+            val grupo = gruposPorCodigo[asignatura.codigo.trim().uppercase()]
+            if (grupo != null) asignatura.copy(grupo = grupo) else asignatura
+        }
+        val estudianteConGrupos = estudianteConElectivas.copy(asignaturas = asignaturasConGrupo.toMutableList())
+
         val totalCambios = actualizadas + electivasResueltas
-        if (totalCambios > 0) {
-            val sincronizado = estudianteConElectivas.sincronizarComplementarias()
+        if (totalCambios > 0 || gruposPorCodigo.isNotEmpty()) {
+            val sincronizado = estudianteConGrupos.sincronizarComplementarias()
             programa = programa.cambiarEstudiante(sincronizado)
             parse.guardarEstudiante(sincronizado)
         }

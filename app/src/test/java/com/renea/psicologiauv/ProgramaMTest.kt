@@ -113,7 +113,7 @@ class ProgramaMTest {
             // Se escriben sin tildes y en mayúsculas a propósito: la comparación las normaliza.
             crearAsignatura("1", nombre = "EVALUACION Y DIAGNOSTICO", semestre = 8, nota = if (aprobadas) 4f else 0f),
             crearAsignatura("2", nombre = "Seminario de Trabajo de Grado II", semestre = 8, nota = if (aprobadas) 4f else 0f),
-            crearAsignatura("3", nombre = "Practicas de Fundamentacion II", semestre = 8, nota = if (aprobadas) 4f else 0f)
+            crearAsignatura("3", nombre = "Practica de Fundamentacion Profesional II", semestre = 8, nota = if (aprobadas) 4f else 0f)
         )
         assertTrue(programaCon(*materiasCriticas(true)).semestreCompletado(8))
         assertFalse(programaCon(*materiasCriticas(false)).semestreCompletado(8))

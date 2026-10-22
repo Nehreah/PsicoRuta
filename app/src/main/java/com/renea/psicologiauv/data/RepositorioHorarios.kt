@@ -44,15 +44,21 @@ object RepositorioHorarios {
         emptyList()
     }
 
-    /** Devuelve las sesiones del catálogo cuyos códigos pertenecen al semestre actual. */
+    /** Devuelve las sesiones del catálogo cuyos códigos y grupos coinciden con las asignaturas matriculadas del semestre actual. */
     fun horarioDelSemestre(estudiante: Estudiante, semestreActual: Int, catalogo: List<AsignaturaHorario>): List<AsignaturaHorario> {
-        val codigos = estudiante.asignaturas
-            .filter { it.semestre == semestreActual && !it.aprobo() }
-            .map { it.codigo.trim().uppercase() }
-            .filter { it.isNotBlank() }
-            .toSet()
-        return catalogo.filter { it.codigo.trim().uppercase() in codigos }
-            .sortedWith(compareBy<AsignaturaHorario> { ordenDia(it.diaClase) }.thenBy { it.horaInicio }.thenBy { it.nombreAsignatura })
+        val matriculadas = estudiante.asignaturas
+            .filter { it.semestre == semestreActual && !it.aprobo() && it.grupo.isNotBlank() }
+        if (matriculadas.isEmpty()) return emptyList()
+
+        val gruposPorCodigo = matriculadas.associate {
+            it.codigo.trim().uppercase() to it.grupo.trim().uppercase().removePrefix("GR").trim()
+        }
+        return catalogo.filter { clase ->
+            val codigo = clase.codigo.trim().uppercase()
+            val grupoMatriculado = gruposPorCodigo[codigo] ?: return@filter false
+            val grupoClase = clase.grupo.trim().uppercase().removePrefix("GR").trim()
+            grupoClase == grupoMatriculado || (grupoClase.toIntOrNull() != null && grupoClase.toIntOrNull() == grupoMatriculado.toIntOrNull())
+        }.sortedWith(compareBy<AsignaturaHorario> { ordenDia(it.diaClase) }.thenBy { it.horaInicio }.thenBy { it.nombreAsignatura })
     }
 
     private fun normalizarDia(dia: String): String = when (dia.trim().uppercase()) {

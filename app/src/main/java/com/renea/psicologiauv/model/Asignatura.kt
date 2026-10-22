@@ -13,7 +13,9 @@ data class Asignatura (
     val area: String,
     var nota: Float = 0f,
     var notaEspecial: String? = null,
-    var complementaria: Boolean = false
+    var complementaria: Boolean = false,
+    // Grupo matriculado según el tabulado SIRA; se usa internamente para filtrar el horario.
+    var grupo: String = ""
     /**
      * Marca especial del tabulado cuando la materia no tiene nota numérica
      * (por ejemplo "C.U", "E.X", "A.P"). Si es distinta de null, la materia

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Política de privacidad de PsicoRuta UV, aplicación educativa independiente.">
+<title>Política de privacidad | PsicoRuta UV</title>
+<style>
+:root{color-scheme:light;--vino:#762c3d;--vino2:#4b1d2a;--fondo:#f7f3f2;--texto:#29252a;--suave:#6c6268;--borde:#e8dfe2;--acento:#f4e8eb}
+*{box-sizing:border-box}body{margin:0;background:var(--fondo);color:var(--texto);font:16px/1.7 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:linear-gradient(135deg,var(--vino2),var(--vino));color:white;padding:42px 20px 36px}
+.wrap{width:min(900px,calc(100% - 32px));margin:0 auto}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;opacity:.85}
+h1{line-height:1.2;margin:10px 0;font-size:clamp(2rem,5vw,3rem)}header p{margin:0;max-width:680px;color:#f8eaf0}
+main{padding:28px 0 52px}article{background:#fff;border:1px solid var(--borde);border-radius:18px;padding:clamp(20px,4vw,38px);box-shadow:0 8px 28px #4b1d2a0f}
+h2{color:var(--vino2);font-size:1.22rem;margin:28px 0 8px}h2:first-of-type{margin-top:0}
+a{color:var(--vino);overflow-wrap:anywhere}ul{padding-left:1.35rem}li{margin:5px 0}
+.notice{border-left:4px solid var(--vino);background:var(--acento);padding:14px 16px;border-radius:8px;margin:20px 0}
+.meta{color:var(--suave);font-size:.92rem}.pending{color:#8b2438;font-weight:700}
+footer{color:var(--suave);text-align:center;padding:0 16px 32px;font-size:.9rem}
+@media(max-width:520px){header{padding-top:32px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="eyebrow">PsicoRuta UV · Proyecto independiente</div>
+<h1>Política de privacidad</h1>
+<p>Cómo se manejan los datos cuando utilizas la aplicación PsicoRuta UV.</p>
+</div></header>
+<main class="wrap"><article>
+<p class="meta"><strong>Responsable/desarrollador:</strong> <span class="pending">Javier Felipe Contreras Díaz</span><br>
+<strong>Contacto de privacidad:</strong> <span class="pending">nehreah@gmail.com</span><br>
+<strong>Fecha de vigencia:</strong> <span class="pending">9 de octubre de 2026</span></p>
+
+<h2>1. Acerca de PsicoRuta UV</h2>
+<p>PsicoRuta UV es una aplicación educativa independiente para consultar y organizar información de avance académico relacionada con un plan de estudios. No es una aplicación oficial de la Universidad del Valle ni está patrocinada, administrada o respaldada por esa institución. La información académica importante debe contrastarse con las fuentes oficiales.</p>
+
+<h2>2. Datos que maneja la aplicación</h2>
+<p>De acuerdo con las funciones incluidas en la versión revisada, la aplicación puede procesar:</p>
+<ul>
+<li>Datos académicos que se muestran o editan en el perfil, como asignaturas, códigos de asignatura, calificaciones, créditos y estado de avance.</li>
+<li>Texto extraído de un PDF que la persona selecciona para importar calificaciones; el procesamiento se realiza en el dispositivo.</li>
+<li>Preferencias internas de la aplicación, por ejemplo si ya se mostró y aceptó el aviso inicial.</li>
+<li>Información contenida en archivos JSON o PDF que la persona decide exportar.</li>
+</ul>
+<p>La aplicación incluye archivos de datos de ejemplo dentro de su instalación para inicializar o mostrar perfiles de prueba. Estos archivos empaquetados no son datos enviados por usuarios a un servidor. No importes ni guardes información personal que no sea necesaria para la finalidad educativa.</p>
+
+<h2>3. Almacenamiento y procesamiento local</h2>
+<p>El perfil académico activo se guarda en el almacenamiento privado de la aplicación en el dispositivo. Las preferencias se guardan en las preferencias privadas de Android. Cuando se selecciona un PDF mediante el selector de documentos del sistema, la aplicación lee el documento para extraer información académica y procesarla localmente.</p>
+<p>En el código revisado, el manifiesto de Android no declara el permiso INTERNET y las dependencias directas declaradas no incluyen SDKs de publicidad ni analítica. Por ello, la versión revisada no está configurada para enviar datos académicos a un servidor propio. Esta afirmación corresponde al código y manifiesto entregados; debe revisarse si en el futuro se incorporan permisos, SDKs, servicios o nuevas dependencias. La aplicación sí contiene enlaces a sitios externos y puede abrir otras aplicaciones del dispositivo, como se explica abajo.</p>
+
+<h2>4. Enlaces externos y aplicaciones de terceros</h2>
+<p>La aplicación contiene enlaces a recursos externos, incluidos sitios web y documentos relacionados con información académica, y puede iniciar una aplicación de correo mediante un enlace de correo electrónico. Cuando decides abrir uno de esos enlaces, el navegador, la aplicación de correo o el servicio externo seleccionado puede recibir información conforme a su propio funcionamiento y política de privacidad. PsicoRuta UV no controla las prácticas de privacidad de esos terceros.</p>
+<p>La aplicación también permite abrir o compartir archivos generados. Si eliges una aplicación de terceros como destino para abrir o compartir un archivo, esa aplicación o servicio tratará el contenido de acuerdo con sus propias condiciones.</p>
+
+<h2>5. Exportación de archivos</h2>
+<p>La aplicación puede exportar el perfil académico como archivo JSON a la carpeta Descargas y generar informes PDF que también pueden guardarse en Descargas. Estos archivos pueden contener información académica. Una vez exportados, dejan de estar únicamente en el almacenamiento privado de PsicoRuta UV: otras aplicaciones con acceso al archivo o cualquier persona con quien lo compartas podrían acceder a su contenido. Revisa los archivos antes de compartirlos y guárdalos en un lugar seguro.</p>
+
+<h2>6. Copias de seguridad</h2>
+<p>En el código revisado, el manifiesto establece <code>android:allowBackup="false"</code> y las reglas de copia excluyen los dominios de almacenamiento privado, preferencias, bases de datos y almacenamiento externo para copias en la nube y transferencias entre dispositivos. La aplicación está, por tanto, configurada para excluir sus datos de las copias automáticas de Android. El comportamiento de transferencias entre dispositivos puede variar según la versión de Android y el fabricante; no debe considerarse una garantía absoluta en todos los dispositivos.</p>
+<p>Para conservar el progreso, utiliza la función de exportación JSON si está disponible y guarda el archivo en un lugar seguro. Las copias exportadas a Descargas no se eliminan necesariamente al borrar los datos o desinstalar la aplicación, por lo que deben administrarse por separado.</p>
+
+<h2>7. Conservación y eliminación</h2>
+<p>Los datos del perfil y las preferencias permanecen en el almacenamiento de la aplicación mientras no se eliminen. Puedes borrar el perfil desde la función correspondiente de la app, borrar los datos de PsicoRuta UV desde los ajustes de Android o desinstalarla. La acción de eliminar el perfil hace que la aplicación pueda volver a cargar su plantilla inicial de datos. Los archivos JSON y PDF exportados a Descargas deben eliminarse por separado si ya no los necesitas. Si compartiste archivos con terceros, la aplicación no puede eliminarlos de los dispositivos o servicios de esos terceros.</p>
+
+<h2>8. Seguridad</h2>
+<p>La aplicación utiliza el almacenamiento privado de Android para el perfil activo y las funciones del sistema para seleccionar documentos. Los archivos que exportas a Descargas o compartes pueden quedar disponibles fuera del almacenamiento privado. Ningún método garantiza seguridad absoluta; protege tu dispositivo con bloqueo de pantalla, mantén el sistema actualizado y no compartas archivos con información que desees mantener privada. Esta política no afirma que la aplicación cifre los archivos exportados.</p>
+
+<h2>9. Público objetivo</h2>
+<p>PsicoRuta UV está concebida como una herramienta de organización académica. El responsable debe configurar de forma coherente el público objetivo y la clasificación de contenido en Google Play; el carácter educativo de la aplicación no implica por sí solo que esté dirigida a niños.</p>
+
+<h2>10. Cambios en esta política</h2>
+<p>Esta política puede actualizarse cuando cambien las funciones, permisos, bibliotecas o formas de tratamiento de datos. La fecha de vigencia indicada al inicio identifica la versión actual. Se recomienda consultar esta página después de actualizar la aplicación.</p>
+
+<h2>11. Contacto</h2>
+<p>Para preguntas sobre esta política o el manejo de datos, contacta al responsable mediante: <span class="pending">nehreah@gmail.com</span>.</p>
+</article></main>
+<footer>PsicoRuta UV · Política de privacidad · Versión preparada a partir del código entregado el 9 de octubre de 2026.</footer>
+</body></html>

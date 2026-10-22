@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+
+    <!-- ImprimirPDF guarda el informe en getExternalFilesDir(null), y si no
+         está disponible cae a filesDir. Ambos deben quedar cubiertos aquí,
+         o el FileProvider lanza una excepción al intentar compartir el PDF. -->
+    <external-files-path
+        name="informes"
+        path="." />
+
+    <files-path
+        name="informes"
+        path="." />
+
+
+        <external-path
+            name="downloads"
+            path="Download/" />
+        <external-files-path
+            name="files"
+            path="." />
+        <files-path
+            name="internal_files"
+            path="." />
+
+
+</paths>

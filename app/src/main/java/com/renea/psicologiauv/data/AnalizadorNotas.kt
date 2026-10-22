@@ -44,6 +44,24 @@ internal object AnalizadorNotas {
         """(?<![A-Za-z0-9])\d{5,7}[A-Za-z]?(?![A-Za-z0-9])"""
     )
 
+    // Patrones para identificar el grupo matriculado en una fila del tabulado SIRA.
+    // 1. Prefijo explícito GR o GRUPO (ej: "GR 01", "GR. 01", "GRUPO 02", "GR: 03").
+    private val patronGrupoExplicito = Regex(
+        """(?i)\b(?:GR|GRUPO)\b[.:\s]*([0-9]{1,2})\b"""
+    )
+    // 2. Prefijo GR pegado al número (ej: "GR01", "GR02").
+    private val patronGrupoPrefijado = Regex(
+        """(?i)\bGR([0-9]{1,2})\b"""
+    )
+    // 3. Número con cero a la izquierda (ej: "01", "02", ..., "09").
+    private val patronGrupoDosDigitos = Regex(
+        """(?<!\d)(0[1-9])(?!\d)"""
+    )
+    // 4. Número entero de dos dígitos aislado (ej: "10", "11", "12", "50").
+    private val patronNumeroDosDigitos = Regex(
+        """(?<![\d.])([1-9]\d)(?![\d.])"""
+    )
+
     // Encabezado que marca el final de la lista de materias de un periodo y
     // el comienzo del resumen (créditos, promedio semestral).
     private const val MARCADOR_RESUMEN_PERIODO = "Resumen de Finalización"
@@ -177,6 +195,78 @@ internal object AnalizadorNotas {
         }
 
         return resultado
+    }
+
+    fun extraerGruposPorCodigo(texto: String): Map<String, String> {
+        val textoNormalizado = texto.replace(',', '.')
+
+        val limitesLista = ArrayList<Int>()
+        val codigosLista = ArrayList<Pair<Int, String>>()
+
+        for (coincidencia in patronCodigoGenerico.findAll(textoNormalizado)) {
+            val inicio = coincidencia.range.first
+            limitesLista.add(inicio)
+            codigosLista.add(inicio to coincidencia.value)
+        }
+
+        if (codigosLista.isEmpty()) return emptyMap()
+
+        val limites = limitesLista.toIntArray()
+        val resultado = LinkedHashMap<String, String>()
+
+        for ((indiceInicio, codigo) in codigosLista) {
+            val indiceFinCodigo = indiceInicio + codigo.length
+            val posicionSiguiente = primerIndiceMayorQue(limites, indiceFinCodigo - 1)
+            val siguienteLimite =
+                if (posicionSiguiente < limites.size) limites[posicionSiguiente] else null
+
+            val indiceFinDeFila = minOf(
+                siguienteLimite ?: (indiceFinCodigo + LONGITUD_MAXIMA_FILA),
+                indiceFinCodigo + LONGITUD_MAXIMA_FILA,
+                textoNormalizado.length
+            )
+
+            var fragmentoFila = textoNormalizado.substring(
+                indiceFinCodigo,
+                indiceFinDeFila
+            )
+
+            val indiceResumen = fragmentoFila.indexOf(MARCADOR_RESUMEN_PERIODO)
+            if (indiceResumen >= 0) {
+                fragmentoFila = fragmentoFila.substring(0, indiceResumen)
+            }
+
+            val grupo = extraerGrupoDeFragmento(fragmentoFila)
+            if (grupo != null) {
+                resultado[codigo.uppercase()] = grupo
+            }
+        }
+
+        return resultado
+    }
+
+    private fun extraerGrupoDeFragmento(fragmento: String): String? {
+        val matchExplicito = patronGrupoExplicito.find(fragmento)
+        if (matchExplicito != null) {
+            return matchExplicito.groupValues[1].padStart(2, '0')
+        }
+
+        val matchPrefijado = patronGrupoPrefijado.find(fragmento)
+        if (matchPrefijado != null) {
+            return matchPrefijado.groupValues[1].padStart(2, '0')
+        }
+
+        val matchDosDigitos = patronGrupoDosDigitos.find(fragmento)
+        if (matchDosDigitos != null) {
+            return matchDosDigitos.value
+        }
+
+        val matchEnteroDosDigitos = patronNumeroDosDigitos.find(fragmento)
+        if (matchEnteroDosDigitos != null) {
+            return matchEnteroDosDigitos.value
+        }
+
+        return null
     }
 
     /**

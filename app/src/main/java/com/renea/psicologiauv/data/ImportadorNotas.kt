@@ -82,4 +82,14 @@ class ImportadorNotas(private val context: Context) {
         codigosConocidos: List<String>
     ): Map<String, NotaImportada> =
         AnalizadorNotas.extraerNotasPorCodigo(texto, codigosConocidos)
+
+    /**
+     * Recorre [texto] buscando las asignaturas matriculadas y extrae para cada una
+     * el grupo asignado (por ejemplo "01", "02", "50", "GR 01").
+     * Devuelve un mapa código -> grupo normalizado.
+     */
+    fun extraerGruposPorCodigo(
+        texto: String
+    ): Map<String, String> =
+        AnalizadorNotas.extraerGruposPorCodigo(texto)
 }

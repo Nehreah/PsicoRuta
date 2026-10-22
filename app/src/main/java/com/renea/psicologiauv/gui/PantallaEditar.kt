@@ -660,11 +660,12 @@ fun PantallaPerfil(
                                                 })
                                         .distinct()
 
-                                importadorNotas
-                                    .extraerNotasPorCodigo(
-                                        texto,
-                                        codigosConocidos
-                                    )
+                                val notas = importadorNotas.extraerNotasPorCodigo(
+                                    texto,
+                                    codigosConocidos
+                                )
+                                val grupos = importadorNotas.extraerGruposPorCodigo(texto)
+                                notas to grupos
                             }
 
                         } catch (e: Exception) {
@@ -690,7 +691,7 @@ fun PantallaPerfil(
                             ).show()
                         }
 
-                        resultado.isEmpty() -> {
+                        resultado.first.isEmpty() && resultado.second.isEmpty() -> {
 
                             Toast.makeText(
                                 contexto,
@@ -702,10 +703,10 @@ fun PantallaPerfil(
                         else -> {
 
                             val actualizadas =
-                                viewModel
-                                    .importarNotasDesdePdf(
-                                        resultado
-                                    )
+                                viewModel.importarNotasDesdePdf(
+                                    resultado.first,
+                                    resultado.second
+                                )
 
                             Toast.makeText(
                                 contexto,
@@ -3346,6 +3347,33 @@ private fun ModuloHorarioEstudiante(
     // El horario forma parte del modelo del estudiante y se mantiene sincronizado
     // con las asignaturas pendientes del semestre que el programa identifica como actual.
     estudiante.horario = horario.toMutableList()
+
+    val hayGrupoMatriculado = estudiante.asignaturas.any {
+        it.semestre == semestreActual && !it.aprobo() && it.grupo.isNotBlank()
+    }
+
+    if (!hayGrupoMatriculado) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                Text(
+                    "Ingresa tu tabulado con tus asignaturas de este semestre",
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+        return
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
