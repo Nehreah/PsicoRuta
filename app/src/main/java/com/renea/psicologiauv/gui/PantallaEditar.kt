@@ -115,7 +115,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import com.renea.psicologiauv.R
 import com.renea.psicologiauv.data.ImportadorNotas
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
