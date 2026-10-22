@@ -173,6 +173,9 @@ private fun BarrasIdiomasAvance(
  * Agrega los campos de progreso general a los datos de idioma que ya
  * provee el modelo, para usarlos como snapshot inmutable en la UI.
  */
+private fun formatearPorcentajeExacto(valor: Float): String =
+    valor.coerceIn(0f, 100f).toString().removeSuffix(".0")
+
 private data class DatosAvance(
     val avanceCarrera: Float,
     val avances: Map<String, Float>,
@@ -324,7 +327,7 @@ private fun TarjetaHeroeProgreso(
                             colorProgreso = colorAcento
                         ) {
                             Text(
-                                text = "${"%.0f".format(progreso)}%",
+                                text = "${formatearPorcentajeExacto(progreso)}%",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -612,7 +615,7 @@ private fun TarjetaEstadisticasAcademicas(
                 )
                 EstadisticaMini(
                     titulo = "Avance de carrera",
-                    valor = "${programa.avanceCarrera().toInt().coerceIn(0, 100)}%",
+                    valor = "${formatearPorcentajeExacto(programa.avanceCarrera())}%",
                     modifier = Modifier.weight(1f),
                     destacado = true
                 )
