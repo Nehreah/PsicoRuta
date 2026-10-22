@@ -15,7 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Translate
@@ -25,10 +24,8 @@ import androidx.compose.material3.*
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.School
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-
 import androidx.compose.runtime.*
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.compose.ui.Alignment
@@ -47,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.DatosIdiomas
 import com.renea.psicologiauv.model.ProgramaM
-import com.renea.psicologiauv.ui.theme.AmberAccent
 import com.renea.psicologiauv.ui.theme.AprobadoColor
 import kotlinx.coroutines.delay
 
@@ -199,24 +195,21 @@ private fun calcularDatosAvance(programa: ProgramaM): DatosAvance = DatosAvance(
 
 private val ConsejosCampus = listOf(
     "Habito el campus y limpio los espacios que uso.",
-    "No soy cochinx, no dejo colillas, ni latas tiradas en ningun espacio de mi univerisdad.",
-    "Respeto a mis compañerxs y ellos me respetan también.",
+    "No soy cochinx, no dejo restos tirados en ningún espacio de mi universidad.",
+    "Respeto a mis compañerxs. Y espero que ellos me respetan a mí.",
     "Cuido las zonas verdes, porque son zonas de vida.",
     "El piso NO es basurero. Uso los botes de basura porque amo mi universidad.",
     "Bajo el volumen en espacios de estudio compartidos.",
     "Respeto a mis compañerxs en su diversidad.",
-    "No soy conchudx, si exijo, aplico.",
-    "No soy pusilanime, participo activamente en mi facultad.",
     "Si lo ensucio, lo limpio.",
-    "Si ofendo a un compañero, me disculpo.",
+    "Si ofendo a un compañerx, me disculpo.",
     "No dejo basura 'para después'. Después siempre se convierte en nunca.",
     "Mi libertad termina donde empieza la libertad de lxs demás.",
     "Cuido a los animales que habitan el campus y no los molesto ni alimento irresponsablemente.",
-    "No normalizo el acoso, la discriminación, ni las burlas. Si veo algo, no me hago de la vista gorda. BRINDO AYUDA.",
-    "No soy espectadxr: si el campus es de todxs, su cuidado también.",
+    "No normalizo el acoso, la discriminación, ni las burlas. Ayudo a quien lo necesita.",
     "Todo lo hago desde el amor y los buenos deseos",
     "La digna rabia y la protesta: son consignas justas",
-    "Después de sexto semestre parece que la universdiad y la vida pesan más, apoyate en tus amigos"
+    "Después de sexto semestre parece que la universidad y la vida pesan más, apoyate en tus compañerxs."
 )
 
 @Composable
@@ -590,14 +583,12 @@ private fun TarjetaEstadisticasAcademicas(
                 EstadisticaMini(
                     titulo = "Promedio general",
                     valor = if (programa.promedioGeneral() > 0f) "%.2f".format(programa.promedioGeneral()) else "—",
-                    detalle = "Escala de 0 a 5",
                     modifier = Modifier.weight(1f),
                     destacado = true
                 )
                 EstadisticaMini(
                     titulo = "Nota más alta",
                     valor = notaMasAlta?.let { "%.1f".format(it) } ?: "—",
-                    detalle = "Nota numérica",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -605,13 +596,11 @@ private fun TarjetaEstadisticasAcademicas(
                 EstadisticaMini(
                     titulo = "Nota más baja",
                     valor = notaMasBaja?.let { "%.1f".format(it) } ?: "—",
-                    detalle = "Nota registrada",
                     modifier = Modifier.weight(1f)
                 )
                 EstadisticaMini(
                     titulo = "Asignaturas aprobadas",
                     valor = aprobadas.toString(),
-                    detalle = "$cursadas con nota o marca",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -619,13 +608,11 @@ private fun TarjetaEstadisticasAcademicas(
                 EstadisticaMini(
                     titulo = "Créditos aprobados",
                     valor = creditosAprobados.toString(),
-                    detalle = "Según asignaturas aprobadas",
                     modifier = Modifier.weight(1f)
                 )
                 EstadisticaMini(
                     titulo = "Avance de carrera",
                     valor = "${programa.avanceCarrera().toInt().coerceIn(0, 100)}%",
-                    detalle = "Del plan académico",
                     modifier = Modifier.weight(1f),
                     destacado = true
                 )
@@ -655,7 +642,6 @@ private fun TarjetaEstadisticasAcademicas(
 private fun EstadisticaMini(
     titulo: String,
     valor: String,
-    detalle: String,
     modifier: Modifier = Modifier,
     destacado: Boolean = false
 ) {
@@ -672,7 +658,6 @@ private fun EstadisticaMini(
         ) {
             Text(titulo, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant, maxLines = 2, minLines = 2)
             Text(valor, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = if (destacado) scheme.primary else scheme.onSurface)
-            Text(detalle, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }

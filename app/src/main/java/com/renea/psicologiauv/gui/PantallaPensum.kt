@@ -272,9 +272,9 @@ fun PantallaPensum(
 
     moduloInformacion?.let { modulo ->
         val descripcion = when (modulo) {
-            "Créditos complementarios" -> "Estos créditos popularmente llamados créditos fantasma, son 5 créditos que debes cumplir como parte de tus actividades extraordinarias. Asistencia a eventos, congresos, simposios, presentación de ponencias, o en dado caso, cursar asignaturas equivalentes."
-            "Electivas" -> "Aquí se muestra el avance de electivas complementarias y profesionales. Para la candidatura se consideran las electivas aprobadas según los requisitos del programa; entre las profesionales es obligatoria Problemas actuales del individuo en la sociedad."
-            "Idiomas" -> "Uno de los requisitos obligatorios para ser candidato a grado de psicología es haber cursado dos niveles de idioma extranjeros. Lo común es cursar 2 niveles de inglés, no obstante cualquier otro idioma extranjero es válido para aprobar el requisito."
+            "Créditos complementarios" -> "Son 5 créditos popularmente llamados <créditos fantasma>, son aquellos créditos que debes cumplir como parte de tus actividades no incluídas en el pensum. Asistencia a eventos, congresos, simposios, presentación de ponencias, o en dado caso, cursar asignaturas equivalentes."
+            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura se consideran electivas profesionales: Problemas actuales del individuo en la sociedad. y 3 electivas a elección del estudiante. Electivas complementarias son aquellas asignaturas como baile, teatro, cine, etc."
+            "Idiomas" -> "Como requisito obligatorio para ser candidato a grado en Psicología es deber del estudiante cursar dos niveles de idioma extranjeros. Lo común es cursar 2 niveles de inglés, no obstante cualquier otro idioma extranjero es válido para aprobar el requisito."
             else -> "Información del módulo $modulo."
         }
         AlertDialog(

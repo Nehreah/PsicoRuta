@@ -434,11 +434,11 @@ fun PantallaPracticas(
 
     moduloInformacion?.let { modulo ->
         val descripcion = when (modulo) {
-            "Asignaturas necesarias" -> "Debes aprobar Ética del ejercicio profesional, Evaluación y Diagnóstico Psicológico y las dos asignaturas de Práctica de Fundamentación Profesional (I y II)."
-            "Profesionalización" -> "Este módulo muestra tu avance en las asignaturas de profesionalización. Para la candidatura se requieren al menos 27 créditos de este componente."
-            "Líneas profesionales" -> "Debes aprobar al menos un nivel de cada línea profesional. Clínica y NeuroClínica cuentan como una sola línea para este requisito general."
-            "Electivas" -> "Aquí se muestra el avance de electivas complementarias y profesionales. Para la candidatura se consideran las electivas aprobadas según los requisitos del programa; entre las profesionales es obligatoria Problemas actuales del individuo en la sociedad."
-            "Líneas de prácticas" -> "Para ser candidato debes aprobar los niveles I, II y III de la línea exacta que elegiste para prácticas. Clínica y NeuroClínica son independientes: completar una no reemplaza los niveles de la otra."
+            "Asignaturas necesarias" -> "Asignaturas del ciclo básico necesarias para el inicio de prácticas profesionales supervisadas"
+            "Profesionalización" -> "Son aquellas asignaturas de las cuatro líneas profesionales, de las cuales se deben completar al menos 27 créditos acádemicos."
+            "Líneas profesionales" -> "Además de deber aprobar 27 asignaturas de profesionalziación. Se debe aprobar al menos un nivel de cada línea profesional. Clínica y NeuroClínica cuentan como una sola línea para este requisito general."
+            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura se consideran electivas profesionales: Problemas actuales del individuo en la sociedad. y 3 electivas a elección del estudiante. Electivas complementarias son aquellas asignaturas como baile, teatro, cine, etc.."
+            "Líneas de prácticas" -> "Para ser candidato debes aprobar los niveles I, II y III de la línea exacta que elegiste para prácticas. Clínica y NeuroClínica son independientes en este requisito de Línea de prácticas (solo cuentan como una ante el requisito de líneas profesionales): completar una no reemplaza los niveles de la otra."
             else -> "Información del módulo $modulo."
         }
         Dialog(
