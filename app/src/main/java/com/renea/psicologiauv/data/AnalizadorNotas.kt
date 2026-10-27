@@ -1,5 +1,6 @@
 package com.renea.psicologiauv.data
 
+import com.renea.psicologiauv.model.AsignaturaNoSincronizada
 import com.renea.psicologiauv.model.NotaImportada
 
 /**
@@ -33,7 +34,7 @@ internal object AnalizadorNotas {
     // número (C.U, E.X, A.P). Se busca como token completo y sin distinguir
     // mayúsculas de minúsculas.
     private val patronNotaEspecial = Regex(
-        """(?<![A-Za-z0-9])(C\.U|E\.X|A\.P)(?![A-Za-z0-9])""",
+        """(?<![A-Za-z0-9])(C\.U|E\.?X|A\.P)(?![A-Za-z0-9])""",
         RegexOption.IGNORE_CASE
     )
 
@@ -72,6 +73,29 @@ internal object AnalizadorNotas {
 
     // Límite máximo de caracteres para el tramo de una fila.
     private const val LONGITUD_MAXIMA_FILA = 400
+
+    // Fin de la lista de asignaturas del tabulado de matrícula ("Total Asignaturas
+    // Matriculadas: ...") y marcas de cancelación/reactivación de una fila.
+    private const val MARCADOR_TOTALES = "Total Asignaturas"
+    private val patronEncabezadoCancelacion = Regex(
+        """Cancelaci[óo]n\s*/\s*Reactivaci[óo]n""", RegexOption.IGNORE_CASE
+    )
+    private val patronCancelacion = Regex("""CANCELACI[ÓO]N""", RegexOption.IGNORE_CASE)
+    private val patronReactivacion = Regex("""REACTIVACI[ÓO]N""", RegexOption.IGNORE_CASE)
+
+    // Fila del tabulado: "<código> <Gr> <Sde> <Asignatura (1 o 2 líneas)> <Sede> <TM> <Fun> <Crd>".
+    // Se aplica al texto que sigue al código: salta Gr y Sde y toma el nombre
+    // hasta las columnas "00 N AB 3".
+    private val patronNombreFila = Regex(
+        """^\s*\S+\s+\d{2}\s+(.+?)\s+\d{2}\s+[A-Za-z]\s+[A-Za-z]{2}\s+\d""",
+        RegexOption.DOT_MATCHES_ALL
+    )
+
+    /** Verdadero si el fragmento de una fila indica que la materia fue cancelada (y no reactivada). */
+    private fun filaCancelada(fragmento: String): Boolean {
+        val limpio = patronEncabezadoCancelacion.replace(fragmento, "")
+        return patronCancelacion.containsMatchIn(limpio) && !patronReactivacion.containsMatchIn(limpio)
+    }
 
     private class Ocurrencia(val inicio: Int, val orden: Int, val codigo: String)
 
@@ -195,6 +219,182 @@ internal object AnalizadorNotas {
         }
 
         return resultado
+    }
+
+    /**
+     * Códigos de [codigosConocidos] que aparecen en el tabulado, TENGAN NOTA O
+     * NO (materias que se están cursando). Se devuelven en orden de aparición.
+     * Una aparición cuya fila dice "cancelada" no cuenta; si la materia tiene
+     * otra aparición no cancelada (cancelada y vuelta a cursar), sí cuenta.
+     */
+    fun extraerCodigosPresentes(
+        texto: String,
+        codigosConocidos: List<String>
+    ): List<String> {
+        val textoNormalizado = texto.replace(',', '.')
+        val conocidos = codigosConocidos
+            .filter { it.length >= LONGITUD_MINIMA_CODIGO }
+            .toSet()
+        if (conocidos.isEmpty()) return emptyList()
+
+        val limitesLista = ArrayList<Int>()
+        val apariciones = ArrayList<Pair<Int, String>>()
+        for (coincidencia in patronCodigoGenerico.findAll(textoNormalizado)) {
+            limitesLista.add(coincidencia.range.first)
+            if (coincidencia.value in conocidos) {
+                apariciones.add(coincidencia.range.first to coincidencia.value)
+            }
+        }
+        for (codigo in conocidos) {
+            if (patronCodigoGenerico.matches(codigo)) continue
+            val patron = Regex("(?<![A-Za-z0-9])" + Regex.escape(codigo) + "(?![A-Za-z0-9])")
+            for (c in patron.findAll(textoNormalizado)) apariciones.add(c.range.first to codigo)
+        }
+        apariciones.sortBy { it.first }
+
+        val limites = limitesLista.toIntArray()
+        val resultado = LinkedHashSet<String>()
+        for ((inicio, codigo) in apariciones) {
+            val fin = inicio + codigo.length
+            val siguiente = primerIndiceMayorQue(limites, fin - 1)
+            val finFila = minOf(
+                if (siguiente < limites.size) limites[siguiente] else fin + LONGITUD_MAXIMA_FILA,
+                fin + LONGITUD_MAXIMA_FILA,
+                textoNormalizado.length
+            )
+            var fragmento = textoNormalizado.substring(fin, finFila)
+            val resumen = fragmento.indexOf(MARCADOR_RESUMEN_PERIODO)
+            if (resumen >= 0) fragmento = fragmento.substring(0, resumen)
+            val totales = fragmento.indexOf(MARCADOR_TOTALES)
+            if (totales >= 0) fragmento = fragmento.substring(0, totales)
+            if (!filaCancelada(fragmento)) resultado.add(codigo)
+        }
+        return resultado.toList()
+    }
+
+    /**
+     * Busca en [texto] asignaturas cuyo código no está en [codigosConocidos] y que
+     * están APROBADAS (nota numérica mayor a 2.9 o marca especial C.U/E.X/A.P) o
+     * EN CURSO (aparecen sin nota y sin cancelación). Las canceladas se ignoran.
+     * Solo se consideran códigos con forma de asignatura que terminan en letra
+     * (p. ej. "402203M"), para no confundir otros números del tabulado.
+     * Las notas se leen con exactamente las mismas reglas de
+     * [extraerNotasPorCodigo]. El nombre se toma de la columna "Asignatura" de la
+     * fila; si no se puede leer, se usa "Asignatura <código>".
+     */
+    fun extraerNoSincronizadas(
+        texto: String,
+        codigosConocidos: List<String>
+    ): List<AsignaturaNoSincronizada> {
+        val textoNormalizado = texto.replace(',', '.')
+        val conocidos = codigosConocidos.map { it.trim().uppercase() }.toSet()
+
+        val candidatos = LinkedHashSet<String>()
+        for (coincidencia in patronCodigoGenerico.findAll(textoNormalizado)) {
+            val codigo = coincidencia.value
+            if (codigo.last().isLetter() && codigo.uppercase() !in conocidos) {
+                candidatos.add(codigo)
+            }
+        }
+        if (candidatos.isEmpty()) return emptyList()
+
+        val lista = candidatos.toList()
+        val notas = extraerNotasPorCodigo(texto, lista)
+        val enCurso = extraerCodigosPresentes(texto, lista).toSet()
+
+        val resultado = ArrayList<AsignaturaNoSincronizada>()
+        for (codigo in lista) {
+            val nota = notas[codigo]
+            if (nota != null) {
+                val aprobada = when (nota) {
+                    is NotaImportada.Numerica -> nota.valor > 2.9f
+                    is NotaImportada.Especial -> true
+                }
+                if (!aprobada) continue
+            } else if (codigo !in enCurso) {
+                continue
+            }
+            resultado.add(
+                AsignaturaNoSincronizada(
+                    codigo = codigo,
+                    nombre = extraerNombreTrasCodigo(textoNormalizado, codigo) ?: "Asignatura $codigo",
+                    nota = nota
+                )
+            )
+        }
+        return resultado
+    }
+
+    // Líneas del tabulado que no forman parte del nombre de una asignatura.
+    private val patronesLineaEstructural = listOf(
+        Regex("""^\d{1,3}$"""),                              // grupo o sede sueltos
+        Regex("""^\d{1,3}\s+\d{2}$"""),                      // "Gr Sde"
+        Regex("""^\d{2}\s+[A-Za-z]\s+[A-Za-z]{2}\s+\d.*$"""),  // "00 N AB 3"
+        Regex("""^\d{4}-\d{2}-\d{2}.*$"""),                  // fecha de cancelación
+        Regex(
+            """(?i)cancelaci|reactivaci|total\s+(asignaturas|cr)|verifique|^c[oó]digo\b|""" +
+                    """^listado|^cal\.?$|^sede$|^gr\s+sde|^asignatura$|^hab\.?$|https?:"""
+        )
+    )
+    private val patronPrefijoGrupoSede = Regex("""^\S{1,3}\s+\d{2}\s+(?=.*\p{L})""")
+    private val patronColasColumnas = Regex("""\s+\d{2}\s+[A-Za-z]\s+[A-Za-z]{2}\s+\d.*$""")
+
+    /** Parte de una línea que corresponde al nombre, o null si es solo estructura. */
+    private fun limpiarLineaNombre(linea: String): String? {
+        var x = linea.trim()
+        if (x.isEmpty()) return null
+        x = patronPrefijoGrupoSede.replace(x, "")
+        x = patronColasColumnas.replace(x, "").trim()
+        if (x.isEmpty() || !x.any { it.isLetter() }) return null
+        if (patronesLineaEstructural.any { it.containsMatchIn(x) }) return null
+        return x
+    }
+
+    /**
+     * Nombre de la asignatura en la fila de [codigo]. Formato del tabulado:
+     * "<código> <Gr> <Sde> <Asignatura> <Sede> <TM> <Fun> <Crd>", donde el
+     * nombre puede ocupar dos líneas. Se usa la última aparición del código.
+     *
+     * Estrategias, de la más precisa a la más tolerante al orden en que la
+     * librería de PDF entregue el texto:
+     * 1. Texto entre "Gr Sde" y las columnas "Sede TM Fun Crd".
+     * 2. Primeras líneas con letras después del código (sin columnas ni fechas).
+     * 3. Últimas líneas con letras antes del código, desde la fila anterior.
+     */
+    private fun extraerNombreTrasCodigo(texto: String, codigo: String): String? {
+        val inicio = texto.lastIndexOf(codigo)
+        if (inicio < 0) return null
+        val desde = inicio + codigo.length
+        val siguiente = patronCodigoGenerico.find(texto, desde)?.range?.first ?: texto.length
+        val hasta = minOf(siguiente, desde + 250)
+        val fragmento = texto.substring(desde, maxOf(desde, hasta))
+
+        fun compactar(crudo: String): String? =
+            // Los nombres de asignaturas solo tienen letras: se corta en el primer número.
+            crudo.takeWhile { !it.isDigit() }
+                .replace(Regex("""\s+"""), " ")
+                .trim(' ', '-', '.', ':', ',')
+                .takeIf { it.length >= 4 }
+                ?.take(80)
+
+        // 1. Patrón completo de la fila (sobre un tramo más largo, por si la
+        //    siguiente fila empieza antes de las columnas).
+        val tramoLargo = texto.substring(desde, minOf(texto.length, desde + 250))
+        patronNombreFila.find(tramoLargo)?.groupValues?.get(1)?.let { crudo ->
+            compactar(crudo)?.let { return it }
+        }
+
+        // 2. Líneas con letras después del código.
+        val despues = fragmento.lines().mapNotNull { limpiarLineaNombre(it) }.take(2)
+        compactar(despues.joinToString(" "))?.let { return it }
+
+        // 3. Líneas con letras antes del código (nombre impreso encima de la fila).
+        val anterior = patronCodigoGenerico.findAll(texto.substring(0, inicio)).lastOrNull()
+        val desdeAnterior = anterior?.let { it.range.last + 1 } ?: maxOf(0, inicio - 200)
+        val antes = texto.substring(desdeAnterior, inicio).lines()
+            .mapNotNull { limpiarLineaNombre(it) }
+            .takeLast(2)
+        return compactar(antes.joinToString(" "))
     }
 
     fun extraerGruposPorCodigo(texto: String): Map<String, String> {

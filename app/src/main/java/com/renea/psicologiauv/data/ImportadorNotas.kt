@@ -5,6 +5,7 @@ import android.net.Uri
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
+import com.renea.psicologiauv.model.AsignaturaNoSincronizada
 import com.renea.psicologiauv.model.NotaImportada
 
 /**
@@ -82,6 +83,23 @@ class ImportadorNotas(private val context: Context) {
         codigosConocidos: List<String>
     ): Map<String, NotaImportada> =
         AnalizadorNotas.extraerNotasPorCodigo(texto, codigosConocidos)
+
+    /** Códigos conocidos presentes en el PDF, con o sin nota (en orden de aparición). */
+    fun extraerCodigosPresentes(
+        texto: String,
+        codigosConocidos: List<String>
+    ): List<String> =
+        AnalizadorNotas.extraerCodigosPresentes(texto, codigosConocidos)
+
+    /**
+     * Asignaturas aprobadas del PDF que no coinciden con ningún código de
+     * [codigosConocidos] (pensum + catálogo de electivas profesionales).
+     */
+    fun extraerNoSincronizadas(
+        texto: String,
+        codigosConocidos: List<String>
+    ): List<AsignaturaNoSincronizada> =
+        AnalizadorNotas.extraerNoSincronizadas(texto, codigosConocidos)
 
     /**
      * Recorre [texto] buscando las asignaturas matriculadas y extrae para cada una

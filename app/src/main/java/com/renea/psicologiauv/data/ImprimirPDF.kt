@@ -108,9 +108,24 @@ class ImprimirPDF(private val context: Context) {
             // Línea 1: Estudiante y Código
             canvas.drawText("Estudiante: ${estudiante.nombre}", margenIzquierdo, y, estiloDatos)
             val textoCodigo = "Código: ${if (estudiante.codigo > 0) estudiante.codigo else "N/A"}"
-            val anchoCodigo = estiloDatos.measureText(textoCodigo)
-            canvas.drawText(textoCodigo, anchoPagina - margenDerecho - anchoCodigo, y, estiloDatos)
-            y += 25f
+            // Mismo criterio que el banner "Candidato a prácticas" de la app.
+            val aptoPracticas = programa.requisitosInicioPracticasCompletos()
+            val textoApto = "Apto para prácticas: ${if (aptoPracticas) "Sí" else "No"}"
+            val textoCodigoApto = "$textoCodigo   $textoApto"
+            val anchoNombre = estiloDatos.measureText("Estudiante: ${estudiante.nombre}")
+            val anchoCodigoApto = estiloDatos.measureText(textoCodigoApto)
+            if (margenIzquierdo + anchoNombre + 15f + anchoCodigoApto <= anchoPagina - margenDerecho) {
+                canvas.drawText(textoCodigoApto, anchoPagina - margenDerecho - anchoCodigoApto, y, estiloDatos)
+                y += 25f
+            } else {
+                // Nombre muy largo: el código queda en la línea y "Apto" pasa a la siguiente.
+                val anchoCodigo = estiloDatos.measureText(textoCodigo)
+                canvas.drawText(textoCodigo, anchoPagina - margenDerecho - anchoCodigo, y, estiloDatos)
+                y += 20f
+                val anchoApto = estiloDatos.measureText(textoApto)
+                canvas.drawText(textoApto, anchoPagina - margenDerecho - anchoApto, y, estiloDatos)
+                y += 25f
+            }
 
             // Línea 2: Programa y Línea profesional
             val textoPrograma = "Programa: ${programa.nombre} (${programa.codigo})"
@@ -127,13 +142,6 @@ class ImprimirPDF(private val context: Context) {
             y = dibujarTablaResumenGeneral(canvas, programa, xTabla, y)
             y += 25f
 
-            // --- TABLA 2: AVANCE POR ÁREA ---
-            val avances = programa.avanceAreas()
-            val anchoTablaAreas = 420f
-            val xTablaAreas = (anchoPagina - anchoTablaAreas) / 2
-            y = dibujarTablaAvanceAreas(canvas, avances, xTablaAreas, y)
-            y += 25f
-
             // --- TABLA DE REQUISITOS: PRÁCTICAS O GRADUARSE ---
             val practicasSupervisadasI = estudiante.asignaturas.find { it.codigo.trim() == "402222M" }
             val practicasSupervisadasII = estudiante.asignaturas.find { it.codigo.trim() == "402224M" }
@@ -145,6 +153,11 @@ class ImprimirPDF(private val context: Context) {
             } else {
                 dibujarTablaRequisitosPracticas(canvas, estudiante, y)
             }
+            y += 20f
+
+            // --- TABLA DE ELECTIVAS (2 complementarias + 4 profesionales) ---
+            saltoDePaginaSiHaceFalta(190f)
+            y = dibujarTablaElectivas(canvas, programa, y)
             y += 20f
 
             // --- MATERIAS CURSADAS POR SEMESTRE ---
@@ -413,6 +426,81 @@ class ImprimirPDF(private val context: Context) {
     }
 
     /**
+     * Dibuja la tabla "ELECTIVAS" con las 6 posiciones del pénsum:
+     * 2 electivas complementarias y 4 electivas profesionales.
+     * Si la electiva no se ha cursado se muestra "-" como nombre/nota;
+     * si se cursó, se muestra su nombre y su nota (numérica o cualitativa).
+     */
+    private fun dibujarTablaElectivas(
+        canvas: android.graphics.Canvas,
+        programa: ProgramaM,
+        y: Float
+    ): Float {
+        var yActual = y
+        val asignaturas = programa.estudiante?.asignaturas.orEmpty()
+
+        fun cursada(a: Asignatura) = a.nota > 0f || a.notaEspecial != null
+
+        // Complementarias: las 2 posiciones del pénsum (en orden de la lista).
+        val complementarias = asignaturas
+            .filter { it.componente.equals("Electiva complementaria", ignoreCase = true) }
+            .take(2)
+
+        // Profesionales: Electiva Profesional I (402197M) + II, III y IV.
+        val profesionales = listOfNotNull(asignaturas.find { it.codigo.trim() == "402197M" }) +
+                programa.electivasProfesionalesIIaIV()
+
+        fun filaDe(prefijo: String, a: Asignatura?): Pair<String, String> =
+            if (a != null && cursada(a)) "$prefijo: ${a.nombre}" to a.textoNota()
+            else "$prefijo: -" to "-"
+
+        val filas = mutableListOf<Pair<String, String>>()
+        for (i in 0 until 2) filas.add(filaDe("Complementaria ${i + 1}", complementarias.getOrNull(i)))
+        for (i in 0 until 4) filas.add(filaDe("Profesional ${i + 1}", profesionales.getOrNull(i)))
+
+        // Créditos aprobados entre las 6 electivas (máximo 6 x 3 = 18).
+        val creditosElectivas = (complementarias.take(2) + profesionales.take(4))
+            .filter { it.aprobo() }
+            .sumOf { it.creditos }
+        filas.add("Créditos aprobados (Mínimo requerido: 12)" to "$creditosElectivas/18")
+
+        canvas.drawText("ELECTIVAS", margenIzquierdo, yActual, estiloSubtitulo)
+        yActual += 20f
+
+        val anchoNombreCol = 480f
+        val anchoNotaCol = 80f
+        val anchoTotal = anchoNombreCol + anchoNotaCol + 20f
+        val margenTabla = (anchoPagina - anchoTotal - margenIzquierdo - margenDerecho) / 2 + margenIzquierdo
+
+        val paintFondo = Paint().apply { color = colorFondoCabecera; style = Paint.Style.FILL }
+        val paintBorde = Paint().apply { strokeWidth = 1f; style = Paint.Style.STROKE }
+        canvas.drawRect(margenTabla, yActual - 14f, margenTabla + anchoTotal, yActual + 4f, paintFondo)
+        canvas.drawRect(margenTabla, yActual - 14f, margenTabla + anchoTotal, yActual + 4f, paintBorde)
+
+        var xActual = margenTabla + 5f
+        canvas.drawText("ASIGNATURA", xActual, yActual, estiloCabecera)
+        xActual += anchoNombreCol + 5f
+        canvas.drawText("NOTA", xActual, yActual, estiloCabecera)
+        yActual += 18f
+
+        filas.forEachIndexed { filaIndex, (nombre, nota) ->
+            val colorFondoFila = if (filaIndex % 2 == 0) colorFondoFilaPar else colorFondoFilaImpar
+            val paintFondoFila = Paint().apply { color = colorFondoFila; style = Paint.Style.FILL }
+            canvas.drawRect(margenTabla, yActual - 14f, margenTabla + anchoTotal, yActual + 4f, paintFondoFila)
+            canvas.drawRect(margenTabla, yActual - 14f, margenTabla + anchoTotal, yActual + 4f, paintBorde)
+
+            canvas.drawText(nombre, margenTabla + 5f, yActual, estiloTexto)
+            val xNota = margenTabla + anchoNombreCol + 5f + (anchoNotaCol - estiloTexto.measureText(nota)) / 2
+            canvas.drawText(nota, xNota, yActual, estiloTexto)
+
+            yActual += 18f
+        }
+
+        yActual += 15f
+        return yActual
+    }
+
+    /**
      * Dibuja una tabla con el título "REQUISITOS PARA GRADUARSE" que incluye:
      * - Práctica Profesional Supervisada I (código 402222M)
      * - Práctica Profesional Supervisada II (código 402224M)
@@ -564,56 +652,6 @@ class ImprimirPDF(private val context: Context) {
             canvas.drawText(concepto, xActual, yActual, estiloTexto)
             xActual += anchoCol1 + 5f
             canvas.drawText(valor, xActual, yActual, estiloTextoBold)
-
-            yActual += 18f
-            index++
-        }
-
-        yActual += 10f
-        return yActual
-    }
-
-    private fun dibujarTablaAvanceAreas(
-        canvas: android.graphics.Canvas,
-        avances: Map<String, Float>,
-        x: Float,
-        y: Float
-    ): Float {
-        var yActual = y
-        val ancho = 420f
-
-        canvas.drawText("AVANCE POR ÁREA", x, yActual, estiloSubtitulo)
-        yActual += 20f
-
-        val paintFondo = Paint().apply { color = colorFondoCabecera; style = Paint.Style.FILL }
-        canvas.drawRect(x, yActual - 14f, x + ancho, yActual + 4f, paintFondo)
-
-        val paintBorde = Paint().apply { strokeWidth = 1f; style = Paint.Style.STROKE }
-        canvas.drawRect(x, yActual - 14f, x + ancho, yActual + 4f, paintBorde)
-
-        val anchoCol1 = ancho * 0.7f
-
-        val xActualCabecera1 = x + 5f
-        canvas.drawText("ÁREA", xActualCabecera1, yActual, estiloCabecera)
-        val xActualCabecera2 = x + anchoCol1 + 5f
-        canvas.drawText("AVANCE", xActualCabecera2, yActual, estiloCabecera)
-        yActual += 18f
-
-        var index = 0
-        avances.entries.forEach { entry ->
-            val area = entry.key
-            val porcentaje = entry.value
-
-            val colorFondo = if (index % 2 == 0) colorFondoFilaPar else colorFondoFilaImpar
-            val paintFondoFila = Paint().apply { color = colorFondo; style = Paint.Style.FILL }
-            canvas.drawRect(x, yActual - 14f, x + ancho, yActual + 4f, paintFondoFila)
-            canvas.drawRect(x, yActual - 14f, x + ancho, yActual + 4f, paintBorde)
-
-            val xActualCol1 = x + 5f
-            canvas.drawText(area, xActualCol1, yActual, estiloTexto)
-
-            val xActualCol2 = x + anchoCol1 + 5f
-            canvas.drawText("%.1f%%".format(porcentaje), xActualCol2, yActual, estiloTextoBold)
 
             yActual += 18f
             index++

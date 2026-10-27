@@ -20,6 +20,14 @@ import androidx.compose.ui.graphics.lerp
 
 val LocalTemaLinea = staticCompositionLocalOf { obtenerTemaLinea(null) }
 
+/**
+ * Control del tema claro/oscuro elegido por el usuario. [oscuro] indica el
+ * tema activo y [alternar] lo cambia (y lo recuerda entre sesiones).
+ */
+class ControlTema(val oscuro: Boolean, val alternar: () -> Unit)
+
+val LocalControlTema = staticCompositionLocalOf { ControlTema(false) { } }
+
 // ============================================================
 // ESQUEMAS DERIVADOS DE LA LÍNEA
 // ============================================================

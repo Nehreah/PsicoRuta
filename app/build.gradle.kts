@@ -18,8 +18,8 @@ android {
         applicationId = "com.renea.psicologiauv"
         minSdk = 24
         targetSdk = 37
-        versionCode = 5
-        versionName = "3.1"
+        versionCode = 7
+        versionName = "Lanzamiento producción"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

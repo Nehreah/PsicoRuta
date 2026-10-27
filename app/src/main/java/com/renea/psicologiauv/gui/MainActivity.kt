@@ -94,7 +94,55 @@ class MainActivity : ComponentActivity() {
         val preferenciasAviso = getSharedPreferences("psicoruta_ajustes", MODE_PRIVATE)
 
         setContent {
-            PsicologiaUVTheme(linea = viewModel.programa.estudiante?.linea) {
+            // Tema elegido por el usuario (null = seguir el del sistema). Se recuerda entre sesiones.
+            var temaManual by remember {
+                mutableStateOf<Boolean?>(
+                    if (preferenciasAviso.contains("tema_oscuro"))
+                        preferenciasAviso.getBoolean("tema_oscuro", false)
+                    else null
+                )
+            }
+            val sistemaOscuro = androidx.compose.foundation.isSystemInDarkTheme()
+            val oscuro = temaManual ?: sistemaOscuro
+
+            // Todas las pantallas leen el modo desde la configuración: se la reescribe con el modo elegido.
+            val configuracionBase = androidx.compose.ui.platform.LocalConfiguration.current
+            val configuracionTema = remember(configuracionBase, oscuro) {
+                android.content.res.Configuration(configuracionBase).apply {
+                    uiMode = (uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK.inv()) or
+                            (if (oscuro) android.content.res.Configuration.UI_MODE_NIGHT_YES
+                            else android.content.res.Configuration.UI_MODE_NIGHT_NO)
+                }
+            }
+
+            // Íconos de las barras del sistema acordes al tema elegido.
+            androidx.compose.runtime.DisposableEffect(oscuro) {
+                enableEdgeToEdge(
+                    statusBarStyle = androidx.activity.SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT
+                    ) { oscuro },
+                    navigationBarStyle = androidx.activity.SystemBarStyle.auto(
+                        android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT
+                    ) { oscuro }
+                )
+                onDispose { }
+            }
+
+            val controlTema = remember(oscuro) {
+                com.renea.psicologiauv.ui.theme.ControlTema(oscuro) {
+                    val nuevo = !oscuro
+                    temaManual = nuevo
+                    preferenciasAviso.edit().putBoolean("tema_oscuro", nuevo).apply()
+                }
+            }
+
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalConfiguration provides configuracionTema,
+                com.renea.psicologiauv.ui.theme.LocalControlTema provides controlTema
+            ) {
+            PsicologiaUVTheme(linea = viewModel.programa.estudiante?.linea, darkTheme = oscuro) {
                 var avisoAceptado by remember {
                     mutableStateOf(preferenciasAviso.getBoolean("aviso_uso_aceptado", false))
                 }
@@ -126,6 +174,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
             }
         }
     }

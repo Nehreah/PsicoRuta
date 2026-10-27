@@ -24,3 +24,16 @@ sealed class NotaImportada {
      */
     data class Especial(val marca: String) : NotaImportada()
 }
+
+/**
+ * Asignatura aprobada que aparece en el tabulado (PDF) pero cuyo código no
+ * coincide con ninguna del pensum del estudiante ni del catálogo de electivas
+ * profesionales. El usuario decide si se descarta o si se asigna a una de las
+ * dos electivas complementarias.
+ */
+data class AsignaturaNoSincronizada(
+    val codigo: String,
+    val nombre: String,
+    /** null = la asignatura se está cursando (aún sin nota). */
+    val nota: NotaImportada?
+)

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.renea.psicologiauv.data.Serializador
 import com.renea.psicologiauv.model.Asignatura
+import com.renea.psicologiauv.model.AsignaturaNoSincronizada
 import com.renea.psicologiauv.model.Estudiante
 import com.renea.psicologiauv.model.NotaImportada
 import com.renea.psicologiauv.model.ProgramaM
@@ -162,7 +163,7 @@ class ControlV (private val parse: Serializador): ViewModel() {
      * Devuelve cuántas asignaturas quedaron con una nota distinta a la que
      * tenían, para poder mostrarle ese número al usuario.
      */
-    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>, gruposPorCodigo: Map<String, String> = emptyMap()): Int {
+    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>, gruposPorCodigo: Map<String, String> = emptyMap(), codigosPresentes: List<String> = emptyList()): Int {
         val estudianteActual = programa.estudiante ?: return 0
 
         // 1. Actualiza las asignaturas que ya tienen su código definitivo en el pensum.
@@ -172,7 +173,7 @@ class ControlV (private val parse: Serializador): ViewModel() {
         //    reales que el SIRA trajo y que aún no están asignadas a ningún slot.
         val catalogo = parse.leerElectivasProfesionales()
         val (estudianteConElectivas, electivasResueltas) =
-            estudianteConNotas.resolverElectivasProfesionales(notasPorCodigo, catalogo)
+            estudianteConNotas.resolverElectivasProfesionales(notasPorCodigo, catalogo, codigosPresentes)
 
         // Guarda también los grupos importados, aunque no haya cambiado ninguna nota.
         val asignaturasConGrupo = estudianteConElectivas.asignaturas.map { asignatura ->
@@ -188,6 +189,22 @@ class ControlV (private val parse: Serializador): ViewModel() {
             parse.guardarEstudiante(sincronizado)
         }
         return totalCambios
+    }
+
+    /**
+     * Sincroniza asignaturas del PDF que no estaban en el pénsum con las
+     * electivas complementarias: cada par es (asignatura, posición) con
+     * posición 0 = Complementaria I y 1 = Complementaria II.
+     */
+    fun asignarNoSincronizadasAComplementarias(asignaciones: List<Pair<AsignaturaNoSincronizada, Int>>) {
+        if (asignaciones.isEmpty()) return
+        var actual = programa.estudiante ?: return
+        asignaciones.forEach { (item, posicion) ->
+            actual = actual.asignarElectivaComplementaria(posicion, item.codigo, item.nombre, item.nota)
+        }
+        val sincronizado = actual.sincronizarComplementarias()
+        programa = programa.cambiarEstudiante(sincronizado)
+        parse.guardarEstudiante(sincronizado)
     }
 
     /**

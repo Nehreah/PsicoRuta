@@ -232,8 +232,11 @@ fun PantallaPensum(
                     // pasan a tener el código real de la electiva, así que se
                     // buscan por posición y no por código.
                     val posicionSlot = listOf("3", "4", "5").indexOf(codigo)
+                    val posicionComplementaria = listOf("1", "2").indexOf(codigo)
                     val materia = if (posicionSlot >= 0) {
                         programa.electivasProfesionalesIIaIV().getOrNull(posicionSlot)
+                    } else if (posicionComplementaria >= 0) {
+                        programa.electivasComplementarias().getOrNull(posicionComplementaria)
                     } else {
                         programa.estudiante?.asignaturas
                             ?.find { it.codigo.trim() == codigo }

@@ -42,6 +42,33 @@ data class Estudiante(
         return copy(asignaturas = nuevasAsignaturas)
     }
 
+    /**
+     * Sincroniza una asignatura del PDF con una de las dos electivas
+     * complementarias del pénsum. [posicion] es 0 para Electiva
+     * Complementaria I y 1 para la II (orden de la lista). El espacio toma el
+     * nombre y el código reales y la nota importada.
+     */
+    fun asignarElectivaComplementaria(
+        posicion: Int,
+        codigo: String,
+        nombre: String,
+        nota: NotaImportada?
+    ): Estudiante {
+        val indices = asignaturas.indices.filter {
+            asignaturas[it].componente.equals("Electiva complementaria", ignoreCase = true)
+        }
+        val indice = indices.getOrNull(posicion) ?: return this
+        val base = asignaturas[indice].copy(nombre = nombre, codigo = codigo, nota = 0f, notaEspecial = null)
+        val actualizada = when (nota) {
+            is NotaImportada.Numerica -> base.cambiarNota(nota.valor)
+            is NotaImportada.Especial -> base.cambiarNotaEspecial(nota.marca)
+            null -> base
+        }
+        val nuevas = asignaturas.toMutableList()
+        nuevas[indice] = actualizada
+        return copy(asignaturas = nuevas)
+    }
+
     fun cambiarSemestreAsignatura(codigoAsignatura: String, nuevoSemestre: Int): Estudiante{
         val nuevasAsignaturas = asignaturas.map {
             if(it.codigo == codigoAsignatura) it.cambiarSemestre(nuevoSemestre)
@@ -206,14 +233,18 @@ data class Estudiante(
      */
     fun resolverElectivasProfesionales(
         notasPorCodigo: Map<String, NotaImportada>,
-        catalogoCompleto: List<ElectivaProfesionalCatalogo>
+        catalogoCompleto: List<ElectivaProfesionalCatalogo>,
+        codigosPresentes: List<String> = emptyList()
     ): Pair<Estudiante, Int> {
         // Codigos ya presentes en las asignaturas del estudiante.
         val codigosEnPensum = asignaturas.map { it.codigo }.toSet()
 
         // Codigos del catalogo que el PDF trajo pero el estudiante no tiene aun.
         val codigosElectivasCatalogo = catalogoCompleto.map { it.codigo }.toSet()
-        val electivasNuevas = notasPorCodigo.keys
+        // Se incluyen también las electivas que el PDF muestra SIN nota (en curso),
+        // ordenadas por aparición; luego las que solo llegaron con nota.
+        val codigosCandidatos = (codigosPresentes + notasPorCodigo.keys).distinct()
+        val electivasNuevas = codigosCandidatos
             .filter { it in codigosElectivasCatalogo && it !in codigosEnPensum }
             // Mantenemos el orden en que aparecen en el mapa (que ya viene
             // ordenado por posicion en el PDF desde ImportadorNotas).

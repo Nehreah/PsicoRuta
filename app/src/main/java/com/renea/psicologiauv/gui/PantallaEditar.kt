@@ -27,6 +27,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -71,6 +72,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -110,10 +115,13 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.renea.psicologiauv.data.ImportadorNotas
+import com.renea.psicologiauv.data.ReglaEspanol
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
 import com.renea.psicologiauv.data.RepositorioHorarios
 import com.renea.psicologiauv.model.AsignaturaHorario
+import com.renea.psicologiauv.model.AsignaturaNoSincronizada
+import com.renea.psicologiauv.model.NotaImportada
 import com.renea.psicologiauv.model.ModuloConsejoPrincipal
 import com.renea.psicologiauv.ui.theme.White
 import kotlinx.coroutines.Dispatchers
@@ -433,6 +441,17 @@ fun PantallaPerfil(
     }
     var asignaturaTareasSolicitada by remember { mutableStateOf<AsignaturaHorario?>(null) }
 
+    // Códigos del catálogo/pensum que aparecieron en el último PDF (con o sin nota).
+    var codigosPresentesPdf by remember { mutableStateOf<Set<String>>(emptySet()) }
+
+    // Asignaturas del PDF que no coincidieron con el pensum; se resuelven antes de pedir los semestres.
+    var noSincronizadas by remember { mutableStateOf<List<AsignaturaNoSincronizada>>(emptyList()) }
+
+    // Módulo que aparece tras importar notas para ubicar cada electiva profesional en su semestre.
+    var mostrandoSemestresElectivas by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var menuAccionesAbierto by rememberSaveable {
         mutableStateOf(false)
     }
@@ -636,8 +655,10 @@ fun PantallaPerfil(
                                 // últimos, el PDF nunca se busca por las
                                 // electivas reales y no se pueden asignar a los
                                 // espacios de Electiva Profesional II, III y IV.
+                                // 204001M (Español en el SIRA) se lee aparte: llena
+                                // Cultura Escrita si fue aprobado o eximido (ReglaEspanol).
                                 val codigosConocidos =
-                                    (estudiante
+                                    (listOf(ReglaEspanol.CODIGO_ESPANOL_SIRA) + estudiante
                                         .asignaturas
                                         .map {
                                             it.codigo
@@ -649,12 +670,31 @@ fun PantallaPerfil(
                                                 })
                                         .distinct()
 
-                                val notas = importadorNotas.extraerNotasPorCodigo(
+                                val notasCrudas = importadorNotas.extraerNotasPorCodigo(
                                     texto,
                                     codigosConocidos
                                 )
+                                val regla = ReglaEspanol.aplicar(notasCrudas)
+                                val notas = regla.notas
                                 val grupos = importadorNotas.extraerGruposPorCodigo(texto)
-                                notas to grupos
+                                val sinSincronizar = importadorNotas.extraerNoSincronizadas(
+                                    texto,
+                                    codigosConocidos
+                                )
+                                val presentes = importadorNotas.extraerCodigosPresentes(
+                                    texto,
+                                    codigosConocidos
+                                )
+                                // Cultura Escrita flotante: solo si no se asignó antes a una complementaria.
+                                val flotante = regla.culturaFlotante?.takeIf { f ->
+                                    estudiante.asignaturas.none { it.codigo == f.codigo }
+                                }
+                                ResultadoLecturaPdf(
+                                    notas,
+                                    grupos,
+                                    listOfNotNull(flotante) + sinSincronizar,
+                                    presentes
+                                )
                             }
 
                         } catch (e: Exception) {
@@ -680,7 +720,7 @@ fun PantallaPerfil(
                             ).show()
                         }
 
-                        resultado.first.isEmpty() && resultado.second.isEmpty() -> {
+                        resultado.notas.isEmpty() && resultado.grupos.isEmpty() && resultado.sinSincronizar.isEmpty() && resultado.presentes.isEmpty() -> {
 
                             Toast.makeText(
                                 contexto,
@@ -693,8 +733,9 @@ fun PantallaPerfil(
 
                             val actualizadas =
                                 viewModel.importarNotasDesdePdf(
-                                    resultado.first,
-                                    resultado.second
+                                    resultado.notas,
+                                    resultado.grupos,
+                                    resultado.presentes
                                 )
 
                             Toast.makeText(
@@ -702,6 +743,18 @@ fun PantallaPerfil(
                                 "Se importaron $actualizadas nota(s).",
                                 Toast.LENGTH_LONG
                             ).show()
+
+                            // Primero se resuelven las asignaturas que no sincronizaron con el pensum.
+                            noSincronizadas = resultado.sinSincronizar
+                            codigosPresentesPdf = resultado.presentes.toSet()
+
+                            // Si ya hay electivas profesionales cursadas, pide el semestre de cada una.
+                            val hayElectivasCursadas = viewModel.programa.estudiante
+                                ?.asignaturas.orEmpty()
+                                .any { it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) }
+                            if (hayElectivasCursadas) {
+                                mostrandoSemestresElectivas = true
+                            }
                         }
                     }
                 }
@@ -758,6 +811,44 @@ fun PantallaPerfil(
                 },
 
             )
+        }
+    }
+
+
+    if (noSincronizadas.isNotEmpty()) {
+        ModuloEmergente(
+            onCerrar = { noSincronizadas = emptyList() }
+        ) {
+            TarjetaNoSincronizadas(
+                asignaturas = noSincronizadas,
+                complementarias = viewModel.programa.electivasComplementarias(),
+                onConfirmar = { asignaciones ->
+                    viewModel.asignarNoSincronizadasAComplementarias(asignaciones)
+                    noSincronizadas = emptyList()
+                }
+            )
+        }
+    }
+
+    if (mostrandoSemestresElectivas && noSincronizadas.isEmpty()) {
+
+        val electivasCursadas = estudiante.asignaturas
+            .filter { it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) }
+
+        if (electivasCursadas.isEmpty()) {
+            mostrandoSemestresElectivas = false
+        } else {
+            ModuloEmergente(
+                onCerrar = { mostrandoSemestresElectivas = false }
+            ) {
+                TarjetaSemestresElectivas(
+                    electivas = electivasCursadas,
+                    onSemestreSeleccionado = { codigo, semestre ->
+                        viewModel.cambiarSemestreAsignatura(codigo, semestre)
+                    },
+                    onListo = { mostrandoSemestresElectivas = false }
+                )
+            }
         }
     }
 
@@ -1325,6 +1416,34 @@ fun PantallaPerfil(
                     Spacer(
                         Modifier.height(2.dp)
                     )
+
+
+                    // Tema claro / oscuro
+                    val controlTema = com.renea.psicologiauv.ui.theme.LocalControlTema.current
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Tema de la app",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedButton(
+                            onClick = controlTema.alternar,
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (controlTema.oscuro) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(if (controlTema.oscuro) "Claro" else "Oscuro")
+                        }
+                    }
 
 
                     Text(
@@ -2559,6 +2678,293 @@ private fun ModuloEmergente(
                 .verticalScroll(rememberScrollState())
         ) {
             contenido()
+        }
+    }
+}
+
+
+// ========================================================================
+// ASIGNATURAS QUE NO SINCRONIZARON CON EL PENSUM (tras importar notas)
+// ========================================================================
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TarjetaNoSincronizadas(
+    asignaturas: List<AsignaturaNoSincronizada>,
+    complementarias: List<com.renea.psicologiauv.model.Asignatura>,
+    onConfirmar: (List<Pair<AsignaturaNoSincronizada, Int>>) -> Unit
+) {
+    val colores = MaterialTheme.colorScheme
+
+    // codigo -> posición de la complementaria elegida (0 = I, 1 = II); sin entrada = descartar.
+    val elecciones = remember { androidx.compose.runtime.mutableStateMapOf<String, Int>() }
+
+    // Nombre editable: por si el PDF no permitió leerlo bien, el usuario lo corrige.
+    val nombres = remember {
+        androidx.compose.runtime.mutableStateMapOf<String, String>().apply {
+            asignaturas.forEach { put(it.codigo, it.nombre) }
+        }
+    }
+
+    fun elegir(codigo: String, posicion: Int?) {
+        if (posicion == null) {
+            elecciones.remove(codigo)
+        } else {
+            // Un espacio admite una sola asignatura: quien lo tenía vuelve a "Descartar".
+            elecciones.keys.toList()
+                .filter { elecciones[it] == posicion }
+                .forEach { elecciones.remove(it) }
+            elecciones[codigo] = posicion
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = colores.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Asignaturas sin sincronizar",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface
+            )
+            Text(
+                text = "Estas asignaturas no sincronizaron con el pensum, ¿deseas descartarlas o asignarlas a una electiva complementaria?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colores.onSurfaceVariant
+            )
+
+            asignaturas.forEach { item ->
+                val eleccion = elecciones[item.codigo]
+                val notaTexto = when (val n = item.nota) {
+                    is NotaImportada.Numerica -> "%.1f".format(n.valor)
+                    is NotaImportada.Especial -> n.marca
+                    null -> "En curso"
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(colores.surfaceVariant.copy(alpha = 0.45f))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    OutlinedTextField(
+                        value = nombres[item.codigo] ?: item.nombre,
+                        onValueChange = { nombres[item.codigo] = it },
+                        label = { Text("Nombre de la asignatura") },
+                        singleLine = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = if (item.nota == null) "${item.codigo} · En curso" else "${item.codigo} · Nota: $notaTexto",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colores.onSurfaceVariant
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val opciones = listOf<Pair<String, Int?>>(
+                            "Descartar" to null,
+                            "Complementaria I" to 0,
+                            "Complementaria II" to 1
+                        )
+                        opciones.forEach { (etiqueta, posicion) ->
+                            val seleccionada = eleccion == posicion
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(if (seleccionada) colores.primary else colores.surface)
+                                    .border(
+                                        1.dp,
+                                        if (seleccionada) colores.primary else colores.outlineVariant,
+                                        RoundedCornerShape(50)
+                                    )
+                                    .clickable { elegir(item.codigo, posicion) }
+                                    .padding(horizontal = 12.dp, vertical = 7.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = etiqueta,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (seleccionada) colores.onPrimary else colores.onSurface
+                                )
+                            }
+                        }
+                    }
+                    // Aviso si el espacio elegido ya tenía una asignatura con nota.
+                    val ocupante = eleccion?.let { complementarias.getOrNull(it) }
+                    if (ocupante != null && (ocupante.nota > 0f || ocupante.notaEspecial != null)) {
+                        Text(
+                            text = "Reemplazará a «${ocupante.nombre}».",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colores.error
+                        )
+                    }
+                }
+            }
+
+            Button(
+                onClick = {
+                    onConfirmar(
+                        asignaturas.mapNotNull { item ->
+                            elecciones[item.codigo]?.let { posicion ->
+                                val nombre = nombres[item.codigo]?.trim().orEmpty()
+                                item.copy(nombre = nombre.ifBlank { item.nombre }) to posicion
+                            }
+                        }
+                    )
+                },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Continuar", fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+
+// ========================================================================
+// SEMESTRE DE CADA ELECTIVA PROFESIONAL (tras importar notas)
+// ========================================================================
+
+/** Resultado de leer el PDF de notas. */
+private data class ResultadoLecturaPdf(
+    val notas: Map<String, NotaImportada>,
+    val grupos: Map<String, String>,
+    val sinSincronizar: List<AsignaturaNoSincronizada>,
+    val presentes: List<String>
+)
+
+/**
+ * Electiva profesional que se debe ubicar en un semestre: ya tiene nota
+ * (numérica o marca especial), o se está cursando (aparece en el PDF sin nota),
+ * o es un espacio ya resuelto con su código real aunque aún no tenga nota.
+ * Los espacios vacíos ("3", "4", "5") y la Electiva Profesional I sin
+ * matricular no cuentan.
+ */
+private fun com.renea.psicologiauv.model.Asignatura.esElectivaProfesionalParaSemestre(
+    codigosPresentesPdf: Set<String>
+): Boolean {
+    if (!componente.equals("Electiva profesional", ignoreCase = true)) return false
+    val codigoLimpio = codigo.trim()
+    val conNota = nota > 0f || notaEspecial != null
+    val espacioResuelto = codigoLimpio !in listOf("3", "4", "5", "402197M")
+    return conNota || espacioResuelto || codigoLimpio in codigosPresentesPdf
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TarjetaSemestresElectivas(
+    electivas: List<com.renea.psicologiauv.model.Asignatura>,
+    onSemestreSeleccionado: (codigo: String, semestre: Int) -> Unit,
+    onListo: () -> Unit
+) {
+    val colores = MaterialTheme.colorScheme
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = colores.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = "Electivas profesionales",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colores.onSurface
+            )
+            Text(
+                text = "Selecciona el semestre en el que cursaste cada electiva.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colores.onSurfaceVariant
+            )
+
+            electivas.forEach { electiva ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(colores.surfaceVariant.copy(alpha = 0.45f))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = electiva.nombre,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
+                    )
+                    if (electiva.nota <= 0f && electiva.notaEspecial == null) {
+                        Text(
+                            text = "En curso",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colores.onSurfaceVariant
+                        )
+                    }
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        (1..11).forEach { semestre ->
+                            val seleccionado = electiva.semestre == semestre
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (seleccionado) colores.primary
+                                        else colores.surface
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (seleccionado) colores.primary
+                                        else colores.outlineVariant,
+                                        CircleShape
+                                    )
+                                    .clickable {
+                                        onSemestreSeleccionado(electiva.codigo, semestre)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = semestre.toString(),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = if (seleccionado) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (seleccionado) colores.onPrimary else colores.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = onListo,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Listo", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }

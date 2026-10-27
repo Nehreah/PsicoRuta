@@ -744,12 +744,20 @@ data class ProgramaM(
      * Estado de las dos electivas complementarias que aparecen como
      * espacios independientes en el pensum (códigos 1 y 2).
      */
-    fun estadosElectivasComplementarias(): List<Boolean> =
-        listOf("1", "2").map { codigo ->
-            estudiante?.asignaturas.orEmpty()
-                .find { it.codigo.trim() == codigo }
-                ?.aprobo() == true
-        }
+    fun estadosElectivasComplementarias(): List<Boolean> {
+        val slots = electivasComplementarias()
+        return (0 until 2).map { i -> slots.getOrNull(i)?.aprobo() == true }
+    }
+
+    /**
+     * Electiva Complementaria I y II, por posición: empiezan con los códigos
+     * provisionales "1" y "2", pero al sincronizar una asignatura del PDF el
+     * espacio pasa a tener el código real.
+     */
+    fun electivasComplementarias(): List<Asignatura> =
+        estudiante?.asignaturas.orEmpty()
+            .filter { it.componente.equals("Electiva complementaria", ignoreCase = true) }
+            .take(2)
 
     /**
      * Estado de Electiva Profesional II, III y IV.
