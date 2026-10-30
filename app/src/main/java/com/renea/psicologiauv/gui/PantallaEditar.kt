@@ -1103,6 +1103,7 @@ fun PantallaPerfil(
             ModuloHorarioEstudiante(
                 estudiante = estudiante,
                 semestreActual = viewModel.programa.semestreEnCurso(),
+                candidatoAGrado = viewModel.programa.requisitoCreditosCarreraCumplido(),
                 contexto = contexto,
                 onImportarDatos = { mostrandoImportacion = true },
                 onGestionarTareas = { asignaturaTareasSolicitada = it }
@@ -3740,6 +3741,7 @@ private fun AccesoCuadrado(
 private fun ModuloHorarioEstudiante(
     estudiante: com.renea.psicologiauv.model.Estudiante,
     semestreActual: Int,
+    candidatoAGrado: Boolean,
     contexto: Context,
     onImportarDatos: () -> Unit,
     onGestionarTareas: (AsignaturaHorario) -> Unit
@@ -3753,6 +3755,35 @@ private fun ModuloHorarioEstudiante(
     // El horario forma parte del modelo del estudiante y se mantiene sincronizado
     // con las asignaturas pendientes del semestre que el programa identifica como actual.
     estudiante.horario = horario.toMutableList()
+
+    // Con el 100 % de los créditos ya no hay horario que importar.
+    if (candidatoAGrado) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    Icons.Default.School,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    "Eres candidato a grado, felicitaciones",
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        return
+    }
 
     val hayGrupoMatriculado = estudiante.asignaturas.any {
         it.semestre == semestreActual && !it.aprobo() && it.grupo.isNotBlank()

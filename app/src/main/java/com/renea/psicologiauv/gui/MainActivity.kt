@@ -2,6 +2,8 @@ package com.renea.psicologiauv.gui
 
 import androidx.compose.ui.graphics.luminance
 import android.os.Bundle
+import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -69,6 +71,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.renea.psicologiauv.data.Serializador
 import com.renea.psicologiauv.ui.theme.Red
 import com.renea.psicologiauv.ui.theme.PsicologiaUVTheme
@@ -86,10 +95,71 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    // ------------------------------------------------------------------
+    // ACTUALIZACIONES DENTRO DE LA APP (Google Play, modo flexible)
+    // ------------------------------------------------------------------
+    private lateinit var appUpdateManager: AppUpdateManager
+
+    /** Verdadero cuando Play terminó de descargar la actualización y falta reiniciar la app. */
+    private var actualizacionDescargada by mutableStateOf(false)
+
+    private val lanzadorActualizacion =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { }
+
+    private val oyenteInstalacion = InstallStateUpdatedListener { estado ->
+        if (estado.installStatus() == InstallStatus.DOWNLOADED) actualizacionDescargada = true
+    }
+
+    private fun buscarActualizacion() {
+        try {
+            appUpdateManager.appUpdateInfo
+                .addOnSuccessListener { info ->
+                    if (info.installStatus() == InstallStatus.DOWNLOADED) {
+                        // Se descargó en segundo plano mientras la app estaba cerrada o pausada.
+                        actualizacionDescargada = true
+                    } else if (!ofertaActualizacionMostrada &&
+                        info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE &&
+                        info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                    ) {
+                        ofertaActualizacionMostrada = true
+                        appUpdateManager.startUpdateFlowForResult(
+                            info,
+                            lanzadorActualizacion,
+                            AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build()
+                        )
+                    }
+                }
+                .addOnFailureListener { error ->
+                    // Normal si la app no se instaló desde Google Play (por ejemplo, desde Android Studio).
+                    Log.w("PsicoRuta", "No se pudo consultar actualizaciones", error)
+                }
+        } catch (e: Exception) {
+            Log.w("PsicoRuta", "Error al buscar actualizaciones", e)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        buscarActualizacion()
+    }
+
+    override fun onDestroy() {
+        appUpdateManager.unregisterListener(oyenteInstalacion)
+        super.onDestroy()
+    }
+
+    companion object {
+        // Para ofrecer la actualización una sola vez por sesión (no en cada rotación de pantalla).
+        private var ofertaActualizacionMostrada = false
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
+        appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        appUpdateManager.registerListener(oyenteInstalacion)
 
         val preferenciasAviso = getSharedPreferences("psicoruta_ajustes", MODE_PRIVATE)
 
@@ -147,30 +217,38 @@ class MainActivity : ComponentActivity() {
                     mutableStateOf(preferenciasAviso.getBoolean("aviso_uso_aceptado", false))
                 }
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = Color.Transparent
-                ) {
-                    if (avisoAceptado) {
-                        PsicologiaUVApp(
-                            viewModel = viewModel,
-                            mostrarBienvenidaInicial = preferenciasAviso
-                                .getBoolean("bienvenida_pendiente", false),
-                            onBienvenidaTerminada = {
-                                preferenciasAviso.edit()
-                                    .putBoolean("bienvenida_pendiente", false)
-                                    .apply()
-                            }
-                        )
-                    } else {
-                        AvisoInicialPsicoRuta(
-                            onContinuar = {
-                                preferenciasAviso.edit()
-                                    .putBoolean("aviso_uso_aceptado", true)
-                                    .putBoolean("bienvenida_pendiente", true)
-                                    .apply()
-                                avisoAceptado = true
-                            }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = Color.Transparent
+                    ) {
+                        if (avisoAceptado) {
+                            PsicologiaUVApp(
+                                viewModel = viewModel,
+                                mostrarBienvenidaInicial = preferenciasAviso
+                                    .getBoolean("bienvenida_pendiente", false),
+                                onBienvenidaTerminada = {
+                                    preferenciasAviso.edit()
+                                        .putBoolean("bienvenida_pendiente", false)
+                                        .apply()
+                                }
+                            )
+                        } else {
+                            AvisoInicialPsicoRuta(
+                                onContinuar = {
+                                    preferenciasAviso.edit()
+                                        .putBoolean("aviso_uso_aceptado", true)
+                                        .putBoolean("bienvenida_pendiente", true)
+                                        .apply()
+                                    avisoAceptado = true
+                                }
+                            )
+                        }
+                    }
+                    if (actualizacionDescargada) {
+                        AvisoActualizacionLista(
+                            onReiniciar = { appUpdateManager.completeUpdate() },
+                            modifier = Modifier.align(Alignment.BottomCenter)
                         )
                     }
                 }
@@ -182,6 +260,44 @@ class MainActivity : ComponentActivity() {
 
 
 
+
+// ========================================================================
+// AVISO DE ACTUALIZACIÓN LISTA: Play ya la descargó; falta reiniciar la app.
+// ========================================================================
+
+@Composable
+private fun AvisoActualizacionLista(
+    onReiniciar: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colores = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .navigationBarsPadding()
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .fillMaxWidth()
+            .shadow(6.dp, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(colores.inverseSurface)
+            .padding(start = 16.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Actualización lista para instalar",
+            style = MaterialTheme.typography.bodyMedium,
+            color = colores.inverseOnSurface,
+            modifier = Modifier.weight(1f)
+        )
+        androidx.compose.material3.TextButton(onClick = onReiniciar) {
+            Text(
+                text = "Reiniciar",
+                color = colores.inversePrimary,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
 
 // ========================================================================
 // AVISO DE USO: se presenta en la primera apertura y queda disponible

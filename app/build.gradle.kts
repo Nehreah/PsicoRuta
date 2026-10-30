@@ -18,8 +18,8 @@ android {
         applicationId = "com.renea.psicologiauv"
         minSdk = 24
         targetSdk = 37
-        versionCode = 7
-        versionName = "Lanzamiento producción"
+        versionCode = 8
+        versionName = "Omega"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.room.ktx)
     implementation(libs.pdfbox.android)
+    implementation(libs.play.app.update)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

@@ -11,7 +11,8 @@ data class Estudiante(
     var linea: String = "Ninguna",
     val avatarUri: String? = null,
     var asignaturas: MutableList<Asignatura>,
-    var horario: MutableList<AsignaturaHorario> = mutableListOf()
+    var horario: MutableList<AsignaturaHorario> = mutableListOf(),
+    val semestresManuales: Map<Int, Boolean> = emptyMap()
 ) {
     fun cambiarNombre(nuevoNombre: String): Estudiante =
         copy(nombre = nuevoNombre)
@@ -76,6 +77,58 @@ data class Estudiante(
                 it
         }.toMutableList()
         return copy(asignaturas = nuevasAsignaturas)
+    }
+
+    /**
+     * Permite fijar o revertir manualmente el estado de completitud de un
+     * semestre. Si [completado] es null, se elimina el ajuste manual y se
+     * vuelve al cálculo automático.
+     */
+    fun cambiarEstadoSemestre(semestre: Int, completado: Boolean?): Estudiante {
+        val nuevos = if (completado == null) {
+            semestresManuales - semestre
+        } else {
+            semestresManuales + (semestre to completado)
+        }
+        return copy(semestresManuales = nuevos)
+    }
+
+    /**
+     * Cambia al [semestreActual] el semestre de las asignaturas que se están
+     * cursando en este momento, para que aparezcan en el horario aunque en el
+     * pensum pertenezcan a otro semestre (una de tercero que no se vio antes,
+     * o una de octavo que se está adelantando).
+     *
+     * Una asignatura se considera en curso cuando se cumplen las dos
+     * condiciones:
+     * - su código está en [codigosEnCurso], es decir, aparece en el tabulado
+     *   SIRA y NO está cancelada (las canceladas nunca llegan en esa lista); y
+     * - no tiene nota alguna ([Asignatura.sinNota]): ni numérica ni marca
+     *   especial.
+     *
+     * Las asignaturas que ya están en [semestreActual] no se tocan. Devuelve
+     * el nuevo [Estudiante] y la cantidad de asignaturas que cambiaron de
+     * semestre.
+     */
+    fun moverAsignaturasEnCursoAlSemestre(
+        codigosEnCurso: Collection<String>,
+        semestreActual: Int
+    ): Pair<Estudiante, Int> {
+        val enCurso = codigosEnCurso.map { it.trim().uppercase() }.toSet()
+        if (enCurso.isEmpty()) return this to 0
+
+        var movidas = 0
+        val nuevasAsignaturas = asignaturas.map { asignatura ->
+            val cursando = asignatura.codigo.trim().uppercase() in enCurso && asignatura.sinNota()
+            if (cursando && asignatura.semestre != semestreActual) {
+                val movida = asignatura.cambiarSemestre(semestreActual)
+                if (movida.semestre != asignatura.semestre) movidas++
+                movida
+            } else {
+                asignatura
+            }
+        }.toMutableList()
+        return copy(asignaturas = nuevasAsignaturas) to movidas
     }
 
     fun cambiarNotaAsignatura(codigoAsignatura: String, nuevaNota: Float): Estudiante{

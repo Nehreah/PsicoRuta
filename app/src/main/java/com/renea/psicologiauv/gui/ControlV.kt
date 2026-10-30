@@ -140,6 +140,14 @@ class ControlV (private val parse: Serializador): ViewModel() {
             parse.guardarEstudiante(nuevoEstudiante)
         }
     }
+    fun cambiarEstadoSemestre(semestre: Int, completado: Boolean?) {
+        val nuevoEstudiante = programa.estudiante?.cambiarEstadoSemestre(semestre, completado)
+        if (nuevoEstudiante != null) {
+            val nuevoPrograma = programa.cambiarEstudiante(nuevoEstudiante)
+            programa = nuevoPrograma
+            parse.guardarEstudiante(nuevoEstudiante)
+        }
+    }
     class Factory(private val parse: Serializador): ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
@@ -182,14 +190,29 @@ class ControlV (private val parse: Serializador): ViewModel() {
         }
         val estudianteConGrupos = estudianteConElectivas.copy(asignaturas = asignaturasConGrupo.toMutableList())
 
+        // Recuerda los grupos del PDF: las asignaturas en curso que luego se asignen a una
+        // electiva complementaria (ver asignarNoSincronizadasAComplementarias) los necesitan.
+        gruposUltimaImportacion = gruposPorCodigo
+
+        val sincronizado = estudianteConGrupos.sincronizarComplementarias()
+
+        // 3. Las asignaturas que aparecen en el PDF, no están canceladas y no tienen nota se
+        //    están cursando ahora: se pasan al semestre actual para que salgan en el horario,
+        //    aunque en el pensum pertenezcan a otro semestre.
+        val semestreActual = programa.cambiarEstudiante(sincronizado).semestreEnCurso()
+        val (estudianteConEnCurso, movidas) =
+            sincronizado.moverAsignaturasEnCursoAlSemestre(codigosPresentes, semestreActual)
+
         val totalCambios = actualizadas + electivasResueltas
-        if (totalCambios > 0 || gruposPorCodigo.isNotEmpty()) {
-            val sincronizado = estudianteConGrupos.sincronizarComplementarias()
-            programa = programa.cambiarEstudiante(sincronizado)
-            parse.guardarEstudiante(sincronizado)
+        if (totalCambios > 0 || gruposPorCodigo.isNotEmpty() || movidas > 0) {
+            programa = programa.cambiarEstudiante(estudianteConEnCurso)
+            parse.guardarEstudiante(estudianteConEnCurso)
         }
         return totalCambios
     }
+
+    // Grupos (código -> grupo) leídos en el último PDF importado.
+    private var gruposUltimaImportacion: Map<String, String> = emptyMap()
 
     /**
      * Sincroniza asignaturas del PDF que no estaban en el pénsum con las
@@ -202,7 +225,22 @@ class ControlV (private val parse: Serializador): ViewModel() {
         asignaciones.forEach { (item, posicion) ->
             actual = actual.asignarElectivaComplementaria(posicion, item.codigo, item.nombre, item.nota)
         }
-        val sincronizado = actual.sincronizarComplementarias()
+        var sincronizado = actual.sincronizarComplementarias()
+
+        // Las que se están cursando (sin nota) pasan al semestre actual y toman su grupo del
+        // PDF, igual que las asignaturas del pensum, para que aparezcan en el horario.
+        val semestreActual = programa.cambiarEstudiante(sincronizado).semestreEnCurso()
+        val enCurso = asignaciones.filter { it.first.nota == null }.map { it.first.codigo.trim().uppercase() }.toSet()
+        if (enCurso.isNotEmpty()) {
+            val conGrupo = sincronizado.asignaturas.map { asignatura ->
+                val codigo = asignatura.codigo.trim().uppercase()
+                val grupo = gruposUltimaImportacion[codigo]
+                if (codigo in enCurso && grupo != null) asignatura.copy(grupo = grupo) else asignatura
+            }.toMutableList()
+            sincronizado = sincronizado.copy(asignaturas = conGrupo)
+                .moverAsignaturasEnCursoAlSemestre(enCurso, semestreActual).first
+        }
+
         programa = programa.cambiarEstudiante(sincronizado)
         parse.guardarEstudiante(sincronizado)
     }

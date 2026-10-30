@@ -223,7 +223,7 @@ data class ProgramaM(
      * - Semestres 6 y 7: se permiten hasta 6 créditos pendientes.
      * - Semestre 8: se permiten hasta 9 créditos pendientes.
      */
-    fun semestreCompletado(semestre: Int): Boolean {
+    fun semestreCompletadoAutomatico(semestre: Int): Boolean {
         val materias = asignaturasContablesDelSemestre(semestre)
         if (materias.isEmpty()) return false
 
@@ -238,6 +238,34 @@ data class ProgramaM(
 
         return creditosPendientes <= toleranciaCreditosSemestre(semestre)
     }
+
+    /** Corrección manual del estado del semestre (null = se usa el cálculo automático). */
+    fun estadoSemestreManual(semestre: Int): Boolean? =
+        estudiante?.semestresManuales?.get(semestre)
+
+    /**
+     * Estado final del semestre: si el estudiante lo corrigió a mano se
+     * respeta esa decisión; si no, se aplica la regla automática.
+     */
+    fun semestreCompletado(semestre: Int): Boolean =
+        estadoSemestreManual(semestre) ?: semestreCompletadoAutomatico(semestre)
+
+    /** Total de asignaturas asignadas a un semestre. */
+    fun totalAsignaturasSemestre(semestre: Int): Int =
+        asignaturasPorSemestre()[semestre].orEmpty().size
+
+    /** Asignaturas del semestre que ya tienen nota o marca especial. */
+    fun asignaturasCursadasSemestre(semestre: Int): Int =
+        asignaturasPorSemestre()[semestre].orEmpty()
+            .count { it.nota > 0f || it.notaEspecial != null }
+
+    /** Créditos totales del semestre. */
+    fun creditosTotalesSemestre(semestre: Int): Int =
+        asignaturasPorSemestre()[semestre].orEmpty().sumOf { it.creditos }
+
+    /** Créditos aprobados del semestre. */
+    fun creditosAprobadosSemestre(semestre: Int): Int =
+        asignaturasPorSemestre()[semestre].orEmpty().filter { it.aprobo() }.sumOf { it.creditos }
 
     /**
      * Semestre en el que se encuentra el estudiante: el inmediatamente

@@ -88,6 +88,16 @@ data class Asignatura (
     fun aprobo(notaMinima: Float = 2.9f): Boolean = (nota > notaMinima) || (notaEspecial != null)
 
     /**
+     * Verdadero si la asignatura no tiene ningún tipo de calificación: ni nota
+     * numérica ni marca especial (C.U, E.X, A.P). Una materia reprobada con
+     * nota (por ejemplo 2.0) NO cumple esto porque sí tiene nota.
+     *
+     * Combinado con "aparece en el tabulado y no está cancelada", identifica
+     * una asignatura que se está cursando actualmente.
+     */
+    fun sinNota(): Boolean = nota <= 0f && notaEspecial == null
+
+    /**
      * Texto para mostrar en la interfaz: la nota numérica formateada, la
      * marca especial si no hay nota numérica, o "-" si no hay ninguna de
      * las dos.

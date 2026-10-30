@@ -11,6 +11,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -83,7 +84,13 @@ fun PantallaAvance(
                 linea = programa.estudiante?.linea
             )
 
-            TarjetaEstadisticasAcademicas(programa = programa, avances = datos.avances)
+            TarjetaEstadisticasAcademicas(
+                programa = programa,
+                avances = datos.avances,
+                onCambiarEstadoSemestre = { semestre, completado ->
+                    viewModel.cambiarEstadoSemestre(semestre, completado)
+                }
+            )
 
             Spacer(modifier = Modifier.height(72.dp))
         }
@@ -504,7 +511,8 @@ private fun iconoParaArea(indice: Int): ImageVector =
 @Composable
 private fun TarjetaEstadisticasAcademicas(
     programa: ProgramaM,
-    avances: Map<String, Float>
+    avances: Map<String, Float>,
+    onCambiarEstadoSemestre: (Int, Boolean?) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     val asignaturas = programa.estudiante?.asignaturas.orEmpty()
@@ -513,10 +521,12 @@ private fun TarjetaEstadisticasAcademicas(
     val notaMasBaja = notasNumericas.minOfOrNull { it.nota }
     val aprobadas = asignaturas.count { it.aprobo() }
     val cursadas = asignaturas.count { it.nota > 0f || it.notaEspecial != null }
-    val creditosAprobados = asignaturas.filter { it.aprobo() }.sumOf { it.creditos }
+    // Misma fuente que la tarjeta héroe: créditos que cuentan para la carrera (con topes por área).
+    val creditosAprobados = programa.creditosQueSirvenParaCarrera()
     val semestresCompletados = (1..10).count { programa.semestreCompletado(it) }
     val rojo = Color(0xFFC62828)
     val verde = Color(0xFF2E7D32)
+    var semestreSeleccionado by remember { mutableStateOf<Int?>(null) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -550,11 +560,19 @@ private fun TarjetaEstadisticasAcademicas(
             ) {
                 (1..10).forEach { semestre ->
                     val completo = programa.semestreCompletado(semestre)
+                    val seleccionado = semestreSeleccionado == semestre
                     Surface(
-                        modifier = Modifier.weight(1f).height(38.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(38.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .clickable {
+                                semestreSeleccionado = if (seleccionado) null else semestre
+                            },
                         shape = RoundedCornerShape(7.dp),
                         color = if (completo) verde else rojo,
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        border = if (seleccionado) BorderStroke(2.dp, scheme.onSurface) else null
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
@@ -566,6 +584,15 @@ private fun TarjetaEstadisticasAcademicas(
                         }
                     }
                 }
+            }
+            semestreSeleccionado?.let { semestre ->
+                PanelSemestre(
+                    programa = programa,
+                    semestre = semestre,
+                    verde = verde,
+                    rojo = rojo,
+                    onCambiarEstado = { onCambiarEstadoSemestre(semestre, it) }
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -635,6 +662,104 @@ private fun TarjetaEstadisticasAcademicas(
                         color = if (porcentaje >= 100f) verde else scheme.primary,
                         trackColor = scheme.surfaceVariant
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PanelSemestre(
+    programa: ProgramaM,
+    semestre: Int,
+    verde: Color,
+    rojo: Color,
+    onCambiarEstado: (Boolean?) -> Unit
+) {
+    val scheme = MaterialTheme.colorScheme
+    val completo = programa.semestreCompletado(semestre)
+    val esManual = programa.estadoSemestreManual(semestre) != null
+    val promedio = programa.promedioSemestre(semestre)
+    val cursadas = programa.asignaturasCursadasSemestre(semestre)
+    val totalAsignaturas = programa.totalAsignaturasSemestre(semestre)
+    val creditosAprobados = programa.creditosAprobadosSemestre(semestre)
+    val creditosTotales = programa.creditosTotalesSemestre(semestre)
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = scheme.surfaceVariant.copy(alpha = 0.35f),
+        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Semestre $semestre",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = if (completo) verde else rojo,
+                    contentColor = Color.White
+                ) {
+                    Text(
+                        text = if (completo) "Completado" else "Pendiente",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                EstadisticaMini(
+                    titulo = "Promedio del semestre",
+                    valor = if (promedio > 0f) "%.2f".format(promedio) else "—",
+                    modifier = Modifier.weight(1f),
+                    destacado = true
+                )
+                EstadisticaMini(
+                    titulo = "Asignaturas cursadas",
+                    valor = "$cursadas/$totalAsignaturas",
+                    modifier = Modifier.weight(1f)
+                )
+                EstadisticaMini(
+                    titulo = "Créditos aprobados",
+                    valor = "$creditosAprobados/$creditosTotales",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.65f))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Semestre completado",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = if (esManual) "Ajustado manualmente por ti"
+                        else "Calculado según tus notas",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = scheme.onSurfaceVariant
+                    )
+                }
+                Switch(checked = completo, onCheckedChange = { onCambiarEstado(it) })
+            }
+
+            if (esManual) {
+                TextButton(
+                    onClick = { onCambiarEstado(null) },
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Volver al cálculo automático")
                 }
             }
         }

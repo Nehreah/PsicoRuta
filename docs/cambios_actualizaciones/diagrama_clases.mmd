@@ -1,0 +1,245 @@
+classDiagram
+    direction TB
+
+    %% ================= MODELO =================
+    class Asignatura {
+        +String nombre
+        +String codigo
+        +Int semestre
+        +Int creditos
+        +String lineaProfesional
+        +String componente
+        +String area
+        +Float nota
+        +String? notaEspecial
+        +Boolean complementaria
+        +String grupo
+        +cambiarNota(Float) Asignatura
+        +cambiarNotaEspecial(String) Asignatura
+        +cambiarSemestre(Int) Asignatura
+        +aprobo(Float) Boolean
+        +sinNota() Boolean ★ horario
+        +esElectivaOIdioma() Boolean
+        +textoNota() String
+    }
+    class Estudiante {
+        +String nombre
+        +Int codigo
+        +String linea
+        +String? avatarUri
+        +MutableList~Asignatura~ asignaturas
+        +cambiarLinea(String) Estudiante
+        +actualizarNotasMasivo(Map) Pair
+        +agregarAsignatura(Asignatura) Estudiante
+        +eliminarAsignatura(String) Estudiante
+        +sincronizarComplementarias() Estudiante
+        +resolverElectivasProfesionales(List) Estudiante
+        +moverAsignaturasEnCursoAlSemestre(Collection, Int) Pair ★ horario
+    }
+    class ProgramaM {
+        +String nombre
+        +Int codigo
+        +Estudiante? estudiante
+        +Int creditosCarrera
+        +semestreEnCurso() Int
+        +asignaturasPorSemestre() Map
+        +requisitosInicioTrabajoGrado() List~Pair~
+        +avanceCarrera() Float
+        +datosIdiomas() DatosIdiomas
+        +avanceLineasProfundizacion() Map
+        +requisitoTrabajoDeGradoCumplido() Boolean
+        +cumpleRequisitosGrado() Boolean
+    }
+    class AvanceLineaProfesional {
+        +String linea
+        +String opcion
+        +Int nivel
+        +String asignatura
+        +textoNivel() String
+    }
+    class DatosIdiomas {
+        +List~Asignatura~ idiomasICandidatas
+        +List~Asignatura~ idiomasIICandidatas
+        +Boolean idiomasIAprobado
+        +Boolean idiomasIIAprobado
+    }
+    class ConsejoPensum {
+        +String titulo
+        +String texto
+    }
+    class ElectivaProfesionalCatalogo {
+        +String nombre
+        +String codigo
+        +Int creditos
+    }
+    class NotaImportada {
+        <<sealed>>
+    }
+    class Numerica {
+        +Float valor
+    }
+    class Especial {
+        +String marca
+    }
+
+    %% ================= DATOS =================
+    class Serializador {
+        +cargarEstudiante() Estudiante?
+        +guardarEstudiante(Estudiante)
+        +exportarEstudianteADescargas(Estudiante) Uri?
+        +importarEstudianteDesdeUri(Uri) Estudiante?
+        +leerElectivasProfesionales() List
+    }
+    class ImportadorNotas {
+        +extraerTexto(Uri) String
+        +extraerNotasPorCodigo(...) Map
+    }
+    class AnalizadorNotas {
+        <<object>>
+        +extraerNotasPorCodigo(String, List) Map
+    }
+    class AsignaturaHorario {
+        +String codigo
+        +String nombreAsignatura
+        +String grupo
+        +String diaClase
+        +Int horaInicio
+        +Int horaFin
+        +String espacio
+    }
+    class RepositorioHorarios {
+        <<object>>
+        +cargarCatalogo(Context) List~AsignaturaHorario~
+        +horarioDelSemestre(Estudiante, Int, List) List~AsignaturaHorario~
+    }
+    class ImprimirPDF {
+        +generarYGuardar(ProgramaM) Uri?
+        +abrirPDF(Uri)
+    }
+
+    %% ================= CONTROL =================
+    class ControlV {
+        <<ViewModel>>
+        +ProgramaM programa
+        +cambiarNotaAsignatura(String, Float)
+        +importarNotasDesdePdf(Map, Map, List) Int ★ horario
+        +asignarNoSincronizadasAComplementarias(List) ★ horario
+        -Map gruposUltimaImportacion ★ horario
+        +importarEstudianteDesdeJson(Estudiante)
+        +agregarAsignaturaComplementaria(...)
+        +eliminarEstudiante()
+    }
+
+    %% ================= NAVEGACION / GUI =================
+    class PantallasApp {
+        <<enum>>
+        USUARIO
+        PENSUM
+        GRADO
+        TRABAJO_GRADO
+        AVANCE
+        PRACTICAS
+        PRACTICAS_INTRO
+        REGLAMENTO_TRABAJO_GRADO ★ nuevo
+    }
+    class MainActivity {
+        +PsicologiaUVApp(ControlV)
+        -AppUpdateManager appUpdateManager ★ actualizaciones
+        -Boolean actualizacionDescargada ★ actualizaciones
+        -buscarActualizacion() ★ actualizaciones
+        +onResume() ★ actualizaciones
+        +onDestroy() ★ actualizaciones
+    }
+    class AppUpdateManager {
+        <<Google Play Core>>
+        +getAppUpdateInfo() Task
+        +startUpdateFlowForResult(...)
+        +completeUpdate() Task
+        +registerListener(InstallStateUpdatedListener)
+    }
+    class AvisoActualizacionLista {
+        <<Composable>>
+        +onReiniciar() Unit
+    }
+    class PantallaPerfil
+    class PantallaPensum
+    class PantallaGrado
+    class PantallaTrabajoGrado {
+        +programa ProgramaM
+        +onVerReglamento() Unit ★ nuevo
+        +mostrarDirector Boolean ★ v2
+        -DialogoDirectorYLinea ★ v2
+        +colorTinta() Color internal ★ v2
+        +TextoCuerpo / TextoChico / TextoEtiqueta ★ v2
+        -RequisitoInicial(List~String~) ★ nuevo
+        -HitoCompacto(Hito, Boolean) ★ nuevo
+        -FilaRequisito(String, Boolean)
+        ~SeccionTrabajoGrado(...) internal
+        ~Texto(...) internal
+        ~Punto(...) internal
+        ~Opciones(...) internal
+    }
+    class PantallaReglamentoTrabajoGrado {
+        ★ nueva pantalla
+        +Plazos y ciclo
+        +Cómo se evalúa
+        +Sustentación
+        +Director y jurados
+        +Modalidades
+        +Ética, autoría y estilo
+    }
+    class PantallaAvance
+    class PantallaPracticasIntro
+    class PantallaPracticas
+    class Hito {
+        +String periodo
+        +String titulo
+        +String descripcion
+    }
+
+    %% ================= RELACIONES =================
+    Estudiante "1" *-- "0..*" Asignatura
+    ProgramaM "1" o-- "0..1" Estudiante
+    ProgramaM ..> AvanceLineaProfesional : crea
+    ProgramaM ..> DatosIdiomas : crea
+    ProgramaM ..> ConsejoPensum : crea
+    DatosIdiomas o-- Asignatura
+    NotaImportada <|-- Numerica
+    NotaImportada <|-- Especial
+    Estudiante ..> NotaImportada : usa
+    Estudiante ..> ElectivaProfesionalCatalogo : usa
+
+    Serializador ..> Estudiante : lee/escribe
+    Serializador ..> ElectivaProfesionalCatalogo : lee
+    ImportadorNotas ..> AnalizadorNotas
+    AnalizadorNotas ..> NotaImportada : produce
+    ImprimirPDF ..> ProgramaM
+    Estudiante "1" o-- "0..*" AsignaturaHorario : horario
+    RepositorioHorarios ..> AsignaturaHorario : produce
+    RepositorioHorarios ..> Estudiante : filtra por semestre y grupo
+    ProgramaM ..> Estudiante : semestreEnCurso()
+    ControlV ..> Estudiante : moverAsignaturasEnCursoAlSemestre() ★ horario
+
+    ControlV --> Serializador
+    ControlV "1" *-- "1" ProgramaM
+    ControlV ..> ImportadorNotas
+    MainActivity ..> ControlV
+    MainActivity ..> AppUpdateManager : actualización FLEXIBLE ★
+    MainActivity ..> AvisoActualizacionLista : muestra al terminar la descarga ★
+    MainActivity ..> PantallasApp : navega
+
+    MainActivity ..> PantallaPerfil
+    MainActivity ..> PantallaPensum
+    MainActivity ..> PantallaGrado
+    MainActivity ..> PantallaTrabajoGrado
+    MainActivity ..> PantallaReglamentoTrabajoGrado : ★ nuevo destino
+    MainActivity ..> PantallaAvance
+    MainActivity ..> PantallaPracticasIntro
+    MainActivity ..> PantallaPracticas
+
+    PantallaTrabajoGrado ..> ProgramaM : requisitosInicioTrabajoGrado()
+    PantallaTrabajoGrado ..> Hito
+    PantallaTrabajoGrado ..> PantallaReglamentoTrabajoGrado : botón Ver reglamento completo ★
+    PantallaReglamentoTrabajoGrado ..> PantallaTrabajoGrado : reutiliza componentes internal ★
+    PantallaPerfil ..> PantallasApp
+    PantallaPensum ..> PantallasApp

@@ -61,4 +61,18 @@ class EstudianteTest {
         assertEquals(2, inicial.asignaturas.size) // la instancia inicial no cambia
         assertFalse(resultado.asignaturas.any { it.codigo == "999" })
     }
+
+    @Test fun cambiarEstadoSemestreManualPermiteFijarYRevertir() {
+        val inicial = estudiante()
+        assertEquals(emptyMap<Int, Boolean>(), inicial.semestresManuales)
+
+        val conSemestre1 = inicial.cambiarEstadoSemestre(1, true)
+        assertEquals(mapOf(1 to true), conSemestre1.semestresManuales)
+
+        val conSemestre2 = conSemestre1.cambiarEstadoSemestre(2, false)
+        assertEquals(mapOf(1 to true, 2 to false), conSemestre2.semestresManuales)
+
+        val revertido = conSemestre2.cambiarEstadoSemestre(1, null)
+        assertEquals(mapOf(2 to false), revertido.semestresManuales)
+    }
 }
