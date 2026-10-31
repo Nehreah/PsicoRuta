@@ -4,16 +4,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,19 +21,13 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
@@ -435,49 +423,6 @@ private data class DatosProgresoPensum(
     val creditosCarrera: Int
 )
 
-
-@Composable
-private fun AnilloPensum(
-    progreso: Float,
-    colorProgreso: Color = MaterialTheme.colorScheme.primary,
-    colorFondo: Color = MaterialTheme.colorScheme.surfaceVariant
-) {
-    Box(
-        modifier = Modifier.size(72.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = 7.dp.toPx()
-            val diameter = size.minDimension - stroke
-            val left = (size.width - diameter) / 2f
-            val top = (size.height - diameter) / 2f
-            drawArc(
-                color = colorFondo,
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = Offset(left, top),
-                size = Size(diameter, diameter),
-                style = Stroke(width = stroke, cap = StrokeCap.Round)
-            )
-            drawArc(
-                color = colorProgreso,
-                startAngle = -90f,
-                sweepAngle = 360f * progreso,
-                useCenter = false,
-                topLeft = Offset(left, top),
-                size = Size(diameter, diameter),
-                style = Stroke(width = stroke, cap = StrokeCap.Round)
-            )
-        }
-        Text(
-            text = "${"%.0f".format(progreso * 100)}%",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.ExtraBold,
-            color = colorProgreso
-        )
-    }
-}
 
 /* ====================================================================== */
 /* CUBO DE SEMESTRES                                                       */
@@ -1094,100 +1039,6 @@ private fun MateriaCompacta(
     }
 }
 
-/* ====================================================================== */
-/* CINTA INFERIOR DE OPCIONES                                              */
-/* ====================================================================== */
-
-@Composable
-private fun CintaOpcionesPensum(
-    modifier: Modifier = Modifier,
-    filtrosActivos: Boolean,
-    tieneElectivas: Boolean,
-    onFiltros: () -> Unit,
-    onElectivas: () -> Unit,
-    onAgregar: () -> Unit
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 2.dp,
-        shadowElevation = 4.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OpcionCintaPensum(Icons.Default.Tune, "Filtros", filtrosActivos, onClick = onFiltros)
-            OpcionCintaPensum(
-                icono = Icons.Default.School,
-                texto = "Electivas",
-                activa = false,
-                habilitada = tieneElectivas,
-                onClick = onElectivas
-            )
-            OpcionCintaPensum(
-                icono = Icons.Default.Add,
-                texto = "Cr/Compl",
-                activa = false,
-                habilitada = true,
-                onClick = onAgregar
-            )
-        }
-    }
-}
-
-@Composable
-private fun OpcionCintaPensum(
-    icono: androidx.compose.ui.graphics.vector.ImageVector,
-    texto: String,
-    activa: Boolean,
-    habilitada: Boolean = true,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .height(38.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(enabled = habilitada, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = when {
-            !habilitada -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
-            activa -> MaterialTheme.colorScheme.primaryContainer
-            else -> Color.Transparent
-        }
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 9.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icono,
-                contentDescription = texto,
-                modifier = Modifier.size(16.dp),
-                tint = when {
-                    !habilitada -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    activa -> MaterialTheme.colorScheme.onPrimaryContainer
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
-            Text(
-                text = texto,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (activa) FontWeight.ExtraBold else FontWeight.SemiBold,
-                color = when {
-                    !habilitada -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                    activa -> MaterialTheme.colorScheme.onPrimaryContainer
-                    else -> MaterialTheme.colorScheme.onSurface
-                }
-            )
-        }
-    }
-}
 
 /* ====================================================================== */
 /* FILTROS                                                                 */
@@ -1359,7 +1210,7 @@ private fun FiltroChipCompacto(
             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         leadingIcon = if (seleccionado) {
-            {
+            @Composable {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
@@ -1769,7 +1620,7 @@ private fun DialogoAgregarAsignaturaComplementaria(
                                 )
                             },
                             leadingIcon = if (seleccionada) {
-                                {
+                                @Composable {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
@@ -2219,7 +2070,7 @@ private fun DialogoEditarAsignatura(
                                 )
                             },
                             leadingIcon = if (seleccionada) {
-                                {
+                                @Composable {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,

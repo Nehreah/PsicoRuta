@@ -9,46 +9,34 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Filter1
-import androidx.compose.material.icons.filled.Filter2
-import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CorporateFare
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.HourglassEmpty
-import androidx.compose.material.icons.filled.LocalHospital
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.MedicalServices
-import androidx.compose.material.icons.filled.CorporateFare
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
 
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.AvanceLineaProfesional
@@ -533,13 +521,6 @@ fun PantallaPracticas(
     }
 }
 
-@Composable
-private fun TextoInfoPracticas(titulo: String, descripcion: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(titulo, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Text(descripcion, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
 
 @Composable
 private fun BarrasLineasProfesionalesPracticas(
@@ -989,154 +970,6 @@ private fun BannerEstado(texto: String, cumple: Boolean) {
     }
 }
 
-// ========================================================================
-// TARJETA DE REQUISITO (Ética / Diagnóstico / Fundamentación I / II)
-// ========================================================================
-
-@Composable
-private fun TarjetaRequisito(
-    nombre: String,
-    cumple: Boolean,
-    icono: ImageVector,
-    modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
-) {
-    val scheme = MaterialTheme.colorScheme
-    val stateColor = if (cumple) AprobadoColor else scheme.primary
-    val stateBackground = if (cumple) {
-        AprobadoColor.copy(alpha = 0.09f)
-    } else {
-        scheme.primary.copy(alpha = 0.055f)
-    }
-
-    Surface(
-        modifier = if (onClick != null) modifier.height(66.dp).clickable { onClick() } else modifier.height(66.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = stateBackground
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(28.dp),
-                shape = RoundedCornerShape(50),
-                color = stateColor.copy(alpha = 0.10f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = if (cumple) {
-                            Icons.Filled.CheckCircle
-                        } else {
-                            icono
-                        },
-                        contentDescription = null,
-                        tint = stateColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = nombre,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = scheme.onSurface,
-                    maxLines = 3
-                )
-
-                Text(
-                    text = if (cumple) "Cumple" else "Pendiente",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = if (cumple) AprobadoColor else scheme.primary
-                )
-            }
-
-            Text(
-                text = "›",
-                style = MaterialTheme.typography.headlineSmall,
-                color = scheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-// ========================================================================
-// CAJÓN DE NIVEL DE LÍNEA PROFESIONAL
-// ========================================================================
-
-@Composable
-private fun CajonNivelLinea(
-    linea: String,
-    icono: ImageVector,
-    avance: AvanceLineaProfesional?,
-    modifier: Modifier = Modifier
-) {
-    val scheme = MaterialTheme.colorScheme
-    val aprobado = avance != null
-    val color = if (aprobado) AprobadoColor else scheme.primary
-    val textoNivel = avance?.textoNivel() ?: "No cursó"
-
-    Surface(
-        modifier = modifier.height(92.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = color.copy(alpha = 0.10f)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 5.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = linea,
-                color = scheme.onSurface,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 2
-            )
-
-            Surface(
-                modifier = Modifier.size(30.dp),
-                shape = RoundedCornerShape(50),
-                color = color.copy(alpha = 0.10f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = icono,
-                        contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(15.dp)
-                    )
-                }
-            }
-
-            Text(
-                text = textoNivel,
-                color = color,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-        }
-    }
-}
-
-// ========================================================================
-// INDICADOR DE CRÉDITOS (semicírculo animado)
-// ========================================================================
 
 // ========================================================================
 // TARJETA DE NIVEL DE MATERIA (I / II / III de la línea seleccionada)
@@ -1566,7 +1399,7 @@ private fun DialogoEditarMateria(
                                 )
                             },
                             leadingIcon = if (seleccionada) {
-                                {
+                                @Composable {
                                     Icon(
                                         imageVector = Icons.Filled.CheckCircle,
                                         contentDescription = null,

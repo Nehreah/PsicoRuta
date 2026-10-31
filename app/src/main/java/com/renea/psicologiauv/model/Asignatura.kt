@@ -33,15 +33,6 @@ data class Asignatura (
             nuevaNota > 0f && nuevaNota <= 5f -> copy(nota = nuevaNota, notaEspecial = null)
             else -> this
         }
-    fun cambiarComplementaria(nuevaNota: Float): Asignatura =
-        when {
-            // Ingresar 0 reinicia la materia: borra la nota numérica y
-            // cualquier marca especial (C.U, E.X, A.P), dejándola como si
-            // no se hubiera cursado.
-            nuevaNota == 0f -> copy(nota = 0f, notaEspecial = null)
-            nuevaNota > 0f && nuevaNota <= 5f -> copy(nota = nuevaNota, notaEspecial = null)
-            else -> this
-        }
 
 
     /**

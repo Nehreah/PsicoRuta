@@ -1,6 +1,5 @@
 package com.renea.psicologiauv.gui
 
-import androidx.compose.ui.graphics.luminance
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
@@ -10,12 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
@@ -42,7 +35,7 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,7 +59,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -79,7 +71,6 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.renea.psicologiauv.data.Serializador
-import com.renea.psicologiauv.ui.theme.Red
 import com.renea.psicologiauv.ui.theme.PsicologiaUVTheme
 
 
@@ -500,7 +491,7 @@ enum class PantallasApp(
 
     AVANCE(
         leyenda = "Avance",
-        icono = Icons.Filled.TrendingUp
+        icono = Icons.AutoMirrored.Filled.TrendingUp
     ),
 
     PRACTICAS(
@@ -871,372 +862,6 @@ fun PsicologiaUVApp(
 
 
                     }
-                }
-            }
-        }
-    }
-}
-
-
-// ========================================================================
-// BARRA DE NAVEGACIÓN MODERNA
-// ========================================================================
-
-@Composable
-private fun BarraNavegacionModerna(
-    destinos: List<PantallasApp>,
-    destinoActual: PantallasApp,
-    onDestinoSeleccionado: (PantallasApp) -> Unit
-) {
-
-    val esTemaOscuro =
-        MaterialTheme.colorScheme.background.luminance() < 0.5f
-
-
-    val fondoBarra =
-        MaterialTheme.colorScheme.surface
-
-
-    val bordeBarra =
-        MaterialTheme.colorScheme.outlineVariant
-            .copy(alpha = 0.35f)
-
-
-    Box(
-
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(
-                    start = 12.dp,
-                    end = 12.dp,
-                    top = 6.dp,
-                    bottom = 8.dp
-                ),
-
-        contentAlignment =
-            Alignment.Center
-    ) {
-
-        Surface(
-
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .shadow(
-                        elevation = 12.dp,
-                        shape =
-                            RoundedCornerShape(26.dp)
-                    ),
-
-            shape =
-                RoundedCornerShape(26.dp),
-
-            color =
-                fondoBarra,
-
-            border =
-                androidx.compose.foundation.BorderStroke(
-                    width = 0.8.dp,
-                    color = bordeBarra
-                )
-        ) {
-
-            Row(
-
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(
-                            horizontal = 6.dp,
-                            vertical = 6.dp
-                        ),
-
-                horizontalArrangement =
-                    Arrangement.SpaceEvenly,
-
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
-
-                destinos.forEach { destino ->
-
-                    ItemBarraNavegacion(
-
-                        destino = destino,
-
-                        seleccionado =
-                            destino ==
-                                    destinoActual,
-
-                        esTemaOscuro =
-                            esTemaOscuro,
-
-                        onClick = {
-
-                            onDestinoSeleccionado(
-                                destino
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-// ========================================================================
-// ITEM DE NAVEGACIÓN
-// ========================================================================
-
-@Composable
-private fun ItemBarraNavegacion(
-    destino: PantallasApp,
-    seleccionado: Boolean,
-    esTemaOscuro: Boolean,
-    onClick: () -> Unit
-) {
-
-    // ====================================================================
-    // ANIMACIONES
-    // ====================================================================
-
-    val anchoSeleccionado by
-    animateDpAsState(
-
-        targetValue =
-            if (seleccionado) {
-                112.dp
-            } else {
-                52.dp
-            },
-
-        animationSpec =
-            tween(
-                durationMillis = 280,
-                easing = FastOutSlowInEasing
-            ),
-
-        label = "anchoItem"
-    )
-
-
-    val escalaIcono by
-    animateFloatAsState(
-
-        targetValue =
-            if (seleccionado) {
-                1.08f
-            } else {
-                1f
-            },
-
-        animationSpec =
-            tween(
-                durationMillis = 220
-            ),
-
-        label = "escalaIcono"
-    )
-
-
-    val colorFondo by
-    animateColorAsState(
-
-        targetValue =
-            if (seleccionado) {
-
-                MaterialTheme.colorScheme.primary.copy(
-                    alpha =
-                        if (esTemaOscuro) {
-                            0.18f
-                        } else {
-                            0.10f
-                        }
-                )
-
-            } else {
-
-                Color.Transparent
-            },
-
-        animationSpec =
-            tween(
-                durationMillis = 220
-            ),
-
-        label = "colorFondo"
-    )
-
-
-    val colorIcono by
-    animateColorAsState(
-
-        targetValue =
-            if (seleccionado) {
-
-                MaterialTheme.colorScheme.primary
-
-            } else {
-
-                MaterialTheme.colorScheme
-                    .onSurfaceVariant
-            },
-
-        animationSpec =
-            tween(
-                durationMillis = 220
-            ),
-
-        label = "colorIcono"
-    )
-
-
-    val colorTexto by
-    animateColorAsState(
-
-        targetValue =
-            if (seleccionado) {
-
-                MaterialTheme.colorScheme
-                    .onSurface
-
-            } else {
-
-                Color.Transparent
-            },
-
-        animationSpec =
-            tween(
-                durationMillis = 180
-            ),
-
-        label = "colorTexto"
-    )
-
-
-    // ====================================================================
-    // ITEM
-    // ====================================================================
-
-    Box(
-
-        modifier =
-            Modifier
-                .height(58.dp)
-                .clip(
-                    RoundedCornerShape(20.dp)
-                )
-                .background(
-                    colorFondo
-                )
-                .clickable(
-                    onClick = onClick
-                )
-                .animateContentSize(
-                    animationSpec =
-                        tween(
-                            durationMillis = 280,
-                            easing =
-                                FastOutSlowInEasing
-                        )
-                )
-                .padding(
-                    horizontal =
-                        if (seleccionado) {
-                            8.dp
-                        } else {
-                            4.dp
-                        }
-                ),
-
-        contentAlignment =
-            Alignment.Center
-    ) {
-
-        Row(
-
-            modifier =
-                Modifier
-                    .height(58.dp)
-                    .width(anchoSeleccionado),
-
-            horizontalArrangement =
-                Arrangement.Center,
-
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-
-            // ============================================================
-            // ICONO
-            // ============================================================
-
-            Icon(
-
-                imageVector =
-                    destino.icono,
-
-                contentDescription =
-                    destino.leyenda,
-
-                tint =
-                    colorIcono,
-
-                modifier =
-                    Modifier
-                        .size(
-                            if (seleccionado) {
-                                23.dp
-                            } else {
-                                21.dp
-                            }
-                        )
-                        .graphicsLayer {
-                            scaleX = escalaIcono
-                            scaleY = escalaIcono
-                        }
-            )
-
-
-            // ============================================================
-            // TEXTO
-            // ============================================================
-
-            AnimatedVisibility(
-                visible = seleccionado
-            ) {
-
-                Row {
-
-                    Spacer(
-                        modifier =
-                            Modifier.width(7.dp)
-                    )
-
-                    Text(
-
-                        text =
-                            destino.leyenda,
-
-                        color =
-                            colorTexto,
-
-                        style =
-                            MaterialTheme.typography
-                                .labelMedium,
-
-                        fontWeight =
-                            FontWeight.Bold,
-
-                        fontSize =
-                            12.sp,
-
-                        maxLines = 1
-                    )
                 }
             }
         }

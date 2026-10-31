@@ -14,13 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.TrackChanges
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
@@ -34,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -105,71 +101,6 @@ fun PantallaAvance(
     }
 }
 
-@Composable
-private fun BarrasIdiomasAvance(
-    datos: DatosIdiomas,
-    programa: ProgramaM,
-    onIdiomaClick: (Asignatura) -> Unit
-) {
-    val scheme = MaterialTheme.colorScheme
-    val idiomas = listOf(
-        Triple("Idiomas I", datos.idiomasIAprobado, datos.existeIdiomasI) to datos.idiomasICandidatas,
-        Triple("Idiomas II", datos.idiomasIIAprobado, datos.existeIdiomasII) to datos.idiomasIICandidatas
-    )
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = scheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, scheme.outlineVariant.copy(alpha = 0.40f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(9.dp)
-        ) {
-            Text(
-                text = "Idiomas",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface
-            )
-
-            idiomas.forEach { (info, candidatas) ->
-                val (nombre, aprobado, habilitado) = info
-                val materia = programa.materiaIdiomaActiva(candidatas)
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .then(
-                                if (habilitado && materia != null) {
-                                    Modifier.clickable { onIdiomaClick(materia) }
-                                } else Modifier
-                            ),
-                        shape = RoundedCornerShape(50),
-                        color = if (aprobado) scheme.primary else scheme.surfaceVariant
-                    ) {}
-
-                    Text(
-                        text = nombre,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (aprobado) scheme.onSurface else scheme.onSurfaceVariant,
-                        fontWeight = if (aprobado) FontWeight.Bold else FontWeight.Medium,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
-    }
-}
 
 
 // ========================================================================
@@ -253,7 +184,7 @@ private fun TarjetaHeroeProgreso(
     var ordenConsejos by remember(consejos) {
         mutableStateOf(consejos.shuffled())
     }
-    var indiceConsejo by remember(consejos) { mutableStateOf(0) }
+    var indiceConsejo by remember(consejos) { mutableIntStateOf(0) }
 
     LaunchedEffect(consejos) {
         while (true) {
@@ -497,17 +428,6 @@ private fun AnilloProgreso(
     }
 }
 
-// ========================================================================
-// AVANCE POR ÁREA
-// ========================================================================
-
-private fun iconoParaArea(indice: Int): ImageVector =
-    when (indice) {
-        0 -> Icons.AutoMirrored.Filled.MenuBook
-        1 -> Icons.Filled.WorkspacePremium
-        else -> Icons.Filled.Science
-    }
-
 @Composable
 private fun TarjetaEstadisticasAcademicas(
     programa: ProgramaM,
@@ -520,7 +440,6 @@ private fun TarjetaEstadisticasAcademicas(
     val notaMasAlta = notasNumericas.maxOfOrNull { it.nota }
     val notaMasBaja = notasNumericas.minOfOrNull { it.nota }
     val aprobadas = asignaturas.count { it.aprobo() }
-    val cursadas = asignaturas.count { it.nota > 0f || it.notaEspecial != null }
     // Misma fuente que la tarjeta héroe: créditos que cuentan para la carrera (con topes por área).
     val creditosAprobados = programa.creditosQueSirvenParaCarrera()
     val semestresCompletados = (1..10).count { programa.semestreCompletado(it) }
@@ -790,207 +709,7 @@ private fun EstadisticaMini(
     }
 }
 
-@Composable
-private fun TarjetaAvancePorArea(avances: Map<String, Float>) {
-    val scheme = MaterialTheme.colorScheme
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = scheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(scheme.surface)
-                .padding(horizontal = 14.dp, vertical = 16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.TrackChanges,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.secondary.copy(alpha = 0.65f),
-                    modifier = Modifier.size(26.dp)
-                )
 
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = "Avance por área",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                avances.entries.forEachIndexed { indice, (area, porcentaje) ->
-                    AnilloArea(
-                        nombre = area,
-                        porcentaje = porcentaje,
-                        icono = iconoParaArea(indice),
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AnilloArea(
-    nombre: String,
-    porcentaje: Float,
-    icono: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    val progresoObjetivo = (porcentaje / 100f).coerceIn(0f, 1f)
-
-    val progresoAnimado by animateFloatAsState(
-        targetValue = progresoObjetivo,
-        animationSpec = tween(durationMillis = 900),
-        label = "progresoArea"
-    )
-
-    val colorProgreso =
-        if (progresoAnimado >= 1f) {
-            AprobadoColor
-        } else {
-            MaterialTheme.colorScheme.primary
-        }
-
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        AnilloProgreso(
-            progreso = progresoAnimado,
-            diametro = 74.dp,
-            grosor = 8.dp,
-            colorFondo = MaterialTheme.colorScheme.surfaceVariant,
-            colorProgreso = colorProgreso
-        ) {
-            Icon(
-                imageVector = icono,
-                contentDescription = null,
-                tint = colorProgreso,
-                modifier = Modifier.size(21.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(7.dp))
-
-        Text(
-            text = "${porcentaje.coerceIn(0f, 100f).toInt()}%",
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.Bold,
-            color = colorProgreso,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = nombre,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            maxLines = 4,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-// ========================================================================
-// CAJÓN DE IDIOMA
-// ========================================================================
-
-@Composable
-private fun CajonIdioma(
-    nombre: String,
-    cumple: Boolean,
-    habilitado: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val scheme = MaterialTheme.colorScheme
-    val containerColor =
-        when {
-            !habilitado -> scheme.surfaceVariant.copy(alpha = 0.55f)
-            cumple -> AprobadoColor.copy(alpha = if (isSystemInDarkTheme()) 0.20f else 0.13f)
-            else -> scheme.surfaceVariant.copy(alpha = 0.72f)
-        }
-
-    val colorTexto =
-        if (!habilitado) scheme.onSurfaceVariant else scheme.onSurface
-
-    Surface(
-        modifier = Modifier
-            .then(modifier)
-            .height(92.dp)
-            .clickable(enabled = habilitado, onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = containerColor
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = if (cumple)
-                    Icons.Filled.CheckCircle
-                else
-                    Icons.Filled.Translate,
-                contentDescription = null,
-                tint = when {
-                    !habilitado -> colorTexto
-                    cumple -> AprobadoColor
-                    else -> MaterialTheme.colorScheme.primary
-                },
-                modifier = Modifier.size(22.dp)
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = nombre,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = colorTexto
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            Text(
-                text = when {
-                    !habilitado -> "No cursada"
-                    cumple -> "Aprobada"
-                    else -> "Pendiente"
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = when {
-                    !habilitado -> colorTexto
-                    cumple -> AprobadoColor
-                    else -> MaterialTheme.colorScheme.error
-                },
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
 
 // ========================================================================
 // MÓDULO DE INFORMACIÓN DE IDIOMAS
@@ -1385,7 +1104,7 @@ private fun DialogoEditarIdioma(
                                 )
                             },
                             leadingIcon = if (seleccionada) {
-                                {
+                                @Composable {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,

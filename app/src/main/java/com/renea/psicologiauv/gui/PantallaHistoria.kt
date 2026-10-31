@@ -1,11 +1,8 @@
 package com.renea.psicologiauv.gui
 
-import com.renea.psicologiauv.ui.theme.LocalTemaLinea
-import androidx.compose.ui.graphics.lerp
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

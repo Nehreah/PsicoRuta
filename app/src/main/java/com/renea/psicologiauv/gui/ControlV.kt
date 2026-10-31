@@ -154,14 +154,6 @@ class ControlV (private val parse: Serializador): ViewModel() {
             return ControlV(parse) as T
         }
     }
-    fun cambiarAvatarEstudiante(nuevaRuta: String) {
-        val nuevoEstudiante = programa.estudiante?.cambiarAvatar(nuevaRuta)
-        if(nuevoEstudiante != null){
-            val nuevoPrograma = programa.cambiarEstudiante(nuevoEstudiante)
-            programa = nuevoPrograma
-            parse.guardarEstudiante(nuevoEstudiante)
-        }
-    }
     /**
      * Aplica de una sola vez las notas leídas desde el PDF (código ->
      * NotaImportada, numérica o especial como "C.U"/"E.X"/"A.P").

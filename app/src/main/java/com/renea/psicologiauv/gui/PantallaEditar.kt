@@ -17,8 +17,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -53,7 +51,6 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Save
@@ -436,6 +433,10 @@ fun PantallaPerfil(
     }
 
     // Módulos emergentes: importación, accesos rápidos y bienvenida inicial.
+    var mostrandoCopiaSeguridad by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var mostrandoImportacion by rememberSaveable {
         mutableStateOf(false)
     }
@@ -488,7 +489,8 @@ fun PantallaPerfil(
                     mostrandoHistoriaLatino ||
                     mostrandoHistoria ||
                     mostrandoReporteBugs ||
-                    mostrandoAcercaDe
+                    mostrandoAcercaDe ||
+                    mostrandoCopiaSeguridad
     ) {
 
         when {
@@ -510,6 +512,9 @@ fun PantallaPerfil(
 
             mostrandoReporteBugs ->
                 mostrandoReporteBugs = false
+
+            mostrandoCopiaSeguridad ->
+                mostrandoCopiaSeguridad = false
 
             mostrandoAcercaDe ->
                 mostrandoAcercaDe = false
@@ -761,6 +766,34 @@ fun PantallaPerfil(
             }
         }
 
+    val selectorJsonRespaldo =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            if (uri != null) {
+                scope.launch {
+                    val nuevoEstudiante = withContext(Dispatchers.IO) {
+                        serializador.importarEstudianteDesdeUri(uri)
+                    }
+                    if (nuevoEstudiante != null) {
+                        viewModel.importarEstudianteDesdeJson(nuevoEstudiante)
+                        Toast.makeText(
+                            contexto,
+                            "Perfil restaurado con éxito.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        mostrandoCopiaSeguridad = false
+                    } else {
+                        Toast.makeText(
+                            contexto,
+                            "No se pudo leer el archivo de respaldo JSON.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
+
 
     // ====================================================================
     // MÓDULOS EMERGENTES
@@ -781,6 +814,41 @@ fun PantallaPerfil(
                 onBienvenidaTerminada()
             }
         )
+    }
+
+    if (mostrandoCopiaSeguridad) {
+        ModuloEmergente(
+            onCerrar = { mostrandoCopiaSeguridad = false }
+        ) {
+            TarjetaCopiaSeguridad(
+                onCerrar = { mostrandoCopiaSeguridad = false },
+                onExportar = {
+                    scope.launch {
+                        val uri = withContext(Dispatchers.IO) {
+                            serializador.exportarEstudianteADescargas(estudiante)
+                        }
+                        if (uri != null) {
+                            Toast.makeText(
+                                contexto,
+                                "Copia guardada en Descargas: estudiante_${estudiante.codigo}.json",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                contexto,
+                                "No se pudo exportar la copia de seguridad.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                },
+                onImportar = {
+                    selectorJsonRespaldo.launch(
+                        arrayOf("application/json", "text/plain", "*/*")
+                    )
+                }
+            )
+        }
     }
 
     if (mostrandoImportacion) {
@@ -1220,6 +1288,16 @@ fun PantallaPerfil(
                         onClick = {
                             menuAccionesAbierto = false
                             mostrarConfirmacionEliminar = true
+                        }
+                    )
+
+                    AccionFlotante(
+                        icono = Icons.Default.Save,
+                        etiqueta = "Copia de seguridad",
+                        descripcion = "Exportar o importar copia de perfil en JSON",
+                        onClick = {
+                            menuAccionesAbierto = false
+                            mostrandoCopiaSeguridad = true
                         }
                     )
 
@@ -1924,620 +2002,121 @@ fun PantallaPerfil(
 
 
 // ========================================================================
-// MEMORIA ESTUDIANTIL — PANEL FLOTANTE
+// TARJETA COPIA DE SEGURIDAD (JSON)
 // ========================================================================
 
 @Composable
-private fun MemoriaEstudiantilFlotante(
-    abierta: Boolean,
-    onAbrir: () -> Unit,
-    onAbrirHistoria: () -> Unit
+private fun TarjetaCopiaSeguridad(
+    onCerrar: () -> Unit,
+    onExportar: () -> Unit,
+    onImportar: () -> Unit
 ) {
+    val colores = MaterialTheme.colorScheme
 
-    Box(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(
-                    top = 18.dp,
-                    end = 0.dp
-                ),
-
-        contentAlignment =
-            Alignment.TopEnd
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = colores.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f))
     ) {
-
-        // ================================================================
-        // PESTAÑA LATERAL CERRADA
-        // ================================================================
-
-        AnimatedVisibility(
-
-            visible =
-                !abierta,
-
-            enter =
-                fadeIn() +
-                        slideInHorizontally(
-                            initialOffsetX = {
-                                it / 2
-                            }
-                        ),
-
-            exit =
-                fadeOut() +
-                        slideOutHorizontally(
-                            targetOffsetX = {
-                                it / 2
-                            }
-                        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-
-            Surface(
-
-                modifier =
-                    Modifier
-                        .width(132.dp)
-                        .height(44.dp)
-                        .clickable(
-                            onClick = onAbrir
-                        ),
-
-                shape =
-                    RoundedCornerShape(
-                        topStart = 20.dp,
-                        bottomStart = 20.dp
-                    ),
-
-                color =
-                    MaterialTheme.colorScheme.surface,
-
-                shadowElevation =
-                    7.dp,
-
-                border =
-                    BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.12f
-                        )
-                    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Row(
-
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(
-                                horizontal = 9.dp
-                            ),
-
-                    verticalAlignment =
-                        Alignment.CenterVertically
+                Surface(
+                    modifier = Modifier.size(36.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    color = colores.surfaceVariant.copy(alpha = 0.65f)
                 ) {
-
-                    // ----------------------------------------------------
-                    // ICONO
-                    // ----------------------------------------------------
-
-                    Surface(
-
-                        modifier =
-                            Modifier.size(31.dp),
-
-                        shape =
-                            CircleShape,
-
-                        color =
-                            MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.12f
-                            )
-                    ) {
-
-                        Box(
-                            contentAlignment =
-                                Alignment.Center
-                        ) {
-
-                            Icon(
-
-                                imageVector =
-                                    Icons.Default.History,
-
-                                contentDescription =
-                                    "Memoria estudiantil",
-
-                                tint =
-                                    MaterialTheme.colorScheme.onSurface,
-
-                                modifier =
-                                    Modifier.size(17.dp)
-                            )
-                        }
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Save,
+                            contentDescription = null,
+                            tint = colores.onSurfaceVariant,
+                            modifier = Modifier.size(19.dp)
+                        )
                     }
-
-
-                    Spacer(
-                        Modifier.width(6.dp)
-                    )
-
-
-                    // ----------------------------------------------------
-                    // TÍTULO
-                    // ----------------------------------------------------
-
+                }
+                Spacer(Modifier.width(9.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-
-                        text =
-                            "Memoria estudiantil",
-
-                        style =
-                            MaterialTheme
-                                .typography
-                                .labelSmall,
-
-                        fontWeight =
-                            FontWeight.Bold,
-
-                        color =
-                            MaterialTheme.colorScheme.onSurface,
-
-                        maxLines = 1,
-
-                        softWrap = false
+                        text = "Copia de seguridad (JSON)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
+                    )
+                    Text(
+                        text = "Exporta o restaura todo tu perfil",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colores.onSurfaceVariant
+                    )
+                }
+                IconButton(
+                    onClick = onCerrar,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cerrar copia de seguridad",
+                        tint = colores.onSurfaceVariant,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
-        }
 
-
-        // ================================================================
-        // PANEL ABIERTO
-        // ================================================================
-
-        AnimatedVisibility(
-
-            visible =
-                abierta,
-
-            enter =
-                fadeIn() +
-                        slideInHorizontally(
-                            initialOffsetX = {
-                                it
-                            }
-                        ),
-
-            exit =
-                fadeOut() +
-                        slideOutHorizontally(
-                            targetOffsetX = {
-                                it
-                            }
-                        )
-        ) {
-
-            Card(
-
-                modifier =
-                    Modifier
-                        .width(294.dp)
-                        .padding(
-                            end = 10.dp
-                        ),
-
-                shape =
-                    RoundedCornerShape(
-                        topStart = 24.dp,
-                        bottomStart = 24.dp,
-                        bottomEnd = 24.dp,
-                        topEnd = 10.dp
-                    ),
-
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor =
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
-                    ),
-
-                elevation =
-                    CardDefaults.cardElevation(
-                        defaultElevation =
-                            9.dp
-                    ),
-
-                border =
-                    BorderStroke(
-                        1.dp,
-                        MaterialTheme.colorScheme.onSurface.copy(
-                            alpha = 0.10f
-                        )
-                    )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-
                 Column(
-
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(
-                                horizontal = 10.dp,
-                                vertical = 13.dp
-                            ),
-
-                    verticalArrangement =
-                        Arrangement.spacedBy(0.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colores.surfaceVariant)
+                        .padding(horizontal = 10.dp, vertical = 9.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-
-                    // ====================================================
-                    // CABECERA
-                    //
-                    // IMPORTANTE:
-                    // "Memoria estudiantil" NO es un botón.
-                    // Solo el círculo de cerrar es interactivo.
-                    // ====================================================
-
-                    Row(
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
-
-                        Surface(
-
-                            modifier =
-                                Modifier.size(29.dp),
-
-                            shape =
-                                RoundedCornerShape(
-                                    13.dp
-                                ),
-
-                            color =
-                                MaterialTheme.colorScheme.primary.copy(
-                                    alpha = 0.18f
-                                )
-                        ) {
-
-                            Box(
-                                contentAlignment =
-                                    Alignment.Center
-                            ) {
-
-                                Icon(
-
-                                    imageVector =
-                                        Icons.Default.History,
-
-                                    contentDescription =
-                                        null,
-
-                                    tint =
-                                        MaterialTheme.colorScheme.onSurface,
-
-                                    modifier =
-                                        Modifier.size(19.dp)
-                                )
-                            }
-                        }
-
-
-                        Spacer(
-                            Modifier.width(7.dp)
-                        )
-
-
-                        Column(
-                            modifier =
-                                Modifier.weight(1f)
-                        ) {
-
-                            Text(
-
-                                text =
-                                    "Memoria estudiantil",
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .titleMedium,
-
-                                fontWeight =
-                                    FontWeight.Bold,
-
-                                color =
-                                    MaterialTheme.colorScheme.onSurface,
-
-                                maxLines = 1,
-
-                                softWrap = false
-                            )
-
-
-                            Spacer(
-                                Modifier.height(3.dp)
-                            )
-
-
-                            Text(
-
-                                text =
-                                    "Tu historia dentro del movimiento",
-
-                                style =
-                                    MaterialTheme
-                                        .typography
-                                        .labelSmall,
-
-                                color =
-                                    MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.62f
-                                    ),
-
-                                maxLines = 1,
-
-                                softWrap = false
-                            )
-                        }
-
-
-                        Spacer(
-                            Modifier.width(6.dp)
-                        )
-
-
-                        // ------------------------------------------------
-                        // SOLO ESTE ELEMENTO ES BOTÓN
-                        // ------------------------------------------------
-
-                        Surface(
-
-                            modifier =
-                                Modifier
-                                    .size(36.dp)
-                                    .clickable(
-                                        onClick = onAbrir
-                                    ),
-
-                            shape =
-                                CircleShape,
-
-                            color =
-                                MaterialTheme.colorScheme.onSurface.copy(
-                                    alpha = 0.09f
-                                ),
-
-                            border =
-                                BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.08f
-                                    )
-                                )
-                        ) {
-
-                            Box(
-                                contentAlignment =
-                                    Alignment.Center
-                            ) {
-
-                                Icon(
-
-                                    imageVector =
-                                        Icons.Default.Close,
-
-                                    contentDescription =
-                                        "Cerrar memoria estudiantil",
-
-                                    tint =
-                                        MaterialTheme.colorScheme.onSurface.copy(
-                                            alpha = 0.85f
-                                        ),
-
-                                    modifier =
-                                        Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    }
-
-
-                    Spacer(
-                        Modifier.height(10.dp)
+                    Text(
+                        text = "Cómo funciona",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colores.onSurface
                     )
+                    PasoSira("1", "Exportar: Guarda un archivo .json con tus notas, línea y horario en la carpeta Descargas.")
+                    PasoSira("2", "Importar: Carga ese archivo .json para restaurar tu perfil en este o en otro dispositivo.")
+                    PasoSira("3", "Tus datos viajan seguros y quedan respaldados localmente.")
+                }
 
-
-                    // ====================================================
-                    // DIVISOR
-                    // ====================================================
-
-                    Box(
-
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.onSurface.copy(
-                                        alpha = 0.09f
-                                    )
-                                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    AccionSiraCompacta(
+                        modifier = Modifier.weight(1f),
+                        texto = "Exportar perfil",
+                        icono = Icons.Default.Save,
+                        onClick = onExportar
                     )
-
-
-                    Spacer(
-                        Modifier.height(10.dp)
+                    AccionSiraCompacta(
+                        modifier = Modifier.weight(1f),
+                        texto = "Importar perfil",
+                        icono = Icons.Default.FileDownload,
+                        onClick = onImportar
                     )
-
-
-                    // ====================================================
-                    // HISTORIA
-                    // ====================================================
-
-                    Surface(
-
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height(70.dp)
-                                .clickable(
-                                    onClick =
-                                        onAbrirHistoria
-                                ),
-
-                        shape =
-                            RoundedCornerShape(17.dp),
-
-                        color =
-                            White.copy(
-                                alpha = 0.075f
-                            ),
-
-                        border =
-                            BorderStroke(
-                                1.dp,
-                                White.copy(
-                                    alpha = 0.09f
-                                )
-                            )
-                    ) {
-
-                        Row(
-
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .padding(
-                                        horizontal = 13.dp
-                                    ),
-
-                            verticalAlignment =
-                                Alignment.CenterVertically
-                        ) {
-
-                            Surface(
-
-                                modifier =
-                                    Modifier.size(34.dp),
-
-                                shape =
-                                    CircleShape,
-
-                                color =
-                                    MaterialTheme.colorScheme.primary.copy(
-                                        alpha = 0.18f
-                                    )
-                            ) {
-
-                                Box(
-                                    contentAlignment =
-                                        Alignment.Center
-                                ) {
-
-                                    Icon(
-
-                                        imageVector =
-                                            Icons.Default.History,
-
-                                        contentDescription =
-                                            null,
-
-                                        tint =
-                                            White,
-
-                                        modifier =
-                                            Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-
-
-                            Spacer(
-                                Modifier.width(8.dp)
-                            )
-
-
-                            Column(
-                                modifier =
-                                    Modifier.weight(1f)
-                            ) {
-
-                                Text(
-
-                                    text =
-                                        "Historia estudiantil",
-
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .labelLarge,
-
-                                    fontWeight =
-                                        FontWeight.Bold,
-
-                                    color =
-                                        White
-                                )
-
-
-                                Spacer(
-                                    Modifier.height(3.dp)
-                                )
-
-
-                                Text(
-
-                                    text =
-                                        "Cali y Latinoamérica",
-
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .labelSmall,
-
-                                    color =
-                                        White.copy(
-                                            alpha = 0.58f
-                                        )
-                                )
-                            }
-
-
-                            Spacer(
-                                Modifier.width(8.dp)
-                            )
-
-
-                            Icon(
-
-                                imageVector =
-                                    Icons.AutoMirrored
-                                        .Filled
-                                        .ArrowForward,
-
-                                contentDescription =
-                                    "Abrir historia estudiantil",
-
-                                tint =
-                                    White.copy(
-                                        alpha = 0.72f
-                                    ),
-
-                                modifier =
-                                    Modifier.size(18.dp)
-                            )
-                        }
-                    }
                 }
             }
         }
     }
 }
-
 
 // ========================================================================
 // TARJETA SIRA
@@ -3653,41 +3232,7 @@ private fun TarjetaSelectorLinea(
 // TÍTULO DE SECCIÓN
 // ========================================================================
 
-@Composable
-private fun SeccionTitulo(
-    icono: ImageVector,
-    titulo: String,
-    subtitulo: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icono, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(19.dp))
-            }
-        }
-        Spacer(Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = titulo,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitulo,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
+
 
 // ========================================================================
 // ACCESO CUADRADO
@@ -3921,14 +3466,15 @@ private fun MatrizHorarioSemanal(
     onClaseClick: (AsignaturaHorario) -> Unit
 ) {
     val dias = listOf("LUN", "MAR", "MIE", "JUE", "VIE", "SAB", "DOM")
-    val diaHoy = when (java.time.LocalDate.now().dayOfWeek) {
-        java.time.DayOfWeek.MONDAY -> "LUN"
-        java.time.DayOfWeek.TUESDAY -> "MAR"
-        java.time.DayOfWeek.WEDNESDAY -> "MIE"
-        java.time.DayOfWeek.THURSDAY -> "JUE"
-        java.time.DayOfWeek.FRIDAY -> "VIE"
-        java.time.DayOfWeek.SATURDAY -> "SAB"
-        java.time.DayOfWeek.SUNDAY -> "DOM"
+    val diaHoy = when (java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK)) {
+        java.util.Calendar.MONDAY -> "LUN"
+        java.util.Calendar.TUESDAY -> "MAR"
+        java.util.Calendar.WEDNESDAY -> "MIE"
+        java.util.Calendar.THURSDAY -> "JUE"
+        java.util.Calendar.FRIDAY -> "VIE"
+        java.util.Calendar.SATURDAY -> "SAB"
+        java.util.Calendar.SUNDAY -> "DOM"
+        else -> "LUN"
     }
     val scroll = rememberScrollState()
     val densidad = androidx.compose.ui.platform.LocalDensity.current
