@@ -61,4 +61,47 @@ class AsignaturaTest {
         assertFalse(asignatura().esElectivaOIdioma())
         assertTrue(asignatura(componente = "Idioma").esElectivaOIdioma())
     }
+
+    @Test fun cambiarNotaEspecialValidaModificaMarcaYReiniciaNota() {
+        val actual = asignatura(nota = 4.0f).cambiarNotaEspecial("E.X")
+        assertEquals("E.X", actual.notaEspecial)
+        assertEquals(0f, actual.nota, 0f)
+        assertTrue(actual.aprobo())
+    }
+
+    @Test fun cambiarNotaEspecialEnBlancoNoModificaLaAsignatura() {
+        val original = asignatura(nota = 3.5f)
+        assertSame(original, original.cambiarNotaEspecial(""))
+        assertSame(original, original.cambiarNotaEspecial("   "))
+    }
+
+    @Test fun soloComponentesEditablesPermitenCambiarCodigo() {
+        assertEquals("NUEVO1", asignatura(componente = "Electiva complementaria").cambiarCodigo("NUEVO1").codigo)
+        assertEquals("NUEVO2", asignatura(componente = "Electiva profesional").cambiarCodigo("NUEVO2").codigo)
+        assertEquals("NUEVO3", asignatura(componente = "Idioma").cambiarCodigo("NUEVO3").codigo)
+        assertEquals("402180M", asignatura(componente = "Obligatoria").cambiarCodigo("NUEVO").codigo)
+    }
+
+    @Test fun sinNotaIdentificaMateriasSinCalificacion() {
+        assertTrue(asignatura(nota = 0f, notaEspecial = null).sinNota())
+        assertFalse(asignatura(nota = 3.0f, notaEspecial = null).sinNota())
+        assertFalse(asignatura(nota = 0f, notaEspecial = "A.P").sinNota())
+        // Una materia con nota reprobatoria (2.0) no es "sin nota": ya fue calificada
+        assertFalse(asignatura(nota = 2.0f, notaEspecial = null).sinNota())
+    }
+
+    @Test fun textoNotaFormateaCorrectamente() {
+        val texto = asignatura(nota = 4.2f).textoNota()
+        assertTrue(texto == "4.2" || texto == "4,2")
+        assertEquals("A.P", asignatura(notaEspecial = "A.P").textoNota())
+        assertEquals("-", asignatura(nota = 0f, notaEspecial = null).textoNota())
+    }
+
+    @Test fun aproboConNotaMinimaPersonalizada() {
+        val mat = asignatura(nota = 3.2f)
+        assertTrue(mat.aprobo(2.9f))
+        assertFalse(mat.aprobo(3.5f))
+        // Con marca especial siempre aprueba independientemente de la nota mínima
+        assertTrue(asignatura(nota = 0f, notaEspecial = "EX").aprobo(4.0f))
+    }
 }

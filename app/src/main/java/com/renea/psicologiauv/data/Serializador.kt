@@ -11,6 +11,7 @@ import android.provider.MediaStore
 import com.renea.psicologiauv.model.ElectivaProfesionalCatalogo
 import com.renea.psicologiauv.model.Estudiante
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.IOException
@@ -290,6 +291,26 @@ class Serializador(private val context: Context) {
         } catch (e: Exception) {
             Log.w(TAG, "No se pudo leer el catálogo de electivas profesionales.", e)
             emptyList()
+        }
+    }
+
+    /**
+     * Lee los códigos alias de Deporte Formativo empaquetados en
+     * assets/data/DeporteFormativo.json y los devuelve como lista.
+     * Devuelve una lista con los códigos por defecto si el archivo no existe o falla la lectura.
+     */
+    fun leerDeporteFormativo(): List<String> {
+        return try {
+            context.assets.open("data/DeporteFormativo.json").use { entrada ->
+                val texto = entrada.readBytes().toString(Charsets.UTF_8)
+                jsonEstudiante.decodeFromString(
+                    ListSerializer(String.serializer()),
+                    texto
+                )
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "No se pudo leer el archivo de deporte formativo.", e)
+            ReglaDeporteFormativo.CODIGOS_ALIAS
         }
     }
 

@@ -128,4 +128,89 @@ class EstudianteOperacionesTest {
         val materia = e.sincronizarComplementarias().asignaturas.first { it.codigo == "402226M" }
         assertEquals("C.U", materia.notaEspecial)
     }
+
+    // ------------------------------------------------------------------
+    // semestresManuales y cambiarEstadoSemestre
+    // ------------------------------------------------------------------
+
+    @Test fun cambiarEstadoSemestreAgregaModificaYRevierte() {
+        val e = crearEstudiante()
+        val e1 = e.cambiarEstadoSemestre(3, true)
+        assertEquals(mapOf(3 to true), e1.semestresManuales)
+
+        val e2 = e1.cambiarEstadoSemestre(4, false)
+        assertEquals(mapOf(3 to true, 4 to false), e2.semestresManuales)
+
+        val e3 = e2.cambiarEstadoSemestre(3, false)
+        assertEquals(mapOf(3 to false, 4 to false), e3.semestresManuales)
+
+        val e4 = e3.cambiarEstadoSemestre(3, null)
+        assertEquals(mapOf(4 to false), e4.semestresManuales)
+    }
+
+    // ------------------------------------------------------------------
+    // asignarElectivaComplementaria
+    // ------------------------------------------------------------------
+
+    @Test fun asignarElectivaComplementariaModificaElSlotCorrespondiente() {
+        val comp1 = crearAsignatura("C1", componente = "Electiva complementaria", nota = 0f)
+        val comp2 = crearAsignatura("C2", componente = "Electiva complementaria", nota = 0f)
+        val e = crearEstudiante(comp1, comp2)
+
+        val r1 = e.asignarElectivaComplementaria(
+            posicion = 0,
+            codigo = "COMP_NUEVA",
+            nombre = "Teatro",
+            nota = com.renea.psicologiauv.model.NotaImportada.Numerica(4.5f)
+        )
+        val m1 = r1.asignaturas.first { it.codigo == "COMP_NUEVA" }
+        assertEquals("Teatro", m1.nombre)
+        assertEquals(4.5f, m1.nota, 0.001f)
+        assertEquals("C2", r1.asignaturas[1].codigo)
+
+        val r2 = r1.asignarElectivaComplementaria(
+            posicion = 1,
+            codigo = "COMP_DANZA",
+            nombre = "Danza",
+            nota = com.renea.psicologiauv.model.NotaImportada.Especial("EX")
+        )
+        val m2 = r2.asignaturas.first { it.codigo == "COMP_DANZA" }
+        assertEquals("Danza", m2.nombre)
+        assertEquals("EX", m2.notaEspecial)
+        assertEquals(0f, m2.nota, 0f)
+    }
+
+    @Test fun asignarElectivaComplementariaFueraDeRangoNoModificaNada() {
+        val comp1 = crearAsignatura("C1", componente = "Electiva complementaria")
+        val e = crearEstudiante(comp1)
+        assertSame(e, e.asignarElectivaComplementaria(5, "X", "Nombre", null))
+        assertSame(e, e.asignarElectivaComplementaria(-1, "X", "Nombre", null))
+    }
+
+    // ------------------------------------------------------------------
+    // moverAsignaturasEnCursoAlSemestre
+    // ------------------------------------------------------------------
+
+    @Test fun moverAsignaturasEnCursoAlSemestreMueveSoloMateriasSinNotaEnCurso() {
+        val m1 = crearAsignatura("402180M", semestre = 1, nota = 0f) // en curso, sin nota
+        val m2 = crearAsignatura("402181M", semestre = 1, nota = 4.0f) // aprobada, no debe moverse
+        val m3 = crearAsignatura("402182M", semestre = 4, nota = 0f) // ya en semestre 4
+        val e = crearEstudiante(m1, m2, m3)
+
+        val (actualizado, movidas) = e.moverAsignaturasEnCursoAlSemestre(
+            codigosEnCurso = listOf("402180M", "402181M", "402182M"),
+            semestreActual = 4
+        )
+        assertEquals(1, movidas)
+        assertEquals(4, actualizado.asignaturas.first { it.codigo == "402180M" }.semestre)
+        assertEquals(1, actualizado.asignaturas.first { it.codigo == "402181M" }.semestre)
+        assertEquals(4, actualizado.asignaturas.first { it.codigo == "402182M" }.semestre)
+    }
+
+    @Test fun moverAsignaturasConListaVaciaRetornaCeroMovidas() {
+        val e = crearEstudiante(crearAsignatura("A", semestre = 1))
+        val (actualizado, movidas) = e.moverAsignaturasEnCursoAlSemestre(emptyList(), 3)
+        assertEquals(0, movidas)
+        assertSame(e, actualizado)
+    }
 }

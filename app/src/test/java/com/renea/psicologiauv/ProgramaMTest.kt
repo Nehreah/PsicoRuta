@@ -349,4 +349,71 @@ class ProgramaMTest {
         assertFalse(programa.requisitoTrabajoDeGradoCumplido())
         assertFalse(programa.requisitoCreditosComplementariosCumplido())
     }
+
+    // ------------------------------------------------------------------
+    // AvanceLineaProfesional y textoNivel
+    // ------------------------------------------------------------------
+
+    @Test fun avanceLineaProfesionalTextoNivel() {
+        assertEquals("Nivel I", com.renea.psicologiauv.model.AvanceLineaProfesional("Social", "Social", 1, "M1").textoNivel())
+        assertEquals("Nivel II", com.renea.psicologiauv.model.AvanceLineaProfesional("Social", "Social", 2, "M2").textoNivel())
+        assertEquals("Nivel III", com.renea.psicologiauv.model.AvanceLineaProfesional("Social", "Social", 3, "M3").textoNivel())
+        assertEquals("Nivel 4", com.renea.psicologiauv.model.AvanceLineaProfesional("Social", "Social", 4, "M4").textoNivel())
+    }
+
+    // ------------------------------------------------------------------
+    // semestresManuales en ProgramaM
+    // ------------------------------------------------------------------
+
+    @Test fun semestreCompletadoRespetaAjusteManual() {
+        // Semestre 1 con materia pendiente (no aprobado automáticamente)
+        val mat = crearAsignatura("M1", semestre = 1, nota = 0f)
+        val est = crearEstudiante(mat)
+        val programa = ProgramaM(estudiante = est)
+
+        assertFalse(programa.semestreCompletadoAutomatico(1))
+        assertFalse(programa.semestreCompletado(1))
+        assertNull(programa.estadoSemestreManual(1))
+
+        // Fijar manualmente como completado
+        val programaManualTrue = programa.copy(estudiante = est.cambiarEstadoSemestre(1, true))
+        assertTrue(programaManualTrue.semestreCompletado(1))
+        assertEquals(true, programaManualTrue.estadoSemestreManual(1))
+
+        // Fijar manualmente como NO completado (incluso si la materia estuviera aprobada)
+        val matAprobada = crearAsignatura("M1", semestre = 1, nota = 4.0f)
+        val estAprobada = crearEstudiante(matAprobada).cambiarEstadoSemestre(1, false)
+        val programaManualFalse = ProgramaM(estudiante = estAprobada)
+        assertTrue(programaManualFalse.semestreCompletadoAutomatico(1))
+        assertFalse(programaManualFalse.semestreCompletado(1))
+        assertEquals(false, programaManualFalse.estadoSemestreManual(1))
+    }
+
+    // ------------------------------------------------------------------
+    // Métricas por semestre
+    // ------------------------------------------------------------------
+
+    @Test fun metricasDeSemestreCalculanTotalesCursadasYCreditos() {
+        val m1 = crearAsignatura("A", semestre = 2, creditos = 3, nota = 4.0f) // aprobada
+        val m2 = crearAsignatura("B", semestre = 2, creditos = 4, nota = 2.0f) // cursada pero reprobada
+        val m3 = crearAsignatura("C", semestre = 2, creditos = 2, nota = 0f) // no cursada
+        val m4 = crearAsignatura("D", semestre = 3, creditos = 3, nota = 5.0f) // otro semestre
+        val programa = programaCon(m1, m2, m3, m4)
+
+        assertEquals(3, programa.totalAsignaturasSemestre(2))
+        assertEquals(2, programa.asignaturasCursadasSemestre(2))
+        assertEquals(9, programa.creditosTotalesSemestre(2))
+        assertEquals(3, programa.creditosAprobadosSemestre(2))
+    }
+
+    @Test fun consejoPensumDevuelveConsejoValidoPorSemestre() {
+        val programa = ProgramaM()
+        (1..10).forEach { semestre ->
+            val consejo = programa.consejoPensum(semestre)
+            assertTrue(consejo.titulo.isNotBlank())
+            assertTrue(consejo.texto.isNotBlank())
+        }
+        val defaultConsejo = programa.consejoPensum(99)
+        assertTrue(defaultConsejo.titulo.isNotBlank())
+    }
 }

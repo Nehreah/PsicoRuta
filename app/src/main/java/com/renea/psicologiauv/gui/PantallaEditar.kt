@@ -113,6 +113,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.renea.psicologiauv.data.ImportadorNotas
 import com.renea.psicologiauv.data.ReglaEspanol
+import com.renea.psicologiauv.data.ReglaDeporteFormativo
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
 import com.renea.psicologiauv.data.RepositorioHorarios
@@ -662,12 +663,17 @@ fun PantallaPerfil(
                                 // espacios de Electiva Profesional II, III y IV.
                                 // 204001M (Español en el SIRA) se lee aparte: llena
                                 // Cultura Escrita si fue aprobado o eximido (ReglaEspanol).
+                                // Los alias de Deporte Formativo (leídos del JSON DeporteFormativo)
+                                // también se incluyen para que el analizador los encuentre.
+                                val codigosDeporte = serializador.leerDeporteFormativo()
                                 val codigosConocidos =
-                                    (listOf(ReglaEspanol.CODIGO_ESPANOL_SIRA) + estudiante
-                                        .asignaturas
-                                        .map {
-                                            it.codigo
-                                        } +
+                                    (listOf(ReglaEspanol.CODIGO_ESPANOL_SIRA) +
+                                            codigosDeporte +
+                                            estudiante
+                                                .asignaturas
+                                                .map {
+                                                    it.codigo
+                                                } +
                                             serializador
                                                 .leerElectivasProfesionales()
                                                 .map {
@@ -680,7 +686,7 @@ fun PantallaPerfil(
                                     codigosConocidos
                                 )
                                 val regla = ReglaEspanol.aplicar(notasCrudas)
-                                val notas = regla.notas
+                                val notas = ReglaDeporteFormativo.aplicar(regla.notas, codigosDeporte)
                                 val grupos = importadorNotas.extraerGruposPorCodigo(texto)
                                 val sinSincronizar = importadorNotas.extraerNoSincronizadas(
                                     texto,
