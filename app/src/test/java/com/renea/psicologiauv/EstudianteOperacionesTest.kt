@@ -16,6 +16,14 @@ class EstudianteOperacionesTest {
         assertEquals("content://a", e.cambiarAvatar("content://a").avatarUri)
     }
 
+    @Test fun cambiarLineaPermiteElegirYQuitarLinea() {
+        val e = crearEstudiante()
+        val conLinea = e.cambiarLinea("Clínica")
+        assertEquals("Clínica", conLinea.linea)
+        val sinLinea = conLinea.cambiarLinea("Ninguna")
+        assertEquals("Ninguna", sinLinea.linea)
+    }
+
     @Test fun cambiarCodigoDelEstudianteRechazaValoresNoPositivos() {
         val e = crearEstudiante()
         assertEquals(555, e.cambiarCodigo(555).codigo)

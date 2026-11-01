@@ -24,9 +24,14 @@ val LocalTemaLinea = staticCompositionLocalOf { obtenerTemaLinea(null) }
  * Control del tema claro/oscuro elegido por el usuario. [oscuro] indica el
  * tema activo y [alternar] lo cambia (y lo recuerda entre sesiones).
  */
-class ControlTema(val oscuro: Boolean, val alternar: () -> Unit)
+class ControlTema(
+    val oscuro: Boolean,
+    val alternar: () -> Unit,
+    val neutro: Boolean = false,
+    val alternarNeutro: () -> Unit = {}
+)
 
-val LocalControlTema = staticCompositionLocalOf { ControlTema(false) { } }
+val LocalControlTema = staticCompositionLocalOf { ControlTema(false, {}) }
 
 // ============================================================
 // ESQUEMAS DERIVADOS DE LA LÍNEA
@@ -48,20 +53,23 @@ private val TextoSecundarioClaro = Color(0xFF45454D)
 private val TextoSecundarioOscuro = Color(0xFFD0D0D6)
 
 private fun esquemaClaro(c: TemaLineaConfig): ColorScheme {
-    val oscurecer = when (c.tipo) {
-        TipoLinea.EDUCATIVA -> 0.22f   // el ámbar necesita más peso para leerse
-        TipoLinea.NINGUNA -> 0f
-        else -> 0.12f
+    val primario = if (c.tipo == TipoLinea.NINGUNA) {
+        Color(0xFF111114)
+    } else {
+        val oscurecer = when (c.tipo) {
+            TipoLinea.EDUCATIVA -> 0.22f   // el ámbar necesita más peso para leerse
+            else -> 0.12f
+        }
+        lerp(c.colorPrimario, Color.Black, oscurecer)
     }
-    val primario = lerp(c.colorPrimario, Color.Black, oscurecer)
 
     return lightColorScheme(
         primary = primario,
         onPrimary = White,
-        primaryContainer = Color(0xFFEDEDF1),
+        primaryContainer = if (c.tipo == TipoLinea.NINGUNA) Color(0xFFF2F2F5) else Color(0xFFEDEDF1),
         onPrimaryContainer = TintaClara,
 
-        secondary = c.colorSecundario,
+        secondary = if (c.tipo == TipoLinea.NINGUNA) Color(0xFF26262B) else c.colorSecundario,
         onSecondary = White,
         secondaryContainer = Color(0xFFF1F1F4),
         onSecondaryContainer = TintaClara,
@@ -97,14 +105,20 @@ private fun esquemaClaro(c: TemaLineaConfig): ColorScheme {
 
 private fun esquemaOscuro(c: TemaLineaConfig): ColorScheme {
     val fondo = c.fondoOscuro
+    val esNeutro = c.tipo == TipoLinea.NINGUNA
+
+    val primario = if (esNeutro) White else lerp(c.colorPrimario, White, 0.30f)
+    val onPrimario = if (esNeutro) Color(0xFF0F0F12) else lerp(fondo, Color.Black, 0.40f)
+    val secundario = if (esNeutro) Color(0xFFE2E2E8) else lerp(c.colorSecundario, White, 0.45f)
+
     return darkColorScheme(
-        primary = lerp(c.colorPrimario, White, 0.30f),
-        onPrimary = lerp(fondo, Color.Black, 0.40f),
-        primaryContainer = Color(0xFF2A2A31),
+        primary = primario,
+        onPrimary = onPrimario,
+        primaryContainer = if (esNeutro) Color(0xFF242429) else Color(0xFF2A2A31),
         onPrimaryContainer = White,
 
-        secondary = lerp(c.colorSecundario, White, 0.45f),
-        onSecondary = lerp(fondo, Color.Black, 0.40f),
+        secondary = secundario,
+        onSecondary = onPrimario,
         secondaryContainer = Color(0xFF232329),
         onSecondaryContainer = White,
 
@@ -116,9 +130,9 @@ private fun esquemaOscuro(c: TemaLineaConfig): ColorScheme {
         background = fondo,
         onBackground = White,
 
-        surface = Charcoal,
+        surface = if (esNeutro) Color(0xFF16161A) else Charcoal,
         onSurface = White,
-        surfaceVariant = DarkGray,
+        surfaceVariant = if (esNeutro) Color(0xFF202026) else DarkGray,
         onSurfaceVariant = TextoSecundarioOscuro,
 
         surfaceContainerLowest = Color(0xFF0E0E12),

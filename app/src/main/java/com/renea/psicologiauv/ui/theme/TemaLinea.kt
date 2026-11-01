@@ -136,14 +136,14 @@ fun obtenerTemaLinea(nombre: String?): TemaLineaConfig {
                 tipo = TipoLinea.NINGUNA,
                 nombreVisible = "Selecciona tu línea",
                 iconoRes = R.drawable.ic_avatar_default,
-                colorPrimario = Color(0xFF6B7280),       // Gris pizarra neutro
-                colorSecundario = Color(0xFF3F4350),
-                fondoClaro = Color(0xFFF8F8FA),
-                fondoOscuro = Color(0xFF18171C),
-                chipFondoClaro = Color(0xFFE6E7EB),
-                chipFondoOscuro = Color(0xFF33343B),
-                colorTextoChip = Color(0xFF30323A),
-                colorTextoChipOscuro = Color(0xFFD5D7DE)
+                colorPrimario = Color(0xFF111114),       // Negro nítido para contraste en modo claro
+                colorSecundario = Color(0xFF26262B),     // Negro / grafito profundo
+                fondoClaro = Color(0xFFFFFFFF),          // Blanco puro
+                fondoOscuro = Color(0xFF0F0F12),         // Negro profundo
+                chipFondoClaro = Color(0xFFF3F3F5),      // Blanco suave para chips
+                chipFondoOscuro = Color(0xFF1E1E22),     // Gris casi negro
+                colorTextoChip = Color(0xFF111114),      // Negro sobre chip claro
+                colorTextoChipOscuro = Color(0xFFFFFFFF) // Blanco sobre chip oscuro
             )
         }
     }

@@ -169,7 +169,7 @@ private fun TarjetaHeroeProgreso(
     )
 
     val isDark = isSystemInDarkTheme()
-    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea)
+    val temaLinea = com.renea.psicologiauv.ui.theme.LocalTemaLinea.current
     val colorAcento = temaLinea.colorPrimario
     val scheme = MaterialTheme.colorScheme
     val fondo = scheme.surface

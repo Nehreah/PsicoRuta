@@ -69,9 +69,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.window.Dialog
@@ -1050,15 +1052,9 @@ fun PantallaPerfil(
                     lineaSeleccionada =
                         estudiante.linea,
 
-                    onSeleccionar = { linea ->
-
-                        viewModel
-                            .cambiarLineaEstudiante(
-                                linea.nombre
-                            )
-
-                        mostrandoSelectorLinea =
-                            false
+                    onSeleccionar = { nombreLinea ->
+                        viewModel.cambiarLineaEstudiante(nombreLinea)
+                        mostrandoSelectorLinea = false
                     }
                 )
             }
@@ -1425,7 +1421,7 @@ fun PantallaPerfil(
             title = {
 
                 Text(
-                    "Datos personales",
+                    "Configuración y perfil",
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -1510,7 +1506,7 @@ fun PantallaPerfil(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Tema de la app",
+                            text = "Modo oscuro",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f)
@@ -1530,86 +1526,89 @@ fun PantallaPerfil(
                         }
                     }
 
+                    // Opción: Tema neutro
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Tema neutro",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Blanco y negro sin colores de línea",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = controlTema.neutro,
+                            onCheckedChange = { controlTema.alternarNeutro() }
+                        )
+                    }
 
                     Text(
-
-                        text =
-                            "Línea profesional",
-
-                        style =
-                            MaterialTheme
-                                .typography
-                                .labelLarge,
-
-                        fontWeight =
-                            FontWeight.Bold
+                        text = "Línea profesional",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
                     )
 
-
                     FlowRow(
-
-                        modifier =
-                            Modifier.fillMaxWidth(),
-
-                        horizontalArrangement =
-                            Arrangement.SpaceEvenly,
-
-                        verticalArrangement =
-                            Arrangement.spacedBy(10.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
+                        val esSinLinea = lineaSeleccionadaDialog == "Ninguna" || lineaSeleccionadaDialog.isBlank()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .width(54.dp)
+                                .clickable {
+                                    lineaSeleccionadaDialog = "Ninguna"
+                                }
+                        ) {
+                            CirculoLinea(
+                                icono = Icons.Default.Block,
+                                color = MaterialTheme.colorScheme.outline,
+                                tamano = 40.dp,
+                                seleccionado = esSinLinea
+                            )
+                            Spacer(Modifier.height(5.dp))
+                            Text(
+                                text = "Sin línea",
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = TextAlign.Center,
+                                fontWeight = if (esSinLinea) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 2
+                            )
+                        }
 
                         LINEAS_DISPONIBLES.forEach { linea ->
-
+                            val seleccionada = linea.nombre == lineaSeleccionadaDialog
                             Column(
-
-                                horizontalAlignment =
-                                    Alignment.CenterHorizontally,
-
-                                modifier =
-                                    Modifier
-                                        .width(54.dp)
-                                        .clickable {
-
-                                            lineaSeleccionadaDialog =
-                                                linea.nombre
-                                        }
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .width(54.dp)
+                                    .clickable {
+                                        lineaSeleccionadaDialog =
+                                            if (seleccionada) "Ninguna"
+                                            else linea.nombre
+                                    }
                             ) {
-
                                 CirculoLinea(
-
-                                    icono =
-                                        linea.icono,
-
-                                    color =
-                                        linea.color,
-
-                                    tamano =
-                                        40.dp,
-
-                                    seleccionado =
-                                        linea.nombre ==
-                                                lineaSeleccionadaDialog
+                                    icono = linea.icono,
+                                    color = linea.color,
+                                    tamano = 40.dp,
+                                    seleccionado = seleccionada
                                 )
-
-
-                                Spacer(
-                                    Modifier.height(5.dp)
-                                )
-
-
+                                Spacer(Modifier.height(5.dp))
                                 Text(
-
-                                    text =
-                                        linea.nombre,
-
-                                    style =
-                                        MaterialTheme
-                                            .typography
-                                            .labelSmall,
-
-                                    textAlign =
-                                        TextAlign.Center,
-
+                                    text = linea.nombre,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    textAlign = TextAlign.Center,
+                                    fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal,
                                     maxLines = 2
                                 )
                             }
@@ -3006,8 +3005,9 @@ private fun TarjetaPerfilHero(
     onNavigate: (PantallasApp) -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
-    val temaLinea = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(linea?.nombre)
+    val temaLinea = com.renea.psicologiauv.ui.theme.LocalTemaLinea.current
     val colorAcento = temaLinea.colorPrimario
+    val textoLinea = linea?.nombre ?: "Selecciona tu línea"
     val progresoAnimado by animateFloatAsState(
         targetValue = (progreso / 100f).coerceIn(0f, 1f),
         animationSpec = tween(durationMillis = 850),
@@ -3112,13 +3112,13 @@ private fun TarjetaPerfilHero(
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Check,
+                                imageVector = if (linea != null) Icons.Default.Check else Icons.Default.Add,
                                 contentDescription = null,
                                 tint = colorAcento,
                                 modifier = Modifier.size(14.dp)
                             )
                             Text(
-                                text = temaLinea.nombreVisible,
+                                text = textoLinea,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold,
@@ -3180,7 +3180,7 @@ private fun TarjetaPerfilHero(
 @Composable
 private fun TarjetaSelectorLinea(
     lineaSeleccionada: String,
-    onSeleccionar: (LineaInfo) -> Unit
+    onSeleccionar: (String) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -3199,7 +3199,7 @@ private fun TarjetaSelectorLinea(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Elige el área que representa tu perfil.",
+                text = "Elige el área que representa tu perfil o quítala para quedar sin línea.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -3208,23 +3208,49 @@ private fun TarjetaSelectorLinea(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Opción explícita: Sin línea
+                val esSinLinea = lineaSeleccionada == "Ninguna" || lineaSeleccionada.isBlank()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.width(58.dp).clickable { onSeleccionar("Ninguna") }
+                ) {
+                    CirculoLinea(
+                        icono = Icons.Default.Block,
+                        color = MaterialTheme.colorScheme.outline,
+                        tamano = 40.dp,
+                        seleccionado = esSinLinea
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "Sin línea",
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.Center,
+                        fontWeight = if (esSinLinea) FontWeight.Bold else FontWeight.Normal,
+                        maxLines = 2
+                    )
+                }
+
                 LINEAS_DISPONIBLES.forEach { linea ->
+                    val seleccionada = linea.nombre == lineaSeleccionada
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(58.dp).clickable { onSeleccionar(linea) }
+                        modifier = Modifier.width(58.dp).clickable {
+                            val nueva = if (seleccionada) "Ninguna" else linea.nombre
+                            onSeleccionar(nueva)
+                        }
                     ) {
                         CirculoLinea(
                             icono = linea.icono,
                             color = linea.color,
                             tamano = 40.dp,
-                            seleccionado = linea.nombre == lineaSeleccionada
+                            seleccionado = seleccionada
                         )
                         Spacer(Modifier.height(4.dp))
                         Text(
                             text = linea.nombre,
                             style = MaterialTheme.typography.labelSmall,
                             textAlign = TextAlign.Center,
-                            fontWeight = if (linea.nombre == lineaSeleccionada) FontWeight.Bold else FontWeight.Normal,
+                            fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal,
                             maxLines = 2
                         )
                     }

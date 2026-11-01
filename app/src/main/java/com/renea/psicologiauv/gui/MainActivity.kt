@@ -163,6 +163,9 @@ class MainActivity : ComponentActivity() {
                     else null
                 )
             }
+            var temaNeutro by remember {
+                mutableStateOf(preferenciasAviso.getBoolean("tema_neutro", false))
+            }
             val sistemaOscuro = androidx.compose.foundation.isSystemInDarkTheme()
             val oscuro = temaManual ?: sistemaOscuro
 
@@ -191,19 +194,29 @@ class MainActivity : ComponentActivity() {
                 onDispose { }
             }
 
-            val controlTema = remember(oscuro) {
-                com.renea.psicologiauv.ui.theme.ControlTema(oscuro) {
-                    val nuevo = !oscuro
-                    temaManual = nuevo
-                    preferenciasAviso.edit().putBoolean("tema_oscuro", nuevo).apply()
-                }
+            val controlTema = remember(oscuro, temaNeutro) {
+                com.renea.psicologiauv.ui.theme.ControlTema(
+                    oscuro = oscuro,
+                    alternar = {
+                        val nuevo = !oscuro
+                        temaManual = nuevo
+                        preferenciasAviso.edit().putBoolean("tema_oscuro", nuevo).apply()
+                    },
+                    neutro = temaNeutro,
+                    alternarNeutro = {
+                        val nuevo = !temaNeutro
+                        temaNeutro = nuevo
+                        preferenciasAviso.edit().putBoolean("tema_neutro", nuevo).apply()
+                    }
+                )
             }
 
             androidx.compose.runtime.CompositionLocalProvider(
                 androidx.compose.ui.platform.LocalConfiguration provides configuracionTema,
                 com.renea.psicologiauv.ui.theme.LocalControlTema provides controlTema
             ) {
-            PsicologiaUVTheme(linea = viewModel.programa.estudiante?.linea, darkTheme = oscuro) {
+            val lineaParaTema = if (temaNeutro) null else viewModel.programa.estudiante?.linea
+            PsicologiaUVTheme(linea = lineaParaTema, darkTheme = oscuro) {
                 var avisoAceptado by remember {
                     mutableStateOf(preferenciasAviso.getBoolean("aviso_uso_aceptado", false))
                 }
@@ -674,9 +687,8 @@ fun PsicologiaUVApp(
         // ================================================================
 
         // Fondo temático global: la ilustración depende de la línea profesional
-        // del estudiante y queda detrás de todas las pantallas, no dentro del hero.
-        val temaPantalla = com.renea.psicologiauv.ui.theme.obtenerTemaLinea(estudiante.linea)
-        val temaOscuro = androidx.compose.foundation.isSystemInDarkTheme()
+        val temaPantalla = com.renea.psicologiauv.ui.theme.LocalTemaLinea.current
+        val temaOscuro = com.renea.psicologiauv.ui.theme.LocalControlTema.current.oscuro
         val fondoTematico = if (temaOscuro) temaPantalla.fondoOscuro else temaPantalla.fondoClaro
 
         Box(
