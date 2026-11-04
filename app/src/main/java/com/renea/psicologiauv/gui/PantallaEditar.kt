@@ -436,6 +436,10 @@ fun PantallaPerfil(
         mutableStateOf(false)
     }
 
+    var mostrandoAgradecimientos by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     // Módulos emergentes: importación, accesos rápidos y bienvenida inicial.
     var mostrandoCopiaSeguridad by rememberSaveable {
         mutableStateOf(false)
@@ -497,6 +501,7 @@ fun PantallaPerfil(
                     mostrandoHistoria ||
                     mostrandoReporteBugs ||
                     mostrandoAcercaDe ||
+                    mostrandoAgradecimientos ||
                     mostrandoCopiaSeguridad
     ) {
 
@@ -525,6 +530,9 @@ fun PantallaPerfil(
 
             mostrandoAcercaDe ->
                 mostrandoAcercaDe = false
+
+            mostrandoAgradecimientos ->
+                mostrandoAgradecimientos = false
         }
     }
 
@@ -1368,6 +1376,16 @@ fun PantallaPerfil(
                         }
                     )
 
+                    AccionFlotante(
+                        icono = Icons.Default.Favorite,
+                        etiqueta = "Agradecimientos",
+                        descripcion = "Agradecimientos y Movimiento Académico Estudiantil",
+                        onClick = {
+                            menuAccionesAbierto = false
+                            mostrandoAgradecimientos = true
+                        }
+                    )
+
                     if (MOSTRAR_OPCION_ACERCA_DE) {
                         AccionFlotante(
                             icono = Icons.Default.CorporateFare,
@@ -1938,6 +1956,179 @@ fun PantallaPerfil(
                         onClick = { mostrandoAcercaDe = false },
                         modifier = Modifier.align(Alignment.End)
                     ) { Text("Cerrar") }
+                }
+            }
+        }
+    }
+
+    if (mostrandoAgradecimientos) {
+        ModuloEmergente(onCerrar = { mostrandoAgradecimientos = false }) {
+            val colores = MaterialTheme.colorScheme
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = colores.surface),
+                border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.65f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(22.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = colores.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            text = "Agradecimientos",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = colores.onSurface,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { mostrandoAgradecimientos = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                        }
+                    }
+
+                    // Breve descripción de la app (2 líneas)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        color = colores.surfaceVariant.copy(alpha = 0.45f),
+                        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.35f))
+                    ) {
+                        Text(
+                            text = "PsicoRuta es una aplicación independiente desarrollada para que los estudiantes de Psicología de la Universidad del Valle gestionen, planifiquen y proyecten su trayectoria académica con autonomía.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colores.onSurfaceVariant,
+                            textAlign = TextAlign.Justify,
+                            modifier = Modifier.padding(14.dp)
+                        )
+                    }
+
+                    // Movimiento Académico Estudiantil (MAE)
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = colores.primaryContainer.copy(alpha = 0.38f),
+                        border = BorderStroke(1.dp, colores.primary.copy(alpha = 0.2f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Movimiento Académico Estudiantil (MAE)",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = colores.primary
+                            )
+                            Text(
+                                text = "Así como el movimiento social estudiantil busca transformar la sociedad a través de la movilización social, el Movimiento Académico Estudiantil busca transformar su entorno a través de la movilización académica: poner el conocimiento, la técnica y la ciencia al servicio del pueblo y de los estudiantes.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Justify,
+                                color = colores.onSurface
+                            )
+                            Text(
+                                text = "Agradecemos y honramos la memoria de todas las compañeras y compañeros que han dado su vida y sus esfuerzos a favor de la transformación social y el bienestar de la comunidad.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Justify,
+                                color = colores.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Reconocimientos especiales",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = colores.onSurface
+                    )
+
+                    // Andrea González Sánchez
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        color = colores.surface,
+                        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.6f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = colores.secondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Andrea González Sánchez",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colores.onSurface
+                                )
+                            }
+                            Text(
+                                text = "Por su acompañamiento y respaldo durante toda la construcción del proyecto. Gracias a su ayuda y aportes fue posible abrir el perfil de desarrollador bajo el cual se publicó la aplicación.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Justify,
+                                color = colores.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Juan Camilo Pavi
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        color = colores.surface,
+                        border = BorderStroke(1.dp, colores.outlineVariant.copy(alpha = 0.6f))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Psychology,
+                                    contentDescription = null,
+                                    tint = colores.secondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Juan Camilo Pavi",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colores.onSurface
+                                )
+                            }
+                            Text(
+                                text = "Beta tester estrella. Con su aguda mirada crítica, dedicación constante e incansable búsqueda de fallas y bugs, aportó la gran mayoría de ideas y recomendaciones que permitieron consolidar un sistema óptimo y confiable para los estudiantes.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Justify,
+                                color = colores.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    TextButton(
+                        onClick = { mostrandoAgradecimientos = false },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Cerrar")
+                    }
                 }
             }
         }

@@ -151,14 +151,14 @@ fun PantallaPracticas(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Asignaturas necesarias",
+                            text = "Asignaturas básicas",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = text,
                             modifier = Modifier.weight(1f)
                         )
-                        IconButton(onClick = { moduloInformacion = "Asignaturas necesarias" }) {
-                            Icon(Icons.Filled.Info, contentDescription = "Información sobre asignaturas necesarias", tint = scheme.primary)
+                        IconButton(onClick = { moduloInformacion = "Asignaturas básicas" }) {
+                            Icon(Icons.Filled.Info, contentDescription = "Información sobre asignaturas básicas", tint = scheme.primary)
                         }
                     }
 
@@ -212,7 +212,7 @@ fun PantallaPracticas(
             // RESUMEN DE PROFESIONALIZACIÓN
             // ================================================================
             BarrasProgresoPracticas(
-                titulo = "Profesionalización",
+                titulo = "Asignaturas de profesionalización",
                 subtitulo = "9 asignaturas · 27 créditos",
                 creditos = datos.creditosProfesionales,
                 creditosTotales = programa.creditosProfesionales,
@@ -220,7 +220,7 @@ fun PantallaPracticas(
                 onBarClick = { indice ->
                     materiasProfesionalizacion.getOrNull(indice)?.let { materiaSeleccionada = it }
                 },
-                onInfoClick = { moduloInformacion = "Profesionalización" }
+                onInfoClick = { moduloInformacion = "Asignaturas de profesionalización" }
             )
 
             BarrasLineasProfesionalesPracticas(
@@ -241,7 +241,7 @@ fun PantallaPracticas(
                 materiasComplementarias = materiasComplementarias,
                 materiasProfesionales = materiasProfesionales,
                 onMateriaClick = { materia -> materiaSeleccionada = materia },
-                onInfoClick = { moduloInformacion = "Electivas" }
+                onInfoClick = { moduloInformacion = "Asignaturas electivas" }
             )
 
 
@@ -422,11 +422,11 @@ fun PantallaPracticas(
 
     moduloInformacion?.let { modulo ->
         val descripcion = when (modulo) {
-            "Asignaturas necesarias" -> "Asignaturas del ciclo básico necesarias para el inicio de prácticas profesionales supervisadas"
-            "Profesionalización" -> "Son aquellas asignaturas de las cuatro líneas profesionales, de las cuales se deben completar al menos 27 créditos acádemicos."
-            "Líneas profesionales" -> "Además de deber aprobar 27 asignaturas de profesionalziación. Se debe aprobar al menos un nivel de cada línea profesional. Clínica y NeuroClínica cuentan como una sola línea para este requisito general."
-            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura se consideran electivas profesionales: Problemas actuales del individuo en la sociedad. y 3 electivas a elección del estudiante. Electivas complementarias son aquellas asignaturas como baile, teatro, cine, etc.."
-            "Líneas de prácticas" -> "Para ser candidato debes aprobar los niveles I, II y III de la línea exacta que elegiste para prácticas. Clínica y NeuroClínica son independientes en este requisito de Línea de prácticas (solo cuentan como una ante el requisito de líneas profesionales): completar una no reemplaza los niveles de la otra."
+            "Asignaturas básicas", "Asignaturas necesarias" -> "Asignaturas del ciclo básico necesarias para el inicio de prácticas profesionales supervisadas"
+            "Asignaturas de profesionalización", "Profesionalización" -> "Asignaturas de profesionalización son aquellas que pertenecen a las 4 líneas profesionales: Educativa, Social, Organizacional, Clínica/NeuroPsicología. El número total acumulado de créditos cursados de estas asignaturas deben ser al menos 27 créditos académicos."
+            "Líneas profesionales" -> "Aunado al requisito de aprobar 27 asignaturas de profesionalziación. Es menester aprobar al menos un nivel de cada línea profesional. Recordatorio: Clínica y Neuropsicología cuentan como una sola línea para este requisito general, por lo que cursar al menos una línea de alguna de las dos se considera válido para aprobar el requisito."
+            "Asignaturas electivas", "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura se consideran electivas profesionales: Problemas actuales del individuo en la sociedad y 3 electivas profesionales a elección del estudiante. Electivas complementarias son aquellas asignaturas que no requieren necesariamente pertenecer al plan de estudios de la facultad de psicología: baile, teatro, cine, etc.."
+            "Líneas de prácticas" -> "Para ser candidato debes aprobar los niveles I, II y III de la línea exacta que elegiste para prácticas. Clínica y Neuropsicología son independientes en este requisito de Línea de prácticas (solo cuentan como una ante el requisito de líneas profesionales): completar una no reemplaza los niveles de la otra."
             else -> "Información del módulo $modulo."
         }
         Dialog(
@@ -635,14 +635,14 @@ private fun BarrasElectivasPracticas(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Electivas",
+                    text = "Asignaturas electivas",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color = scheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onInfoClick) {
-                    Icon(Icons.Filled.Info, contentDescription = "Información sobre electivas", tint = scheme.primary)
+                    Icon(Icons.Filled.Info, contentDescription = "Información sobre asignaturas electivas", tint = scheme.primary)
                 }
             }
 

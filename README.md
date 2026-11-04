@@ -81,6 +81,25 @@ Las contribuciones son bienvenidas. Si tienes sugerencias de mejora o encuentras
 
 ---
 
+## Agradecimientos especiales
+
+Este proyecto no habría sido posible sin el compromiso, la solidaridad y el esfuerzo colectivo de personas fundamentales:
+
+- **Juan Camilo Pavi (Beta tester estrella)**: Su aporte fue determinante en la evolución y maduración de la aplicación. Con un compromiso incansable, agudeza crítica y una dedicación excepcional, lideró la búsqueda exhaustiva de fallas y bugs, aportando la gran mayoría de las recomendaciones, ideas y mejoras que moldearon la experiencia de usuario. Gracias a su persistencia y mirada rigurosa, se logró consolidar un sistema robusto, óptimo y verdaderamente pensado para las necesidades reales del estudiantado.
+- **Andrea González Sánchez**: Por su apoyo incondicional, acompañamiento y aliento constante a lo largo de toda la construcción del proyecto. Su ayuda fundamental, generosidad y aportes hicieron posible abrir el perfil de desarrollador bajo el cual se publicó oficialmente la aplicación para que hoy esté al alcance de la comunidad.
+
+---
+
+### El Movimiento Académico Estudiantil
+
+Este proyecto nace y se articula como parte de una iniciativa fruto a de la investigación académica y se ha denominado el **Movimiento Académico Estudiantil**.
+
+> Si el movimiento social estudiantil busca transformar la sociedad a través de la movilización social, el **Movimiento Académico Estudiantil** busca transformar su entorno a través de la movilización y la producción académica: **el conocimiento y la técnica puestos al servicio del pueblo.**
+
+Agradecemos profundamente y honramos la memoria de todas las compañeras y compañeros que han dado su vida y sus esfuerzos a favor de la transformación social, la justicia y el bienestar de la comunidad. Desde las aulas, el código y la academia, seguimos construyendo colectivamente.
+
+---
+
 ## Licencia
 
 Este proyecto está bajo la licencia **GNU General Public License v3.0 (GPL-3.0)** — consulta el archivo [LICENSE](LICENSE) para más detalles.
