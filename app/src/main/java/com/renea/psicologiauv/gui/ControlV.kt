@@ -124,6 +124,14 @@ class ControlV (private val parse: Serializador): ViewModel() {
             parse.guardarEstudiante(nuevoEstudiante)
         }
     }
+    fun cambiarCreditosAsignatura(codigoAsignatura: String, nuevosCreditos: Int) {
+        val nuevoEstudiante = programa.estudiante?.cambiarCreditosAsignatura(codigoAsignatura, nuevosCreditos)?.sincronizarComplementarias()
+        if (nuevoEstudiante != null) {
+            val nuevoPrograma = programa.cambiarEstudiante(nuevoEstudiante)
+            programa = nuevoPrograma
+            parse.guardarEstudiante(nuevoEstudiante)
+        }
+    }
     fun cambiarNotaAsignatura(codigoAsignatura: String, nuevaNota: Float) {
         val nuevoEstudiante = programa.estudiante?.cambiarNotaAsignatura(codigoAsignatura, nuevaNota)?.sincronizarComplementarias()
         if(nuevoEstudiante != null){
@@ -163,17 +171,25 @@ class ControlV (private val parse: Serializador): ViewModel() {
      * Devuelve cuántas asignaturas quedaron con una nota distinta a la que
      * tenían, para poder mostrarle ese número al usuario.
      */
-    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>, gruposPorCodigo: Map<String, String> = emptyMap(), codigosPresentes: List<String> = emptyList()): Int {
+    fun importarNotasDesdePdf(notasPorCodigo: Map<String, NotaImportada>, gruposPorCodigo: Map<String, String> = emptyMap(), codigosPresentes: List<String> = emptyList(), semestresSira: Map<String, Int> = emptyMap(), creditosSira: Map<String, Int> = emptyMap()): Int {
         val estudianteActual = programa.estudiante ?: return 0
 
+        // 0. Si Español (204001M) está aprobado en el PDF, transforma la materia
+        //    básica de 1.º semestre a Español ("204001M") para que reciba su nota.
+        val estudianteConEspanol = estudianteActual.aplicarReglaEspanol(notasPorCodigo)
+
         // 1. Actualiza las asignaturas que ya tienen su código definitivo en el pensum.
-        val (estudianteConNotas, actualizadas) = estudianteActual.actualizarNotasMasivo(notasPorCodigo)
+        val (estudianteConNotas, actualizadas) = estudianteConEspanol.actualizarNotasMasivo(notasPorCodigo)
+
+        // 1b. Actualiza los créditos de cada asignatura según el SIRA: su valor tiene
+        //     prioridad sobre el que traía el JSON del pensum.
+        val estudianteConCreditos = estudianteConNotas.actualizarCreditosMasivo(creditosSira)
 
         // 2. Rellena los slots de Electiva Profesional II/III/IV con las electivas
         //    reales que el SIRA trajo y que aún no están asignadas a ningún slot.
         val catalogo = parse.leerElectivasProfesionales()
         val (estudianteConElectivas, electivasResueltas) =
-            estudianteConNotas.resolverElectivasProfesionales(notasPorCodigo, catalogo, codigosPresentes)
+            estudianteConCreditos.resolverElectivasProfesionales(notasPorCodigo, catalogo, codigosPresentes)
 
         // Guarda también los grupos importados, aunque no haya cambiado ninguna nota.
         val asignaturasConGrupo = estudianteConElectivas.asignaturas.map { asignatura ->
@@ -188,20 +204,27 @@ class ControlV (private val parse: Serializador): ViewModel() {
 
         val sincronizado = estudianteConGrupos.sincronizarComplementarias()
 
-        // 3. Las asignaturas que aparecen en el PDF, no están canceladas y no tienen nota se
-        //    están cursando ahora: se pasan al semestre actual para que salgan en el horario,
-        //    aunque en el pensum pertenezcan a otro semestre.
-        val semestreActual = programa.cambiarEstudiante(sincronizado).semestreEnCurso()
+        // 3. Cada periodo del PDF es un semestre: las asignaturas se ubican en el semestre SIRA
+        //    en el que se cursaron (también las que se están cursando, que quedan en el último).
+        val (estudianteConSemestres, reubicadas) = sincronizado.aplicarSemestresSira(semestresSira)
+
+        // 4. Las asignaturas que aparecen en el PDF, no están canceladas y no tienen nota se
+        //    están cursando ahora: si el PDF no permitió calcular su semestre SIRA, se pasan al
+        //    semestre actual para que salgan en el horario.
+        val semestresConocidos = semestresSira.keys.map { it.trim().uppercase() }.toSet()
+        val enCursoSinSemestreSira = codigosPresentes.filter { it.trim().uppercase() !in semestresConocidos }
+        val semestreActual = programa.cambiarEstudiante(estudianteConSemestres).semestreEnCurso()
         val (estudianteConEnCurso, movidas) =
-            sincronizado.moverAsignaturasEnCursoAlSemestre(codigosPresentes, semestreActual)
+            estudianteConSemestres.moverAsignaturasEnCursoAlSemestre(enCursoSinSemestreSira, semestreActual)
 
         val totalCambios = actualizadas + electivasResueltas
-        if (totalCambios > 0 || gruposPorCodigo.isNotEmpty() || movidas > 0) {
+        if (totalCambios > 0 || gruposPorCodigo.isNotEmpty() || movidas > 0 || reubicadas > 0 || creditosSira.isNotEmpty()) {
             programa = programa.cambiarEstudiante(estudianteConEnCurso)
             parse.guardarEstudiante(estudianteConEnCurso)
         }
         return totalCambios
     }
+
 
     // Grupos (código -> grupo) leídos en el último PDF importado.
     private var gruposUltimaImportacion: Map<String, String> = emptyMap()
@@ -210,19 +233,43 @@ class ControlV (private val parse: Serializador): ViewModel() {
      * Sincroniza asignaturas del PDF que no estaban en el pénsum con las
      * electivas complementarias: cada par es (asignatura, posición) con
      * posición 0 = Complementaria I y 1 = Complementaria II.
+     *
+     * Aquellas asignaturas en [todas] que no se asignen a ninguna complementaria
+     * se agregan al pensum en su respectivo semestre como asignaturas extracurriculares.
      */
-    fun asignarNoSincronizadasAComplementarias(asignaciones: List<Pair<AsignaturaNoSincronizada, Int>>) {
-        if (asignaciones.isEmpty()) return
+    fun asignarNoSincronizadasAComplementarias(
+        asignaciones: List<Pair<AsignaturaNoSincronizada, Int>>,
+        todas: List<AsignaturaNoSincronizada> = emptyList()
+    ) {
+        if (asignaciones.isEmpty() && todas.isEmpty()) return
         var actual = programa.estudiante ?: return
-        asignaciones.forEach { (item, posicion) ->
-            actual = actual.asignarElectivaComplementaria(posicion, item.codigo, item.nombre, item.nota)
+
+        if (asignaciones.isNotEmpty()) {
+            asignaciones.forEach { (item, posicion) ->
+                actual = actual.asignarElectivaComplementaria(posicion, item.codigo, item.nombre, item.nota, item.creditos)
+                // Semestre SIRA en el que se cursó, si el PDF lo permitió calcular.
+                item.semestre?.let { actual = actual.aplicarSemestresSira(mapOf(item.codigo to it)).first }
+            }
         }
+
+        // Las asignaturas no sincronizadas sobrantes se agregan en su respectivo semestre como extracurriculares.
+        val codigosAsignados = asignaciones.map { it.first.codigo.trim().uppercase() }.toSet()
+        val noAsignadas = todas.filter { it.codigo.trim().uppercase() !in codigosAsignados }
+        if (noAsignadas.isNotEmpty()) {
+            actual = actual.agregarAsignaturasExtracurriculares(noAsignadas, gruposUltimaImportacion)
+        }
+
         var sincronizado = actual.sincronizarComplementarias()
 
         // Las que se están cursando (sin nota) pasan al semestre actual y toman su grupo del
         // PDF, igual que las asignaturas del pensum, para que aparezcan en el horario.
         val semestreActual = programa.cambiarEstudiante(sincronizado).semestreEnCurso()
-        val enCurso = asignaciones.filter { it.first.nota == null }.map { it.first.codigo.trim().uppercase() }.toSet()
+        val itemsTotales = asignaciones.map { it.first } + noAsignadas
+        val enCurso = itemsTotales.filter { it.nota == null }.map { it.codigo.trim().uppercase() }.toSet()
+        val enCursoSinSemestreSira = itemsTotales
+            .filter { it.nota == null && it.semestre == null }
+            .map { it.codigo.trim().uppercase() }
+            .toSet()
         if (enCurso.isNotEmpty()) {
             val conGrupo = sincronizado.asignaturas.map { asignatura ->
                 val codigo = asignatura.codigo.trim().uppercase()
@@ -230,11 +277,19 @@ class ControlV (private val parse: Serializador): ViewModel() {
                 if (codigo in enCurso && grupo != null) asignatura.copy(grupo = grupo) else asignatura
             }.toMutableList()
             sincronizado = sincronizado.copy(asignaturas = conGrupo)
-                .moverAsignaturasEnCursoAlSemestre(enCurso, semestreActual).first
+                .moverAsignaturasEnCursoAlSemestre(enCursoSinSemestreSira, semestreActual).first
         }
 
         programa = programa.cambiarEstudiante(sincronizado)
         parse.guardarEstudiante(sincronizado)
+    }
+
+    /**
+     * Si el usuario descarta o cierra el diálogo de asignaturas no sincronizadas,
+     * todas se agregan como extracurriculares a su respectivo semestre.
+     */
+    fun descartarNoSincronizadas(todas: List<AsignaturaNoSincronizada>) {
+        asignarNoSincronizadasAComplementarias(emptyList(), todas)
     }
 
     /**

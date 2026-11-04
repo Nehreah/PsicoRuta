@@ -75,4 +75,49 @@ class EstudianteTest {
         val revertido = conSemestre2.cambiarEstadoSemestre(1, null)
         assertEquals(mapOf(2 to false), revertido.semestresManuales)
     }
+
+    @Test fun actualizarNotasMasivoAsignaCeroCreditosAExencionesDeEspanolEIngles() {
+        val inicial = estudiante(
+            materia("204001M").copy(nombre = "Español", creditos = 3),
+            materia("204355M").copy(nombre = "Idiomas I", componente = "Idioma", creditos = 2),
+            materia("402181M").copy(nombre = "Psicología General", creditos = 3)
+        )
+        val (actualizado, _) = inicial.actualizarNotasMasivo(
+            mapOf(
+                "204001M" to NotaImportada.Especial("EX"),
+                "204355M" to NotaImportada.Especial("E.X"),
+                "402181M" to NotaImportada.Especial("A.P")
+            )
+        )
+        // Español e Inglés eximidos quedan con 0 créditos
+        assertEquals(0, actualizado.asignaturas.first { it.codigo == "204001M" }.creditos)
+        assertEquals(0, actualizado.asignaturas.first { it.codigo == "204355M" }.creditos)
+        // Otra materia con A.P mantiene sus créditos
+        assertEquals(3, actualizado.asignaturas.first { it.codigo == "402181M" }.creditos)
+    }
+
+    @Test fun aplicarReglaEspanolAsignaCeroCreditosSiEsEximido() {
+        val inicial = estudiante(
+            materia("402180M").copy(nombre = "Cultura Escrita", componente = "Asignatura básica", creditos = 3)
+        )
+        val actualizado = inicial.aplicarReglaEspanol(
+            mapOf("204001M" to NotaImportada.Especial("EX"))
+        )
+        val espanol = actualizado.asignaturas.first { it.codigo == "204001M" }
+        assertEquals("Español", espanol.nombre)
+        assertEquals(0, espanol.creditos)
+    }
+
+    @Test fun actualizarCreditosMasivoAplicaCreditosDelSira() {
+        val inicial = estudiante(
+            materia("402180M").copy(creditos = 3),
+            materia("402181M").copy(creditos = 3)
+        )
+        val actualizado = inicial.actualizarCreditosMasivo(
+            mapOf("402180M" to 4, "402181M" to 2)
+        )
+        assertEquals(4, actualizado.asignaturas.first { it.codigo == "402180M" }.creditos)
+        assertEquals(2, actualizado.asignaturas.first { it.codigo == "402181M" }.creditos)
+    }
 }
+

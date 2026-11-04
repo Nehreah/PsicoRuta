@@ -59,14 +59,21 @@ data class Asignatura (
         else
             this
 
+    fun cambiarCreditos(nuevosCreditos: Int): Asignatura =
+        if (nuevosCreditos >= 0) copy(creditos = nuevosCreditos)
+        else this
+
     /**
-     * Verdadero si la asignatura es una electiva (complementaria o profesional)
-     * o un idioma: son los únicos tipos cuyo nombre y código pueden editarse
+     * Verdadero si la asignatura es una electiva (complementaria o profesional),
+     * un idioma o una extracurricular: son los tipos cuyos datos pueden editarse
      * libremente desde la UI.
      */
     fun esElectivaOIdioma(): Boolean =
         componente.contains("Electiva", ignoreCase = true) ||
-                componente.contains("Idioma", ignoreCase = true)
+                componente.contains("Idioma", ignoreCase = true) ||
+                componente.contains("Extracurricular", ignoreCase = true) ||
+                area.contains("Extracurricular", ignoreCase = true) ||
+                complementaria
 
 
     /**

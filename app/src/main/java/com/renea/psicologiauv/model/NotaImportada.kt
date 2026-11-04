@@ -35,5 +35,11 @@ data class AsignaturaNoSincronizada(
     val codigo: String,
     val nombre: String,
     /** null = la asignatura se está cursando (aún sin nota). */
-    val nota: NotaImportada?
+    val nota: NotaImportada?,
+    /**
+     * Semestre SIRA en el que se cursó (1 = primer periodo del tabulado), o null
+     * si el tabulado no permitió calcularlo.
+     */
+    val semestre: Int? = null,
+    val creditos: Int = 3
 )

@@ -8,11 +8,12 @@ import com.renea.psicologiauv.model.NotaImportada
  * Disciplinar (pensum):
  *
  * - Si el estudiante tiene Español (204001M) aprobado de cualquier forma
- *   (eximido "EX", otra marca especial o nota numérica), esa nota se usa para
- *   llenar Cultura Escrita y Pensamiento Disciplinar (402180M).
+ *   (eximido "EX", otra marca especial o nota numérica), la asignatura original
+ *   del pensum pasa a llamarse "Español" con código 204001M y toma esa nota.
  * - Si además el SIRA trae Cultura Escrita (402180M) aprobada, esa materia
- *   queda "flotante": se ofrece al usuario para usarla como electiva
- *   complementaria o descartarla (ver [AsignaturaNoSincronizada]).
+ *   queda libre como "flotante" con su código real 402180M (sin sufijo -CE): se
+ *   ofrece al usuario para usarla como electiva complementaria o descartarla
+ *   (ver [AsignaturaNoSincronizada]).
  * - Si Español no está aprobado, no cambia nada: Cultura Escrita se sincroniza
  *   con 402180M como siempre.
  */
@@ -22,9 +23,11 @@ object ReglaEspanol {
     const val CODIGO_CULTURA_ESCRITA = "402180M"
 
     /** Código propio de la Cultura Escrita flotante al asignarla a una complementaria. */
-    const val CODIGO_CULTURA_FLOTANTE = "402180M-CE"
+    const val CODIGO_CULTURA_FLOTANTE = "402180M"
 
-    private const val NOMBRE_CULTURA_FLOTANTE = "Cultura Escrita"
+    const val NOMBRE_ESPANOL = "Español"
+    const val NOMBRE_CULTURA_FLOTANTE = "Cultura Escrita"
+    const val CREDITOS_CULTURA_ESCRITA = 3
 
     class Resultado(
         val notas: Map<String, NotaImportada>,
@@ -37,7 +40,7 @@ object ReglaEspanol {
         null -> false
     }
 
-    /** Devuelve las notas a aplicar al pensum (sin el código de Español) y la Cultura Escrita flotante, si aplica. */
+    /** Devuelve las notas a aplicar al pensum y la Cultura Escrita flotante, si aplica. */
     fun aplicar(notas: Map<String, NotaImportada>): Resultado {
         val espanol = notas[CODIGO_ESPANOL_SIRA]
         val sinEspanol = notas.filterKeys { it != CODIGO_ESPANOL_SIRA }
@@ -48,12 +51,12 @@ object ReglaEspanol {
             AsignaturaNoSincronizada(
                 codigo = CODIGO_CULTURA_FLOTANTE,
                 nombre = NOMBRE_CULTURA_FLOTANTE,
-                nota = cultura
+                nota = cultura,
+                creditos = CREDITOS_CULTURA_ESCRITA
             )
         } else null
 
-        val aplicadas = LinkedHashMap(sinEspanol)
-        aplicadas[CODIGO_CULTURA_ESCRITA] = espanol!!
+        val aplicadas = LinkedHashMap(notas)
         return Resultado(aplicadas, flotante)
     }
 }

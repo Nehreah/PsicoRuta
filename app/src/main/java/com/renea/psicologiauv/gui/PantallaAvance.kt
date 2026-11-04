@@ -169,13 +169,15 @@ private fun TarjetaHeroeProgreso(
     )
 
     val isDark = isSystemInDarkTheme()
+    val controlTema = com.renea.psicologiauv.ui.theme.LocalControlTema.current
     val temaLinea = com.renea.psicologiauv.ui.theme.LocalTemaLinea.current
-    val colorAcento = temaLinea.colorPrimario
+    val esOscuroNeutro = (isDark || controlTema.oscuro) && (controlTema.neutro || temaLinea.tipo == com.renea.psicologiauv.ui.theme.TipoLinea.NINGUNA)
+    val colorAcento = if (esOscuroNeutro) Color.White else temaLinea.colorPrimario
     val scheme = MaterialTheme.colorScheme
     val fondo = scheme.surface
     val colorTexto = scheme.onSurface
     val colorSubtexto = scheme.onSurfaceVariant
-    val pistaProgreso = if (isDark) colorAcento.copy(alpha = 0.22f) else colorAcento.copy(alpha = 0.14f)
+    val pistaProgreso = if (esOscuroNeutro) Color.White.copy(alpha = 0.22f) else if (isDark || controlTema.oscuro) colorAcento.copy(alpha = 0.22f) else colorAcento.copy(alpha = 0.14f)
 
     // Orden aleatorio de consejos:
     // cada vez que se crea esta pantalla se baraja la lista, por lo que
@@ -1183,6 +1185,12 @@ private fun DialogoEditarIdioma(
                                 materia.codigo,
                                 notaEspecialSeleccionada!!
                             )
+                            if (notaEspecialSeleccionada == "E.X" || notaEspecialSeleccionada == "EX") {
+                                viewModel.cambiarCreditosAsignatura(
+                                    materia.codigo,
+                                    0
+                                )
+                            }
                         } else if (nuevaNota != null) {
                             viewModel.cambiarNotaAsignatura(
                                 materia.codigo,

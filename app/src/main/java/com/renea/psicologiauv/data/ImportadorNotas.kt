@@ -92,6 +92,16 @@ class ImportadorNotas(private val context: Context) {
         AnalizadorNotas.extraerCodigosPresentes(texto, codigosConocidos)
 
     /**
+     * Semestre SIRA (1 = primer periodo del tabulado) de cada código conocido
+     * presente en el PDF. Cada "PERIODO:" del documento equivale a un semestre.
+     */
+    fun extraerSemestresSiraPorCodigo(
+        texto: String,
+        codigosConocidos: List<String>
+    ): Map<String, Int> =
+        AnalizadorNotas.extraerSemestresSiraPorCodigo(texto, codigosConocidos)
+
+    /**
      * Asignaturas aprobadas del PDF que no coinciden con ningún código de
      * [codigosConocidos] (pensum + catálogo de electivas profesionales).
      */
@@ -110,4 +120,16 @@ class ImportadorNotas(private val context: Context) {
         texto: String
     ): Map<String, String> =
         AnalizadorNotas.extraerGruposPorCodigo(texto)
+
+    /**
+     * Para cada código presente en [notasPorCodigo], extrae el número de créditos
+     * que el SIRA le asigna en la fila correspondiente del [texto].
+     * Devuelve un mapa código -> créditos. La información del SIRA tiene prioridad
+     * sobre los valores del JSON del pensum.
+     */
+    fun extraerCreditosPorCodigo(
+        texto: String,
+        notasPorCodigo: Map<String, NotaImportada>
+    ): Map<String, Int> =
+        AnalizadorNotas.extraerCreditosPorCodigo(texto, notasPorCodigo)
 }

@@ -416,4 +416,64 @@ class ProgramaMTest {
         val defaultConsejo = programa.consejoPensum(99)
         assertTrue(defaultConsejo.titulo.isNotBlank())
     }
+
+    // ------------------------------------------------------------------
+    // Créditos FDI y Carrera para Español eximido
+    // ------------------------------------------------------------------
+
+    @Test fun espanolEximidoConCeroCreditosAportaTresCreditosAFDIYACarrera() {
+        val espanolEximido = crearAsignatura(
+            nombre = "Español",
+            codigo = "204001M",
+            creditos = 0,
+            notaEspecial = "EX",
+            area = "Fundamentación Disciplinar e Interdisciplinar"
+        )
+        val programa = programaCon(espanolEximido)
+
+        // Aunque tenga 0 créditos en sus datos, aporta 3 a FDI
+        assertEquals(3, programa.creditosFDIAprobados())
+        // Y por lo tanto suma 3 a los créditos de carrera
+        assertEquals(3, programa.creditosQueSirvenParaCarrera())
+    }
+
+    @Test fun culturaEscritaEximidaConCeroCreditosAportaTresCreditosAFDI() {
+        val culturaEximida = crearAsignatura(
+            nombre = "Cultura Escrita Y Pensamiento Disciplinar",
+            codigo = "402180M",
+            creditos = 0,
+            notaEspecial = "EX",
+            area = "Fundamentación Disciplinar e Interdisciplinar"
+        )
+        val programa = programaCon(culturaEximida)
+
+        assertEquals(3, programa.creditosFDIAprobados())
+        assertEquals(3, programa.creditosQueSirvenParaCarrera())
+    }
+
+    @Test fun creditosFDINoSuperanLimiteDe74NiCarreraDe168() {
+        val materias = (1..25).map { i ->
+            crearAsignatura(
+                nombre = "Materia FDI $i",
+                codigo = "40200${i}M",
+                creditos = 4,
+                nota = 4.0f,
+                area = "Fundamentación Disciplinar e Interdisciplinar"
+            )
+        }.toTypedArray()
+        val espanol = crearAsignatura(
+            nombre = "Español",
+            codigo = "204001M",
+            creditos = 0,
+            notaEspecial = "EX",
+            area = "Fundamentación Disciplinar e Interdisciplinar"
+        )
+        val programa = programaCon(*materias, espanol)
+
+        // 25 * 4 = 100 + 3 = 103, pero el límite es 74
+        assertEquals(74, programa.creditosFDIAprobados())
+        // En carrera no puede superar 168
+        assertTrue(programa.creditosQueSirvenParaCarrera() <= 168)
+    }
 }
+

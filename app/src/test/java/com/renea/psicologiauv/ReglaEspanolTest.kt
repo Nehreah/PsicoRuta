@@ -51,7 +51,7 @@ class ReglaEspanolTest {
     }
 
     @Test
-    fun aplicarConEspanolAprobadoYCulturaEscritaAusenteAsignaEspanolACultura() {
+    fun aplicarConEspanolAprobadoYCulturaEscritaAusenteConservaEspanol() {
         val notaEspanol = NotaImportada.Numerica(4.5f)
         val notas = mapOf(
             ReglaEspanol.CODIGO_ESPANOL_SIRA to notaEspanol,
@@ -59,8 +59,7 @@ class ReglaEspanolTest {
         )
         val resultado = ReglaEspanol.aplicar(notas)
 
-        assertFalse(resultado.notas.containsKey(ReglaEspanol.CODIGO_ESPANOL_SIRA))
-        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_CULTURA_ESCRITA])
+        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_ESPANOL_SIRA])
         assertNull(resultado.culturaFlotante)
     }
 
@@ -74,13 +73,15 @@ class ReglaEspanolTest {
         )
         val resultado = ReglaEspanol.aplicar(notas)
 
-        assertFalse(resultado.notas.containsKey(ReglaEspanol.CODIGO_ESPANOL_SIRA))
-        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_CULTURA_ESCRITA])
+        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_ESPANOL_SIRA])
+        assertEquals(notaCultura, resultado.notas[ReglaEspanol.CODIGO_CULTURA_ESCRITA])
 
         assertNotNull(resultado.culturaFlotante)
         assertEquals(ReglaEspanol.CODIGO_CULTURA_FLOTANTE, resultado.culturaFlotante?.codigo)
+        assertEquals("402180M", resultado.culturaFlotante?.codigo)
         assertEquals("Cultura Escrita", resultado.culturaFlotante?.nombre)
         assertEquals(notaCultura, resultado.culturaFlotante?.nota)
+        assertEquals(3, resultado.culturaFlotante?.creditos)
     }
 
     @Test
@@ -93,7 +94,8 @@ class ReglaEspanolTest {
         )
         val resultado = ReglaEspanol.aplicar(notas)
 
-        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_CULTURA_ESCRITA])
+        assertEquals(notaEspanol, resultado.notas[ReglaEspanol.CODIGO_ESPANOL_SIRA])
+        assertEquals(notaCultura, resultado.notas[ReglaEspanol.CODIGO_CULTURA_ESCRITA])
         assertNull(resultado.culturaFlotante)
     }
 }

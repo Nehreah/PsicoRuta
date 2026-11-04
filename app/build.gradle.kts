@@ -18,8 +18,8 @@ android {
         applicationId = "com.renea.psicologiauv"
         minSdk = 24
         targetSdk = 37
-        versionCode = 8
-        versionName = "Omega"
+        versionCode = 9
+        versionName = "Nika"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

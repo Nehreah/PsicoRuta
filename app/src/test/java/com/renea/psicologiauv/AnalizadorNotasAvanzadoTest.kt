@@ -150,4 +150,39 @@ class AnalizadorNotasAvanzadoTest {
         assertEquals(0.5f, numerica(r, codigos[0]), 0.001f)
         assertEquals(4.5f, numerica(r, codigos[299]), 0.001f)
     }
+
+    // ===== extraerCreditosPorCodigo =====
+
+    @Test fun extraeCreditosSiraParaCodigosConNota() {
+        // Fila típica del SIRA: código, nombre, Gr, Sde, Asignatura, 00 N AB créditos nota
+        val texto = "402180M TEORIA PSICOLOGICA 01 01 Teoria Psicologica 00 N AB 3 4.0 " +
+                    "402181M OTRA MATERIA 01 01 Otra Materia 00 N AB 2 3.5"
+        val notas = AnalizadorNotas.extraerNotasPorCodigo(texto, listOf("402180M", "402181M"))
+        val creditos = AnalizadorNotas.extraerCreditosPorCodigo(texto, notas)
+        assertEquals(3, creditos["402180M"])
+        assertEquals(2, creditos["402181M"])
+    }
+
+    @Test fun noExtraeCreditosParaCodigosSinNota() {
+        // 402999M aparece en el texto pero no tiene nota → no está en notas → no debe aparecer en créditos
+        val texto = "402180M MATERIA 3 4.0 402999M OTRA 3"
+        val notas = AnalizadorNotas.extraerNotasPorCodigo(texto, listOf("402180M", "402999M"))
+        val creditos = AnalizadorNotas.extraerCreditosPorCodigo(texto, notas)
+        assertTrue(creditos.containsKey("402180M"))
+        assertFalse(creditos.containsKey("402999M"))
+    }
+
+    @Test fun extraeCreditosParaMarcaEspecialEX() {
+        // Asignatura eximida: el SIRA pone E.X en vez de nota, pero créditos siguen en la fila
+        val texto = "204001M ESPANOL 01 01 Espanol 00 N AB 0 E.X"
+        val notas = AnalizadorNotas.extraerNotasPorCodigo(texto, listOf("204001M"))
+        val creditos = AnalizadorNotas.extraerCreditosPorCodigo(texto, notas)
+        // El patrón patronCreditosConNota detecta "0 E.X" → 0 créditos
+        assertEquals(0, creditos["204001M"])
+    }
+
+    @Test fun creditosMapaVacioCuandoNoHayNotas() {
+        val creditos = AnalizadorNotas.extraerCreditosPorCodigo("texto irrelevante", emptyMap())
+        assertTrue(creditos.isEmpty())
+    }
 }

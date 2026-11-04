@@ -74,6 +74,11 @@ internal object AnalizadorNotas {
     // Límite máximo de caracteres para el tramo de una fila.
     private const val LONGITUD_MAXIMA_FILA = 400
 
+    // Encabezado de cada periodo del tabulado ("PERIODO: MARZO/2023 - JULIO/2023").
+    // Es sensible a mayúsculas a propósito: el resumen de cada periodo dice
+    // "Resumen de Finalización por periodo" (minúscula y sin dos puntos).
+    private val patronPeriodo = Regex("""PERIODO\s*:""")
+
     // Fin de la lista de asignaturas del tabulado de matrícula ("Total Asignaturas
     // Matriculadas: ...") y marcas de cancelación/reactivación de una fila.
     private const val MARCADOR_TOTALES = "Total Asignaturas"
@@ -273,6 +278,89 @@ internal object AnalizadorNotas {
     }
 
     /**
+     * Semestre SIRA de cada código de [codigosConocidos] presente en el tabulado.
+     *
+     * Cada encabezado "PERIODO:" abre un semestre nuevo: el primero es el 1, el
+     * siguiente el 2, y así sucesivamente. Cada materia recibe el número del
+     * periodo en el que aparece. Reglas:
+     * - Las apariciones canceladas (y no reactivadas) se ignoran.
+     * - Si la materia aparece en varios periodos (cancelada y recursada, o
+     *   reprobada y repetida) queda el semestre de la aparición MÁS RECIENTE.
+     * - Una fila con nota siempre cuenta; una fila sin nota solo cuenta en el
+     *   último periodo (materia en curso) y si no está cancelada.
+     * - Si el texto no trae ningún "PERIODO:" el resultado es vacío.
+     */
+    fun extraerSemestresSiraPorCodigo(
+        texto: String,
+        codigosConocidos: List<String>
+    ): Map<String, Int> {
+        val textoNormalizado = texto.replace(',', '.')
+        val conocidos = codigosConocidos
+            .filter { it.length >= LONGITUD_MINIMA_CODIGO }
+            .toSet()
+        if (conocidos.isEmpty()) return emptyMap()
+
+        val periodos = patronPeriodo.findAll(textoNormalizado)
+            .map { it.range.first }
+            .toList()
+            .toIntArray()
+        if (periodos.isEmpty()) return emptyMap()
+
+        val limitesLista = ArrayList<Int>()
+        val apariciones = ArrayList<Pair<Int, String>>()
+        for (coincidencia in patronCodigoGenerico.findAll(textoNormalizado)) {
+            limitesLista.add(coincidencia.range.first)
+            if (coincidencia.value in conocidos) {
+                apariciones.add(coincidencia.range.first to coincidencia.value)
+            }
+        }
+        for (codigo in conocidos) {
+            if (patronCodigoGenerico.matches(codigo)) continue
+            val patron = Regex("(?<![A-Za-z0-9])" + Regex.escape(codigo) + "(?![A-Za-z0-9])")
+            for (c in patron.findAll(textoNormalizado)) apariciones.add(c.range.first to codigo)
+        }
+        apariciones.sortBy { it.first }
+
+        val limites = limitesLista.toIntArray()
+        val resultado = LinkedHashMap<String, Int>()
+        for ((inicio, codigo) in apariciones) {
+            val fin = inicio + codigo.length
+            val siguiente = primerIndiceMayorQue(limites, fin - 1)
+            val finFila = minOf(
+                if (siguiente < limites.size) limites[siguiente] else fin + LONGITUD_MAXIMA_FILA,
+                fin + LONGITUD_MAXIMA_FILA,
+                textoNormalizado.length
+            )
+            var fragmento = textoNormalizado.substring(fin, finFila)
+            val resumen = fragmento.indexOf(MARCADOR_RESUMEN_PERIODO)
+            if (resumen >= 0) fragmento = fragmento.substring(0, resumen)
+            val totales = fragmento.indexOf(MARCADOR_TOTALES)
+            if (totales >= 0) fragmento = fragmento.substring(0, totales)
+
+            // Cantidad de encabezados "PERIODO:" que hay antes de esta fila = su semestre.
+            val semestre = primerIndiceMayorQue(periodos, inicio)
+            if (semestre == 0) continue
+
+            // El orden en que la librería de PDF entrega el texto puede dejar el aviso de
+            // cancelación de una fila dentro del tramo de la vecina, así que NO se confía
+            // solo en él:
+            // - Una fila con nota o marca especial nunca está cancelada: se acepta.
+            // - Una fila sin nota solo puede estar "en curso" en el ÚLTIMO periodo; en un
+            //   periodo anterior significa que la materia se canceló.
+            // - En el último periodo, una fila sin nota se acepta si no dice "cancelada".
+            val tieneNota = patronNota.containsMatchIn(fragmento) ||
+                patronNotaEspecial.containsMatchIn(fragmento)
+            val vigente = when {
+                tieneNota -> true
+                semestre < periodos.size -> false
+                else -> !filaCancelada(fragmento)
+            }
+            if (vigente) resultado[codigo] = semestre
+        }
+        return resultado
+    }
+
+    /**
      * Busca en [texto] asignaturas cuyo código no está en [codigosConocidos] y que
      * están APROBADAS (nota numérica mayor a 2.9 o marca especial C.U/E.X/A.P) o
      * EN CURSO (aparecen sin nota y sin cancelación). Las canceladas se ignoran.
@@ -301,6 +389,7 @@ internal object AnalizadorNotas {
         val lista = candidatos.toList()
         val notas = extraerNotasPorCodigo(texto, lista)
         val enCurso = extraerCodigosPresentes(texto, lista).toSet()
+        val semestres = extraerSemestresSiraPorCodigo(texto, lista)
 
         val resultado = ArrayList<AsignaturaNoSincronizada>()
         for (codigo in lista) {
@@ -318,7 +407,9 @@ internal object AnalizadorNotas {
                 AsignaturaNoSincronizada(
                     codigo = codigo,
                     nombre = extraerNombreTrasCodigo(textoNormalizado, codigo) ?: "Asignatura $codigo",
-                    nota = nota
+                    nota = nota,
+                    semestre = semestres[codigo],
+                    creditos = extraerCreditosTrasCodigo(textoNormalizado, codigo)
                 )
             )
         }
@@ -395,6 +486,56 @@ internal object AnalizadorNotas {
             .mapNotNull { limpiarLineaNombre(it) }
             .takeLast(2)
         return compactar(antes.joinToString(" "))
+    }
+
+    private val patronCreditosConNota = Regex("""\b([0-9])\s+(?:[0-5]\.\d{1,2}|C\.U|E\.?X|A\.P)\b""", RegexOption.IGNORE_CASE)
+    private val patronCreditosColumnas = Regex("""\d{2}\s+[A-Za-z]\s+[A-Za-z]{2}\s+([1-9])\b""")
+    private val patronCreditosFinFila = Regex("""\b([1-9])\s*$""", RegexOption.MULTILINE)
+
+    private fun extraerCreditosTrasCodigo(texto: String, codigo: String): Int {
+        val inicio = texto.lastIndexOf(codigo)
+        if (inicio < 0) return 3
+        val desde = inicio + codigo.length
+        val siguiente = patronCodigoGenerico.find(texto, desde)?.range?.first ?: texto.length
+        val hasta = minOf(siguiente, desde + 250)
+        val fragmento = texto.substring(desde, maxOf(desde, hasta))
+
+        return patronCreditosConNota.find(fragmento)?.groupValues?.get(1)?.toIntOrNull()
+            ?: patronCreditosColumnas.find(fragmento)?.groupValues?.get(1)?.toIntOrNull()
+            ?: patronCreditosFinFila.find(fragmento)?.groupValues?.get(1)?.toIntOrNull()
+            ?: 3
+    }
+
+    /**
+     * Para cada código de [codigosConocidos] que tenga nota en [notasPorCodigo]
+     * (es decir, que aparece en el SIRA con alguna calificación o marca especial),
+     * extrae el número de créditos que el propio SIRA le asigna en la fila
+     * correspondiente. Usa exactamente la misma lógica que [extraerCreditosTrasCodigo].
+     *
+     * La información del SIRA tiene prioridad sobre la del JSON del pensum, por lo
+     * que este mapa debe aplicarse DESPUÉS de importar las notas.
+     *
+     * Solo se incluyen códigos para los que se encontró una nota (no se inventa
+     * un crédito para materias que no aparecen en el documento).
+     */
+    fun extraerCreditosPorCodigo(
+        texto: String,
+        notasPorCodigo: Map<String, NotaImportada>
+    ): Map<String, Int> {
+        if (notasPorCodigo.isEmpty()) return emptyMap()
+        val textoNormalizado = texto.replace(',', '.')
+        return notasPorCodigo.mapValues { (codigo, nota) ->
+            val esEximida = when (nota) {
+                is NotaImportada.Especial -> nota.marca.replace(".", "").equals("EX", ignoreCase = true)
+                else -> false
+            }
+            val codigoNorm = codigo.trim().uppercase()
+            if (esEximida && (codigoNorm == "204001M" || codigoNorm == "402180M" || codigoNorm == "204355M" || codigoNorm == "204357M")) {
+                0
+            } else {
+                extraerCreditosTrasCodigo(textoNormalizado, codigo)
+            }
+        }
     }
 
     fun extraerGruposPorCodigo(texto: String): Map<String, String> {

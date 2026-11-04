@@ -1,5 +1,6 @@
 package com.renea.psicologiauv.model
 
+import com.renea.psicologiauv.data.ReglaEspanol
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -195,14 +196,16 @@ data class ProgramaM(
 
     /**
      * Asignaturas que realmente deben contar para determinar si un semestre
-     * está completado. Las electivas complementarias se excluyen; las
-     * electivas profesionales sí cuentan.
+     * está completado. Las electivas complementarias y las extracurriculares
+     * se excluyen; las electivas profesionales sí cuentan.
      */
     private fun asignaturasContablesDelSemestre(semestre: Int): List<Asignatura> =
         asignaturasPorSemestre()[semestre]
             .orEmpty()
             .filterNot {
-                it.componente.contains("Electiva complementaria", ignoreCase = true)
+                it.componente.contains("Electiva complementaria", ignoreCase = true) ||
+                        it.componente.contains("Extracurricular", ignoreCase = true) ||
+                        it.area.contains("Extracurricular", ignoreCase = true)
             }
 
     /**
@@ -384,8 +387,11 @@ data class ProgramaM(
     fun promedioGeneral(): Float {
         // Mismo criterio que promedioSemestre: se excluyen las materias
         // aprobadas por marca especial (CU, EX, AP), que no tienen nota
-        // numérica real.
-        val lista = estudiante?.asignaturas?.filter { it.aprobo() && it.notaEspecial == null }.orEmpty()
+        // numérica real. Se incluyen todas las asignaturas aprobadas con nota
+        // numérica real (incluidas las extracurriculares cursadas).
+        val lista = estudiante?.asignaturas
+            ?.filter { it.aprobo() && it.notaEspecial == null }
+            .orEmpty()
         val sumaCreditos = lista.sumOf { it.creditos }
         if (sumaCreditos == 0) return 0f
         val sumaNotas = lista.sumOf { (it.nota * it.creditos).toDouble() }
@@ -441,12 +447,26 @@ data class ProgramaM(
         }
     }
 
+    private fun esMateriaEspanol(asignatura: Asignatura): Boolean {
+        val codigo = asignatura.codigo.trim()
+        val nombre = asignatura.nombre.trim()
+        return codigo.equals(ReglaEspanol.CODIGO_ESPANOL_SIRA, ignoreCase = true) ||
+                codigo.equals(ReglaEspanol.CODIGO_CULTURA_ESCRITA, ignoreCase = true) ||
+                nombre.equals(ReglaEspanol.NOMBRE_ESPANOL, ignoreCase = true) ||
+                nombre.contains("Español", ignoreCase = true) ||
+                nombre.contains("Cultura Escrita", ignoreCase = true)
+    }
+
     fun creditosFDIAprobados(): Int =
         estudiante?.asignaturas
             ?.filter { it.area == "Fundamentación Disciplinar e Interdisciplinar" && it.aprobo() }
             .orEmpty()
-            .sumOf { it.creditos }
+            .sumOf {
+                if (esMateriaEspanol(it)) maxOf(it.creditos, ReglaEspanol.CREDITOS_CULTURA_ESCRITA)
+                else it.creditos
+            }
             .coerceAtMost(creditosFDI)
+
 
     fun creditosFPCAAprobados(): Int =
         estudiante?.asignaturas

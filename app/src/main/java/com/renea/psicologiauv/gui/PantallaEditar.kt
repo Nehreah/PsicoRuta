@@ -116,6 +116,7 @@ import androidx.core.net.toUri
 import com.renea.psicologiauv.data.ImportadorNotas
 import com.renea.psicologiauv.data.ReglaEspanol
 import com.renea.psicologiauv.data.ReglaDeporteFormativo
+import com.renea.psicologiauv.data.ReglaSemestreSira
 import com.renea.psicologiauv.data.ImprimirPDF
 import com.renea.psicologiauv.data.Serializador
 import com.renea.psicologiauv.data.RepositorioHorarios
@@ -448,6 +449,9 @@ fun PantallaPerfil(
     // Códigos del catálogo/pensum que aparecieron en el último PDF (con o sin nota).
     var codigosPresentesPdf by remember { mutableStateOf<Set<String>>(emptySet()) }
 
+    // Códigos del último PDF cuyo semestre se calculó con los periodos del SIRA (ya no hay que preguntarlo).
+    var codigosConSemestreSira by remember { mutableStateOf<Set<String>>(emptySet()) }
+
     // Asignaturas del PDF que no coincidieron con el pensum; se resuelven antes de pedir los semestres.
     var noSincronizadas by remember { mutableStateOf<List<AsignaturaNoSincronizada>>(emptyList()) }
 
@@ -669,7 +673,7 @@ fun PantallaPerfil(
                                 // también se incluyen para que el analizador los encuentre.
                                 val codigosDeporte = serializador.leerDeporteFormativo()
                                 val codigosConocidos =
-                                    (listOf(ReglaEspanol.CODIGO_ESPANOL_SIRA) +
+                                    (listOf(ReglaEspanol.CODIGO_ESPANOL_SIRA, ReglaEspanol.CODIGO_CULTURA_ESCRITA) +
                                             codigosDeporte +
                                             estudiante
                                                 .asignaturas
@@ -698,16 +702,32 @@ fun PantallaPerfil(
                                     texto,
                                     codigosConocidos
                                 )
+                                // Cada "PERIODO:" del SIRA es un semestre (1, 2, 3...). Se traslada a los
+                                // códigos del pensum con las mismas equivalencias de Español y Deporte.
+                                val semestres = ReglaSemestreSira.aplicar(
+                                    importadorNotas.extraerSemestresSiraPorCodigo(texto, codigosConocidos),
+                                    notasCrudas,
+                                    codigosDeporte
+                                )
+                                // Créditos leídos directamente de cada fila del SIRA. Tienen prioridad
+                                // sobre los valores del JSON del pensum.
+                                val creditos = importadorNotas.extraerCreditosPorCodigo(texto, notas)
                                 // Cultura Escrita flotante: solo si no se asignó antes a una complementaria.
                                 val flotante = regla.culturaFlotante?.takeIf { f ->
-                                    estudiante.asignaturas.none { it.codigo == f.codigo }
-                                }
+                                    estudiante.asignaturas.none {
+                                        it.codigo.trim().equals(f.codigo.trim(), ignoreCase = true) &&
+                                                it.componente.equals("Electiva complementaria", ignoreCase = true)
+                                    }
+                                }?.let { it.copy(semestre = semestres[it.codigo]) }
                                 ResultadoLecturaPdf(
                                     notas,
                                     grupos,
                                     listOfNotNull(flotante) + sinSincronizar,
-                                    presentes
+                                    presentes,
+                                    semestres,
+                                    creditos
                                 )
+
                             }
 
                         } catch (e: Exception) {
@@ -748,7 +768,9 @@ fun PantallaPerfil(
                                 viewModel.importarNotasDesdePdf(
                                     resultado.notas,
                                     resultado.grupos,
-                                    resultado.presentes
+                                    resultado.presentes,
+                                    resultado.semestres,
+                                    resultado.creditos
                                 )
 
                             Toast.makeText(
@@ -760,11 +782,17 @@ fun PantallaPerfil(
                             // Primero se resuelven las asignaturas que no sincronizaron con el pensum.
                             noSincronizadas = resultado.sinSincronizar
                             codigosPresentesPdf = resultado.presentes.toSet()
+                            codigosConSemestreSira = resultado.semestres.keys
+                                .map { it.trim().uppercase() }
+                                .toSet()
 
                             // Si ya hay electivas profesionales cursadas, pide el semestre de cada una.
                             val hayElectivasCursadas = viewModel.programa.estudiante
                                 ?.asignaturas.orEmpty()
-                                .any { it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) }
+                                .any {
+                                    it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) &&
+                                        it.codigo.trim().uppercase() !in codigosConSemestreSira
+                                }
                             if (hayElectivasCursadas) {
                                 mostrandoSemestresElectivas = true
                             }
@@ -893,13 +921,16 @@ fun PantallaPerfil(
 
     if (noSincronizadas.isNotEmpty()) {
         ModuloEmergente(
-            onCerrar = { noSincronizadas = emptyList() }
+            onCerrar = {
+                viewModel.descartarNoSincronizadas(noSincronizadas)
+                noSincronizadas = emptyList()
+            }
         ) {
             TarjetaNoSincronizadas(
                 asignaturas = noSincronizadas,
                 complementarias = viewModel.programa.electivasComplementarias(),
-                onConfirmar = { asignaciones ->
-                    viewModel.asignarNoSincronizadasAComplementarias(asignaciones)
+                onConfirmar = { asignaciones, todasActualizadas ->
+                    viewModel.asignarNoSincronizadasAComplementarias(asignaciones, todasActualizadas)
                     noSincronizadas = emptyList()
                 }
             )
@@ -909,7 +940,10 @@ fun PantallaPerfil(
     if (mostrandoSemestresElectivas && noSincronizadas.isEmpty()) {
 
         val electivasCursadas = estudiante.asignaturas
-            .filter { it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) }
+            .filter {
+                it.esElectivaProfesionalParaSemestre(codigosPresentesPdf) &&
+                    it.codigo.trim().uppercase() !in codigosConSemestreSira
+            }
 
         if (electivasCursadas.isEmpty()) {
             mostrandoSemestresElectivas = false
@@ -1173,7 +1207,7 @@ fun PantallaPerfil(
             ModuloHorarioEstudiante(
                 estudiante = estudiante,
                 semestreActual = viewModel.programa.semestreEnCurso(),
-                candidatoAGrado = viewModel.programa.requisitoCreditosCarreraCumplido(),
+                candidatoAGrado = viewModel.programa.requisitoCreditosCarreraCumplido() || viewModel.programa.avanceCarrera() >= 100f,
                 contexto = contexto,
                 onImportarDatos = { mostrandoImportacion = true },
                 onGestionarTareas = { asignaturaTareasSolicitada = it }
@@ -2277,7 +2311,7 @@ private fun ModuloEmergente(
 private fun TarjetaNoSincronizadas(
     asignaturas: List<AsignaturaNoSincronizada>,
     complementarias: List<com.renea.psicologiauv.model.Asignatura>,
-    onConfirmar: (List<Pair<AsignaturaNoSincronizada, Int>>) -> Unit
+    onConfirmar: (List<Pair<AsignaturaNoSincronizada, Int>>, List<AsignaturaNoSincronizada>) -> Unit
 ) {
     val colores = MaterialTheme.colorScheme
 
@@ -2290,6 +2324,7 @@ private fun TarjetaNoSincronizadas(
             asignaturas.forEach { put(it.codigo, it.nombre) }
         }
     }
+
 
     fun elegir(codigo: String, posicion: Int?) {
         if (posicion == null) {
@@ -2402,14 +2437,18 @@ private fun TarjetaNoSincronizadas(
 
             Button(
                 onClick = {
-                    onConfirmar(
-                        asignaturas.mapNotNull { item ->
-                            elecciones[item.codigo]?.let { posicion ->
-                                val nombre = nombres[item.codigo]?.trim().orEmpty()
-                                item.copy(nombre = nombre.ifBlank { item.nombre }) to posicion
-                            }
+                    val actualizadas = asignaturas.map { item ->
+                        val nombre = nombres[item.codigo]?.trim().orEmpty()
+                        item.copy(
+                            nombre = nombre.ifBlank { item.nombre }
+                        )
+                    }
+                    val asignadas = actualizadas.mapNotNull { item ->
+                        elecciones[item.codigo]?.let { posicion ->
+                            item to posicion
                         }
-                    )
+                    }
+                    onConfirmar(asignadas, actualizadas)
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(14.dp)
@@ -2430,7 +2469,11 @@ private data class ResultadoLecturaPdf(
     val notas: Map<String, NotaImportada>,
     val grupos: Map<String, String>,
     val sinSincronizar: List<AsignaturaNoSincronizada>,
-    val presentes: List<String>
+    val presentes: List<String>,
+    /** Código del pensum -> semestre SIRA (cada periodo del PDF es un semestre). */
+    val semestres: Map<String, Int> = emptyMap(),
+    /** Código -> créditos leídos del SIRA (prioridad sobre el JSON del pensum). */
+    val creditos: Map<String, Int> = emptyMap()
 )
 
 /**
@@ -3006,7 +3049,9 @@ private fun TarjetaPerfilHero(
 ) {
     val scheme = MaterialTheme.colorScheme
     val temaLinea = com.renea.psicologiauv.ui.theme.LocalTemaLinea.current
-    val colorAcento = temaLinea.colorPrimario
+    val controlTema = com.renea.psicologiauv.ui.theme.LocalControlTema.current
+    val esOscuroNeutro = controlTema.oscuro && (controlTema.neutro || temaLinea.tipo == com.renea.psicologiauv.ui.theme.TipoLinea.NINGUNA)
+    val colorAcento = if (esOscuroNeutro) Color.White else temaLinea.colorPrimario
     val textoLinea = linea?.nombre ?: "Selecciona tu línea"
     val progresoAnimado by animateFloatAsState(
         targetValue = (progreso / 100f).coerceIn(0f, 1f),
@@ -3039,7 +3084,7 @@ private fun TarjetaPerfilHero(
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 8.dp.toPx()
                     drawArc(
-                        color = scheme.outlineVariant,
+                        color = if (esOscuroNeutro) Color.White.copy(alpha = 0.22f) else scheme.outlineVariant,
                         startAngle = -90f,
                         sweepAngle = 360f,
                         useCenter = false,
@@ -3351,7 +3396,7 @@ private fun ModuloHorarioEstudiante(
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    "Eres candidato a grado, felicitaciones",
+                    "Felicitaciones, has culminado tu proyecto con exito, eres candidato a grado.",
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,

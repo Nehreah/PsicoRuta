@@ -32,9 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.renea.psicologiauv.data.ReglaEspanol
 import com.renea.psicologiauv.model.Asignatura
 import com.renea.psicologiauv.model.Estudiante
 import com.renea.psicologiauv.model.ModuloConsejoPensum
+import com.renea.psicologiauv.model.NOMBRES_IDIOMAS
 import com.renea.psicologiauv.model.ProgramaM
 import com.renea.psicologiauv.ui.theme.AprobadoColor
 
@@ -995,16 +997,19 @@ private fun MateriaCompacta(
             Text(
                 text = buildAnnotatedString {
                     append(materia.nombre)
-                    if (materia.codigo.trim().length > 2) {
-                        append("  ")
-                        withStyle(
-                            SpanStyle(
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colorCodigo
-                            )
-                        ) {
+                    append("  ")
+                    withStyle(
+                        SpanStyle(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colorCodigo
+                        )
+                    ) {
+                        if (materia.codigo.trim().length > 2) {
                             append(materia.codigo.trim())
+                            append("  Cr: ${materia.creditos}")
+                        } else {
+                            append("Cr: ${materia.creditos}")
                         }
                     }
                 },
@@ -1923,6 +1928,15 @@ private fun DialogoEditarAsignatura(
         )
     }
 
+    var creditosTexto by remember(
+        materia.creditos
+    ) {
+
+        mutableStateOf(
+            materia.creditos.toString()
+        )
+    }
+
     val esElectiva = materia.esElectivaOIdioma()
 
     AlertDialog(
@@ -1973,6 +1987,18 @@ private fun DialogoEditarAsignatura(
 
                         label =
                             "Código"
+                    )
+
+                    CampoCompacto(
+                        value =
+                            creditosTexto,
+
+                        onValueChange = {
+                            creditosTexto = it
+                        },
+
+                        label =
+                            "Número de créditos"
                     )
                 }
 
@@ -2205,6 +2231,17 @@ private fun DialogoEditarAsignatura(
                                 materia.codigo,
                                 notaEspecialSeleccionada!!
                             )
+                        if (notaEspecialSeleccionada == "E.X" || notaEspecialSeleccionada == "EX") {
+                            val esEspanolOIdioma = materia.codigo.trim().equals(ReglaEspanol.CODIGO_ESPANOL_SIRA, ignoreCase = true) ||
+                                materia.codigo.trim().equals(ReglaEspanol.CODIGO_CULTURA_ESCRITA, ignoreCase = true) ||
+                                materia.componente.equals("Idioma", ignoreCase = true) ||
+                                materia.nombre.contains("Español", ignoreCase = true) ||
+                                materia.nombre.contains("Inglés", ignoreCase = true) ||
+                                materia.nombre in NOMBRES_IDIOMAS
+                            if (esEspanolOIdioma) {
+                                viewModel.cambiarCreditosAsignatura(materia.codigo, 0)
+                            }
+                        }
                     } else {
                         val num = notaTexto.toFloatOrNull()
                         if (num != null) {
@@ -2223,6 +2260,11 @@ private fun DialogoEditarAsignatura(
                     }
 
                     if (esElectiva) {
+                        creditosTexto.toIntOrNull()?.let {
+                            if (it >= 0 && it != materia.creditos) {
+                                viewModel.cambiarCreditosAsignatura(materia.codigo, it)
+                            }
+                        }
 
                         viewModel
                             .cambiarNombreAsignatura(

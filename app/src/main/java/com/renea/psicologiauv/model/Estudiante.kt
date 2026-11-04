@@ -3,6 +3,10 @@ package com.renea.psicologiauv.model
 import kotlinx.serialization.Serializable
 import kotlin.collections.MutableList
 import com.renea.psicologiauv.model.ElectivaProfesionalCatalogo
+import com.renea.psicologiauv.data.ReglaEspanol
+
+/** Último semestre que muestra la grilla del pensum. */
+private const val SEMESTRE_MAXIMO_PENSUM = 11
 
 @Serializable
 data class Estudiante(
@@ -14,6 +18,7 @@ data class Estudiante(
     var horario: MutableList<AsignaturaHorario> = mutableListOf(),
     val semestresManuales: Map<Int, Boolean> = emptyMap()
 ) {
+
     fun cambiarNombre(nuevoNombre: String): Estudiante =
         copy(nombre = nuevoNombre)
 
@@ -53,13 +58,20 @@ data class Estudiante(
         posicion: Int,
         codigo: String,
         nombre: String,
-        nota: NotaImportada?
+        nota: NotaImportada?,
+        creditos: Int = 3
     ): Estudiante {
         val indices = asignaturas.indices.filter {
             asignaturas[it].componente.equals("Electiva complementaria", ignoreCase = true)
         }
         val indice = indices.getOrNull(posicion) ?: return this
-        val base = asignaturas[indice].copy(nombre = nombre, codigo = codigo, nota = 0f, notaEspecial = null)
+        val base = asignaturas[indice].copy(
+            nombre = nombre,
+            codigo = codigo,
+            creditos = creditos,
+            nota = 0f,
+            notaEspecial = null
+        )
         val actualizada = when (nota) {
             is NotaImportada.Numerica -> base.cambiarNota(nota.valor)
             is NotaImportada.Especial -> base.cambiarNotaEspecial(nota.marca)
@@ -68,6 +80,14 @@ data class Estudiante(
         val nuevas = asignaturas.toMutableList()
         nuevas[indice] = actualizada
         return copy(asignaturas = nuevas)
+    }
+
+    fun cambiarCreditosAsignatura(codigoAsignatura: String, nuevosCreditos: Int): Estudiante {
+        val nuevasAsignaturas = asignaturas.map {
+            if (it.codigo.trim().equals(codigoAsignatura.trim(), ignoreCase = true)) it.cambiarCreditos(nuevosCreditos)
+            else it
+        }.toMutableList()
+        return copy(asignaturas = nuevasAsignaturas)
     }
 
     fun cambiarSemestreAsignatura(codigoAsignatura: String, nuevoSemestre: Int): Estudiante{
@@ -131,6 +151,38 @@ data class Estudiante(
         return copy(asignaturas = nuevasAsignaturas) to movidas
     }
 
+    /**
+     * Ubica cada asignatura en el semestre SIRA en el que se cursó (cada
+     * periodo del tabulado es un semestre, contando desde 1).
+     *
+     * - Solo se tocan las asignaturas que hoy viven en la grilla del pensum
+     *   (semestre 1..11). Las que usan semestres estructurales (0 = trabajo de
+     *   grado y actividades complementarias, 99 = idiomas) se respetan.
+     * - Un semestre SIRA mayor a [SEMESTRE_MAXIMO_PENSUM] se ubica en el último
+     *   semestre del pensum, para que la asignatura no desaparezca de la grilla.
+     * - Cuando el semestre SIRA coincide con el del pensum no cambia nada.
+     *
+     * Devuelve el nuevo [Estudiante] y la cantidad de asignaturas que cambiaron
+     * de semestre.
+     */
+    fun aplicarSemestresSira(semestresPorCodigo: Map<String, Int>): Pair<Estudiante, Int> {
+        if (semestresPorCodigo.isEmpty()) return this to 0
+        val porCodigo = semestresPorCodigo.mapKeys { it.key.trim().uppercase() }
+
+        var cambiadas = 0
+        val nuevas = asignaturas.map { asignatura ->
+            val semestreSira = porCodigo[asignatura.codigo.trim().uppercase()]
+            if (semestreSira == null || asignatura.semestre !in 1..SEMESTRE_MAXIMO_PENSUM) {
+                asignatura
+            } else {
+                val movida = asignatura.cambiarSemestre(semestreSira.coerceAtMost(SEMESTRE_MAXIMO_PENSUM))
+                if (movida.semestre != asignatura.semestre) cambiadas++
+                movida
+            }
+        }.toMutableList()
+        return copy(asignaturas = nuevas) to cambiadas
+    }
+
     fun cambiarNotaAsignatura(codigoAsignatura: String, nuevaNota: Float): Estudiante{
         val nuevasAsignaturas = asignaturas.map {
             if(it.codigo == codigoAsignatura) it.cambiarNota(nuevaNota)
@@ -183,9 +235,20 @@ data class Estudiante(
                     conNuevaNota
                 }
                 is NotaImportada.Especial -> {
-                    val conNotaEspecial = asignatura.cambiarNotaEspecial(notaImportada.marca)
+                    var conNotaEspecial = asignatura.cambiarNotaEspecial(notaImportada.marca)
+                    val esEximida = notaImportada.marca.replace(".", "").equals("EX", ignoreCase = true)
+                    val esEspanolOIdioma = asignatura.codigo.trim().equals(ReglaEspanol.CODIGO_ESPANOL_SIRA, ignoreCase = true) ||
+                            asignatura.codigo.trim().equals(ReglaEspanol.CODIGO_CULTURA_ESCRITA, ignoreCase = true) ||
+                            asignatura.componente.equals("Idioma", ignoreCase = true) ||
+                            asignatura.nombre in NOMBRES_IDIOMAS ||
+                            asignatura.nombre.contains("Español", ignoreCase = true) ||
+                            asignatura.nombre.contains("Inglés", ignoreCase = true)
+                    if (esEximida && esEspanolOIdioma) {
+                        conNotaEspecial = conNotaEspecial.cambiarCreditos(0)
+                    }
                     if (conNotaEspecial.notaEspecial != asignatura.notaEspecial ||
-                        conNotaEspecial.nota != asignatura.nota
+                        conNotaEspecial.nota != asignatura.nota ||
+                        conNotaEspecial.creditos != asignatura.creditos
                     ) actualizadas++
                     conNotaEspecial
                 }
@@ -196,6 +259,33 @@ data class Estudiante(
     }
 
     /**
+     * Aplica en un solo paso el lote de créditos leídos del PDF SIRA,
+     * actualizando los créditos de cada asignatura encontrada por código.
+     * A diferencia de [cambiarCreditosAsignatura] (que solo permite cambiar
+     * electivas e idiomas desde la UI), este método aplica sin restricción
+     * de componente, porque la información del SIRA tiene prioridad sobre
+     * la del JSON del pensum para TODAS las asignaturas.
+     *
+     * Solo se actualiza si los créditos del SIRA son distintos a los actuales
+     * y el código coincide (case-insensitive).
+     */
+    fun actualizarCreditosMasivo(creditosPorCodigo: Map<String, Int>): Estudiante {
+        if (creditosPorCodigo.isEmpty()) return this
+        val porCodigo = creditosPorCodigo.mapKeys { it.key.trim().uppercase() }
+        val nuevasAsignaturas = asignaturas.map { asignatura ->
+            val codigoUp = asignatura.codigo.trim().uppercase()
+            val creditosSira = porCodigo[codigoUp]
+            if (creditosSira != null && creditosSira != asignatura.creditos) {
+                asignatura.cambiarCreditos(creditosSira)
+            } else {
+                asignatura
+            }
+        }.toMutableList()
+        return copy(asignaturas = nuevasAsignaturas)
+    }
+
+
+    /**
      * Agrega una nueva asignatura (por ejemplo, una asignatura o actividad
      * complementaria creada desde la pantalla de Pensum) a la lista de
      * asignaturas del estudiante.
@@ -204,6 +294,7 @@ data class Estudiante(
         val nuevasAsignaturas = (asignaturas + nuevaAsignatura).toMutableList()
         return copy(asignaturas = nuevasAsignaturas)
     }
+
 
     /**
      * Calcula el siguiente código disponible para una actividad
@@ -337,6 +428,90 @@ data class Estudiante(
         }
 
         return copy(asignaturas = asignaturasActualizadas) to resueltas
+    }
+
+    /**
+     * Si Español (204001M) está presente y aprobado en las notas importadas,
+     * transforma la asignatura original del pensum (Cultura Escrita 402180M)
+     * a código "204001M" y nombre "Español", para que pueda recibir la nota
+     * y semestre de Español, liberando el código 402180M para las complementarias.
+     */
+    fun aplicarReglaEspanol(notasPorCodigo: Map<String, NotaImportada>): Estudiante {
+        val notaEspanol = notasPorCodigo[ReglaEspanol.CODIGO_ESPANOL_SIRA] ?: return this
+        if (!ReglaEspanol.aprobada(notaEspanol)) return this
+
+        // Si ya tiene una materia con el código de Español, ya fue homologada previamente.
+        if (asignaturas.any { it.codigo.trim().equals(ReglaEspanol.CODIGO_ESPANOL_SIRA, ignoreCase = true) }) {
+            return this
+        }
+
+        // Buscar la Cultura Escrita original del pensum (básica, no complementaria).
+        val indice = asignaturas.indexOfFirst {
+            it.codigo.trim().equals(ReglaEspanol.CODIGO_CULTURA_ESCRITA, ignoreCase = true) &&
+                    !it.componente.equals("Electiva complementaria", ignoreCase = true)
+        }
+        if (indice == -1) return this
+
+        val esEximida = (notaEspanol as? NotaImportada.Especial)?.marca?.replace(".", "")?.equals("EX", ignoreCase = true) == true
+        val nuevasAsignaturas = asignaturas.toMutableList()
+        nuevasAsignaturas[indice] = nuevasAsignaturas[indice].copy(
+            codigo = ReglaEspanol.CODIGO_ESPANOL_SIRA,
+            nombre = ReglaEspanol.NOMBRE_ESPANOL,
+            creditos = if (esEximida) 0 else nuevasAsignaturas[indice].creditos
+        )
+        return copy(asignaturas = nuevasAsignaturas)
+    }
+
+    /**
+     * Agrega al pensum en su respectivo semestre las asignaturas que no se asignaron
+     * a ninguna electiva complementaria (asignaturas sobrantes/descartadas del SIRA).
+     * Se registran con componente y área "Extracurricular" para que cuenten hacia los
+     * créditos y el promedio ponderado de ese semestre, pero no hacia los créditos de carrera
+     * ni hacia los requisitos de la misma.
+     */
+    fun agregarAsignaturasExtracurriculares(
+        noAsignadas: List<AsignaturaNoSincronizada>,
+        grupos: Map<String, String> = emptyMap()
+    ): Estudiante {
+        if (noAsignadas.isEmpty()) return this
+
+        val nuevasAsignaturas = asignaturas.toMutableList()
+        for (item in noAsignadas) {
+            val codigoTrim = item.codigo.trim().uppercase()
+            val indiceExistente = nuevasAsignaturas.indexOfFirst {
+                it.codigo.trim().uppercase() == codigoTrim
+            }
+
+            val grupo = grupos[codigoTrim] ?: ""
+            if (indiceExistente != -1) {
+                val existente = nuevasAsignaturas[indiceExistente]
+                var actualizada = if (item.semestre != null) existente.copy(semestre = item.semestre) else existente
+                actualizada = when (val n = item.nota) {
+                    is NotaImportada.Numerica -> actualizada.cambiarNota(n.valor)
+                    is NotaImportada.Especial -> actualizada.cambiarNotaEspecial(n.marca)
+                    null -> actualizada
+                }
+                if (grupo.isNotBlank()) actualizada = actualizada.copy(grupo = grupo)
+                nuevasAsignaturas[indiceExistente] = actualizada
+            } else {
+                val nueva = Asignatura(
+                    nombre = item.nombre,
+                    codigo = item.codigo,
+                    semestre = item.semestre ?: 1,
+                    creditos = item.creditos,
+                    lineaProfesional = "No",
+                    componente = "Extracurricular",
+                    area = "Extracurricular",
+                    nota = (item.nota as? NotaImportada.Numerica)?.valor ?: 0f,
+                    notaEspecial = (item.nota as? NotaImportada.Especial)?.marca,
+                    complementaria = false,
+                    grupo = grupo
+                )
+                nuevasAsignaturas.add(nueva)
+            }
+        }
+
+        return copy(asignaturas = nuevasAsignaturas)
     }
 
 }
