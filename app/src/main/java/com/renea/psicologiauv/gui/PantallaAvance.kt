@@ -137,20 +137,20 @@ private fun calcularDatosAvance(programa: ProgramaM): DatosAvance = DatosAvance(
 private val ConsejosCampus = listOf(
     "Habito el campus y limpio los espacios que uso.",
     "No soy cochinx, no dejo restos tirados en ningún espacio de mi universidad.",
-    "Respeto a mis compañerxs. Y espero que ellos me respetan a mí.",
+    "Respeto a mis compañerxs y espero que también me respeten a mí.",
     "Cuido las zonas verdes, porque son zonas de vida.",
     "El piso NO es basurero. Uso los botes de basura porque amo mi universidad.",
     "Bajo el volumen en espacios de estudio compartidos.",
     "Respeto a mis compañerxs en su diversidad.",
     "Si lo ensucio, lo limpio.",
     "Si ofendo a un compañerx, me disculpo.",
-    "No dejo basura 'para después'. Después siempre se convierte en nunca.",
+    "No dejo basura «para después»: el después siempre se convierte en nunca.",
     "Mi libertad termina donde empieza la libertad de lxs demás.",
     "Cuido a los animales que habitan el campus y no los molesto ni alimento irresponsablemente.",
-    "No normalizo el acoso, la discriminación, ni las burlas. Ayudo a quien lo necesita.",
-    "Todo lo hago desde el amor y los buenos deseos",
-    "La digna rabia y la protesta: son consignas justas",
-    "Después de sexto semestre parece que la universidad y la vida pesan más, apoyate en tus compañerxs."
+    "No normalizo el acoso, la discriminación ni las burlas. Apoyo a quien lo necesita.",
+    "Todo lo hago desde el respeto y los buenos deseos.",
+    "La digna rabia y la protesta social son consignas justas.",
+    "Después de sexto semestre parece que la universidad y la vida pesan más; apóyate en tus compañerxs."
 )
 
 @Composable
@@ -905,7 +905,7 @@ private fun DialogoInformacionIdioma(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Esta sección es llamada idiomas, no inglés. Dado que la naturaleza del requisito para el grado es cursar dos niveles de idioma extranjero. Usualmente se cursa inglés, pero alemán, japonés, etc. también son asignaturas válidas.",
+                                text = "Esta sección se denomina «Idiomas» (y no solo «Inglés»), ya que el requisito de grado consiste en cursar dos niveles de un idioma extranjero. Aunque habitualmente se cursa inglés, asignaturas como francés, alemán, portugués o italiano también son plenamente válidas.",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = scheme.onSurfaceVariant,
                                 lineHeight = MaterialTheme.typography.labelSmall.lineHeight

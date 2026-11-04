@@ -10,7 +10,7 @@ Aplicación Android para estudiantes de la carrera de **Psicología** de la **Un
 
 ## Características principales
 
-- **Malla curricular y Pensum interactivo**: visualización ordenada por semestres, seguimiento de materias (aprobadas, pendientes, matriculadas), créditos académicos y verificación de prerrequisitos.
+- **Malla curricular y pénsum interactivo**: visualización ordenada por semestres, seguimiento de materias (aprobadas, pendientes, matriculadas), créditos académicos y verificación de prerrequisitos.
 - **Seguimiento de avance**: cálculo en tiempo real del progreso de la carrera, créditos cursados vs. totales, gráficos de anillo y avance detallado por áreas curriculares.
 - **Gestión de Prácticas Profesionales**: control del cumplimiento de requisitos previos (Ética, Diagnóstico, Fundamentaciones) y avance por niveles (I, II, III).
 - **Personalización por línea de profundización**: diseños visuales temáticos adaptados a cada línea profesional (**Clínica**, **Educativa**, **Organizacional**, **Social**, **Neuroclínica**), con soporte completo para modo claro y modo oscuro.
@@ -92,7 +92,7 @@ Este proyecto no habría sido posible sin el compromiso, la solidaridad y el esf
 
 ### El Movimiento Académico Estudiantil
 
-Este proyecto nace y se articula como parte de una iniciativa fruto a de la investigación académica y se ha denominado el **Movimiento Académico Estudiantil**.
+Este proyecto nace y se articula como parte de una iniciativa fruto de la investigación académica y se ha denominado el **Movimiento Académico Estudiantil**.
 
 > Si el movimiento social estudiantil busca transformar la sociedad a través de la movilización social, el **Movimiento Académico Estudiantil** busca transformar su entorno a través de la movilización y la producción académica: **el conocimiento y la técnica puestos al servicio del pueblo.**
 

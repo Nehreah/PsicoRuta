@@ -1793,7 +1793,7 @@ fun PantallaPerfil(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "La Consejería Estudiantil es un espacio de escucha que puedes aprovehar para resolver tus asuntos psicológicos, académicos y socioeconómicos, de forma privada y respetuosa.",
+                        text = "La Consejería Estudiantil es un espacio de escucha que puedes aprovechar para resolver tus asuntos psicológicos, académicos y socioeconómicos, de forma privada y respetuosa.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
@@ -2440,8 +2440,8 @@ private fun TarjetaSira(
                             color = colores.onSurface
                         )
                         PasoSira("1", "Descarga tus notas en PDF desde el SIRA.")
-                        PasoSira("2", "Da click en Importar y selecciona el archivo descargado.")
-                        PasoSira("3", "¡Disfruta la app!")
+                        PasoSira("2", "Haz clic en «Importar» y selecciona el archivo descargado.")
+                        PasoSira("3", "¡Listo! Disfruta de la aplicación.")
                     }
 
                     Row(
@@ -2549,7 +2549,7 @@ private fun TarjetaNoSincronizadas(
                 color = colores.onSurface
             )
             Text(
-                text = "Estas asignaturas no sincronizaron con el pensum, ¿deseas descartarlas o asignarlas a una electiva complementaria?",
+                text = "Estas asignaturas no se sincronizaron con el pénsum. ¿Deseas descartarlas o asignarlas como electivas complementarias?",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colores.onSurfaceVariant
             )
@@ -2849,7 +2849,7 @@ private fun DialogoBienvenida(
             )
 
             Text(
-                text = "Aquí podrás seguir tu avance en el pensum, tus prácticas y tu trabajo de grado.",
+                text = "Aquí podrás seguir tu avance en el pénsum, tus prácticas y tu trabajo de grado.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = colores.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -2871,7 +2871,7 @@ private fun DialogoBienvenida(
                 )
                 PasoSira("1", "Descarga tus notas en PDF desde el SIRA.")
                 PasoSira("2", "Impórtalas en la app con un solo toque.")
-                PasoSira("3", "¡Disfruta la app!")
+                PasoSira("3", "¡Listo! Ya puedes comenzar a usar la aplicación.")
             }
 
             Text(
@@ -3298,7 +3298,7 @@ private fun TarjetaPerfilHero(
                         maxLines = 1
                     )
                     Text(
-                        text = "Click acá",
+                        text = "Ver avance",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = scheme.onSurfaceVariant,

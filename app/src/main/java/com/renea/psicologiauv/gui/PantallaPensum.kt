@@ -265,9 +265,9 @@ fun PantallaPensum(
 
     moduloInformacion?.let { modulo ->
         val descripcion = when (modulo) {
-            "Créditos complementarios" -> "Son 5 créditos popularmente llamados <créditos fantasma>, son aquellos créditos que debes cumplir como parte de tus actividades no incluídas en el pensum. Asistencia a eventos, congresos, simposios, presentación de ponencias, o en dado caso, cursar asignaturas equivalentes."
-            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura se consideran electivas profesionales: Problemas actuales del individuo en la sociedad. y 3 electivas a elección del estudiante. Electivas complementarias son aquellas asignaturas como baile, teatro, cine, etc."
-            "Idiomas" -> "Como requisito obligatorio para ser candidato a grado en Psicología es deber del estudiante cursar dos niveles de idioma extranjeros. Lo común es cursar 2 niveles de inglés, no obstante cualquier otro idioma extranjero es válido para aprobar el requisito."
+            "Créditos complementarios" -> "Son 5 créditos popularmente conocidos como «créditos fantasma». Corresponden a los créditos que debes certificar mediante actividades académicas o extracurriculares no incluidas en el pénsum: asistencia a eventos, congresos o simposios, presentación de ponencias o, en su defecto, cursar asignaturas equivalentes."
+            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura a prácticas se consideran como electivas profesionales: «Problemas actuales del individuo en la sociedad» y tres electivas adicionales a elección del estudiante. Las electivas complementarias son aquellas asignaturas formativas como baile, teatro, cine, entre otras."
+            "Idiomas" -> "Como requisito obligatorio para optar al título en Psicología, el estudiante debe cursar dos niveles de un idioma extranjero. Aunque lo más habitual es cursar inglés, cualquier otro idioma extranjero ofertado es igualmente válido para cumplir este requisito."
             else -> "Información del módulo $modulo."
         }
         AlertDialog(

@@ -117,8 +117,8 @@ fun PantallaCali(
                 periodo = "1989–1991",
                 titulo = "Séptima Papeleta y Constituyente",
                 descripcion =
-                    "El movimiento estudiantil impulse la Séptima Papeleta en " +
-                            "las elecciones de 1990, impulsando la redacción de la " +
+                    "El movimiento estudiantil impulsó la Séptima Papeleta en " +
+                            "las elecciones de 1990, lo que dio paso a la redacción de la " +
                             "Constitución Política de 1991."
             ),
             Hito(

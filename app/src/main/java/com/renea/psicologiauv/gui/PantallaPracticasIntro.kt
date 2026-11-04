@@ -107,7 +107,7 @@ fun PantallaPracticasIntro(
             }
 
             Text(
-                text = "Las prácticas profesionales son el espacio en el que integras los conocimientos, habilidades y competencias desarrolladas bajo la supervición profesional.",
+                text = "Las prácticas profesionales son el espacio en el que integras los conocimientos, habilidades y competencias desarrolladas bajo la supervisión profesional.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = scheme.onSurface,
                 textAlign = TextAlign.Justify,
@@ -132,7 +132,7 @@ fun PantallaPracticasIntro(
                         color = scheme.onSurface
                     )
                     Text(
-                        text = "Antes de dar inicio a las prácticas profesionales es necesario elegir una de las cuatro líneas de profesionalización en una de sus 5 modalidades:",
+                        text = "Antes de dar inicio a las prácticas profesionales, es necesario elegir una de las cuatro líneas de profesionalización en una de sus cinco modalidades:",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Justify,
                         color = scheme.onSurfaceVariant
@@ -186,9 +186,9 @@ fun PantallaPracticasIntro(
 
             Text(
                 text = if (requisitosCompletos) {
-                    "Sí se cumple con los requisitos"
+                    "Cumples con los requisitos"
                 } else {
-                    "No se cumple con los requisitos"
+                    "Aún no cumples con los requisitos"
                 },
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
@@ -197,7 +197,7 @@ fun PantallaPracticasIntro(
             )
 
             Text(
-                text = "Selecciona Evaluar para consultar el detalle completo de requisitos y líneas de profesionalización.",
+                text = "Selecciona «Evaluar» para consultar el detalle completo de requisitos y líneas de profesionalización.",
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

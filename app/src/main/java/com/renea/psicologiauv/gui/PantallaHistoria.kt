@@ -414,7 +414,7 @@ private fun HistoriaHero(
                 text =
                     "Hay historias que terminan cuando dejan de contarse. " +
                             "Otras permanecen vivas porque siguen habitando la " +
-                            "memoria, el corazón y el espíritu de quienes aun están.",
+                            "memoria, el corazón y el espíritu de quienes aún están.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
                 color = esquema.text.copy(alpha = 0.94f)
@@ -424,9 +424,9 @@ private fun HistoriaHero(
 
             Text(
                 text =
-                    "En épocas como la actual la historia no solo vuelve a cobrar vida " +
+                    "En épocas como la actual, la historia no solo vuelve a cobrar vida, " +
                             "sino que empezamos a protagonizarla. " +
-                            "Heredamos sus privilegios. También heredamos sus luchas " +
+                            "Heredamos sus privilegios; también heredamos sus luchas. " +
                             "Es hora de transformar nuestro entorno.",
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Justify,
@@ -695,7 +695,7 @@ private fun CarruselConceptos(
                 title = "Alteractivismo",
                 description =
                     "Una forma contemporánea de comprender la acción activista: " +
-                            "más horizontal, creativa y situada. El Alteractivismo " +
+                            "más horizontal, creativa y situada. El alteractivismo " +
                             "permite observar cómo surgen nuevas maneras de participar " +
                             "y de imaginar la transformación social."
             ),
@@ -956,7 +956,7 @@ private fun CarruselReflexion(
             ReflexionHistoria(
                 title = "Una historia que no muere",
                 paragraphs = listOf(
-                    "La historia estudiantil es una historia de resiliciencia. " +
+                    "La historia estudiantil es una historia de resiliencia. " +
                             "Es una historia que vuelve a nosotros cada vez que una nueva " +
                             "generación pregunta, recuerda, cuestiona y decide qué hacer " +
                             "con el mundo que recibió.",

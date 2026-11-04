@@ -309,7 +309,7 @@ private fun RequisitoInicial(pendientes: List<String>) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Cumples con todas las asignaturas básicas para iniciar el ciclo TG",
+                        text = "Cumples con todas las asignaturas básicas para iniciar el ciclo de Trabajo de Grado",
                         modifier = Modifier.weight(1f),
                         style = TextoCuerpo,
                         fontWeight = FontWeight.Bold,
