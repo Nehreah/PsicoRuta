@@ -51,6 +51,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -324,6 +327,11 @@ fun PantallaLatino(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(0.95f)
+                        // El Dialog crea su propia ventana: no hereda los insets
+                        // consumidos por el Scaffold padre. Se aplica aquí (en el
+                        // Column del contenido) para que el overlay negro cubra toda
+                        // la pantalla y el botón × quede visible en Android 15+.
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
                         .clickable(enabled = false) {},
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)

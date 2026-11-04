@@ -24,6 +24,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -319,6 +322,10 @@ private fun AvisoInicialPsicoRuta(
         modifier = Modifier
             .fillMaxSize()
             .background(colores.background)
+            // Fuera de cualquier Scaffold: gestionamos los insets del sistema
+            // para que el contenido no quede oculto bajo la barra de estado,
+            // la barra de navegación o los recortes de pantalla (Android 15+).
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 20.dp, vertical = 18.dp),
         contentAlignment = Alignment.Center
     ) {

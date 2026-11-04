@@ -53,6 +53,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -318,6 +321,11 @@ fun PantallaCali(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth(0.95f)
+                        // El Dialog crea su propia ventana: no hereda los insets
+                        // consumidos por el Scaffold padre. Se aplica aquí (en el
+                        // Column del contenido) para que el overlay negro cubra toda
+                        // la pantalla y el botón × quede visible en Android 15+.
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
                         .clickable(enabled = false) {},
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp)
