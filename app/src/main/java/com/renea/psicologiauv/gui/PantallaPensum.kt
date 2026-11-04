@@ -266,7 +266,7 @@ fun PantallaPensum(
     moduloInformacion?.let { modulo ->
         val descripcion = when (modulo) {
             "Créditos complementarios" -> "Son 5 créditos popularmente conocidos como «créditos fantasma». Corresponden a los créditos que debes certificar mediante actividades académicas o extracurriculares no incluidas en el pénsum: asistencia a eventos, congresos o simposios, presentación de ponencias o, en su defecto, cursar asignaturas equivalentes."
-            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura a prácticas se consideran como electivas profesionales: «Problemas actuales del individuo en la sociedad» y tres electivas adicionales a elección del estudiante. Las electivas complementarias son aquellas asignaturas formativas como baile, teatro, cine, entre otras."
+            "Electivas" -> "Asignaturas electivas complementarias y profesionales. Para la candidatura a prácticas se consideran como electivas profesionales: «Problemas actuales del individuo en la sociedad» y tres electivas adicionales a elección del estudiante. Las electivas complementarias abarcan actividades y asignaturas formativas que no pertenecen necesariamente al plan de estudios propio de Psicología (por ejemplo: baile, teatro, cine, etc.)."
             "Idiomas" -> "Como requisito obligatorio para optar al título en Psicología, el estudiante debe cursar dos niveles de un idioma extranjero. Aunque lo más habitual es cursar inglés, cualquier otro idioma extranjero ofertado es igualmente válido para cumplir este requisito."
             else -> "Información del módulo $modulo."
         }
